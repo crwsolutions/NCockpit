@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="NCockpit.Pages.OverviewPage"
+             Title="Overview"
+             BackgroundColor="#f5f5f5">
+
+    <Grid RowDefinitions="Auto,*" Padding="0">
+        <!-- Header -->
+        <Grid Grid.Row="0" 
+              BackgroundColor="#1a2744" 
+              Padding="24,16" 
+              ColumnDefinitions="*">
+            <VerticalStackLayout Spacing="8">
+                <Label Text="Good afternoon, Colin" 
+                       FontSize="24" 
+                       FontAttributes="Bold" 
+                       TextColor="White" />
+                <Label Text="Here's an overview of your projects." 
+                       FontSize="14" 
+                       TextColor="#b0b8c8" />
+            </VerticalStackLayout>
+        </Grid>
+
+        <!-- Content -->
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="24" Spacing="20">
+                
+                <!-- Summary Cards -->
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                    <Border Grid.Column="0" 
+                            Padding="16" 
+                            BackgroundColor="White"
+                            Stroke="#e0e0e0"
+                            StrokeThickness="1"
+                            StrokeShape="RoundRectangle 8">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Total Projects" 
+                                   FontSize="12" 
+                                   TextColor="#666666" 
+                                   FontAttributes="Bold" />
+                            <Label Text="12" 
+                                   FontSize="28" 
+                                   FontAttributes="Bold" 
+                                   TextColor="#1a2744" />
+                        </VerticalStackLayout>
+                    </Border>
+                    
+                    <Border Grid.Column="1" 
+                            Padding="16" 
+                            BackgroundColor="White"
+                            Stroke="#e0e0e0"
+                            StrokeThickness="1"
+                            StrokeShape="RoundRectangle 8">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Favorites" 
+                                   FontSize="12" 
+                                   TextColor="#666666" 
+                                   FontAttributes="Bold" />
+                            <Label Text="3" 
+                                   FontSize="28" 
+                                   FontAttributes="Bold" 
+                                   TextColor="#0d7377" />
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+
+                <!-- Projects Section -->
+                <Label Text="Recent Projects" 
+                       FontSize="16" 
+                       FontAttributes="Bold" 
+                       TextColor="#1a2744" />
+
+                <!-- Project Item 1 -->
+                <Border Padding="16" 
+                        BackgroundColor="White"
+                        Stroke="#e0e0e0"
+                        StrokeThickness="1"
+                        StrokeShape="RoundRectangle 8">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="NCockpit" 
+                               FontSize="15" 
+                               FontAttributes="Bold" 
+                               TextColor="#1a2744" />
+                        <Label Text="e:\repos\crwsolutions\NCockpit" 
+                               FontSize="12" 
+                               TextColor="#0d7377" />
+                        <Label Text=".NET MAUI • Windows • Active" 
+                               FontSize="11" 
+                               TextColor="#999999" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Project Item 2 -->
+                <Border Padding="16" 
+                        BackgroundColor="White"
+                        Stroke="#e0e0e0"
+                        StrokeThickness="1"
+                        StrokeShape="RoundRectangle 8">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Llama.cpp Starter" 
+                               FontSize="15" 
+                               FontAttributes="Bold" 
+                               TextColor="#1a2744" />
+                        <Label Text="e:\repos\crwsolutions\llama-cpp-starter" 
+                               FontSize="12" 
+                               TextColor="#0d7377" />
+                        <Label Text="C# • AI • Active" 
+                               FontSize="11" 
+                               TextColor="#999999" />
+                    </VerticalStackLayout>
+                </Border>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+
+</ContentPage>

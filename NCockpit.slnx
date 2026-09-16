@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/Solutions items/">
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+    <File Path="CONTRIBUTING.md" />
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="src/NCockpit/NCockpit.csproj">
+    <Deploy Solution="Debug|*" />
+  </Project>
+</Solution>

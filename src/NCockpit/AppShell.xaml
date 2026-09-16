@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="NCockpit.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:NCockpit"
+    xmlns:pages="clr-namespace:NCockpit.Pages"
+    Title="NCockpit"
+    Shell.FlyoutBehavior="Locked"
+    NavBarIsVisible="False"
+    FlyoutWidth="200"
+    FlyoutBackgroundColor="#1a2744">
+
+    <!-- Flyout items with FontAwesome6 Free Solid glyphs -->
+    <Shell.ItemTemplate>
+        <DataTemplate x:DataType="ShellContent">
+            <Grid HeightRequest="52" ColumnDefinitions="Auto,*" Padding="12,8">
+                <Label Grid.Column="0"
+                       Text="{Binding Title, Converter={StaticResource TitleToGlyphConverter}}"
+                       FontFamily="FontAwesomeSolid"
+                       FontSize="18"
+                       TextColor="White"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center"
+                       Margin="0,0,12,0" />
+                <Label Grid.Column="1"
+                       Text="{Binding Title}"
+                       FontSize="15"
+                       TextColor="White" 
+                       HorizontalOptions="Start"
+                       VerticalOptions="Center" />
+            </Grid>
+        </DataTemplate>
+    </Shell.ItemTemplate>
+
+    <!-- Overview -->
+    <ShellContent
+        Title="Overview"
+        ContentTemplate="{DataTemplate pages:OverviewPage}"
+        Route="overview" />
+
+    <!-- Project Details -->
+    <ShellContent
+        Title="Project Details"
+        ContentTemplate="{DataTemplate pages:ProjectDetailsPage}"
+        Route="projectdetails" />
+
+    <!-- Folders -->
+    <ShellContent
+        Title="Folders"
+        ContentTemplate="{DataTemplate pages:FoldersPage}"
+        Route="folders" />
+
+    <!-- Settings -->
+    <ShellContent
+        Title="Settings"
+        ContentTemplate="{DataTemplate pages:SettingsPage}"
+        Route="settings" />
+
+    <!-- About -->
+    <ShellContent
+        Title="About"
+        ContentTemplate="{DataTemplate pages:AboutPage}"
+        Route="about" />
+
+</Shell>
