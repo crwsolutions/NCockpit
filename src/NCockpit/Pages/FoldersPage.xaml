@@ -5,7 +5,7 @@
              Title="Folders"
              BackgroundColor="#f5f5f5">
 
-    <Grid RowDefinitions="Auto,*" Padding="0">
+    <Grid x:Name="Page" RowDefinitions="Auto,*,Auto" Padding="0">
         <!-- Header -->
         <Grid Grid.Row="0" 
               BackgroundColor="#1a2744" 
@@ -30,7 +30,7 @@
                     TextColor="White"
                     FontSize="13"
                     FontAttributes="Bold"
-                    Clicked="OnAddFolderClicked"
+                    Command="{Binding AddFolderCommand}"
                     VerticalOptions="Center" />
         </Grid>
 
@@ -104,8 +104,10 @@
                                                 CornerRadius="4"
                                                 BackgroundColor="#0d7377"
                                                 TextColor="White"
-                                                FontSize="11" />
-                                        
+                                                FontSize="11"
+                                                Command="{Binding Source={x:Reference Page}, Path=BindingContext.ScanFolderCommand}"
+                                                CommandParameter="{Binding .}" />
+
                                         <Button Grid.Column="1"
                                                 Text="Open"
                                                 Padding="8,6"
@@ -113,8 +115,9 @@
                                                 BackgroundColor="#666666"
                                                 TextColor="White"
                                                 FontSize="11"
-                                                Clicked="OnOpenFolderClicked" />
-                                        
+                                                Command="{Binding Source={x:Reference Page}, Path=BindingContext.OpenFolderCommand}"
+                                                CommandParameter="{Binding Path}" />
+
                                         <Button Grid.Column="2"
                                                 Text="Delete"
                                                 Padding="8,6"
@@ -122,7 +125,8 @@
                                                 BackgroundColor="#d32f2f"
                                                 TextColor="White"
                                                 FontSize="11"
-                                                Clicked="OnDeleteFolderClicked" />
+                                                Command="{Binding Source={x:Reference Page}, Path=BindingContext.DeleteFolderCommand}"
+                                                CommandParameter="{Binding .}" />
                                     </Grid>
                                 </VerticalStackLayout>
                             </Border>
@@ -132,6 +136,15 @@
 
             </VerticalStackLayout>
         </ScrollView>
+
+        <!-- Status Text (e.g. after a scan) -->
+        <Label Grid.Row="2"
+               Text="{Binding StatusText}"
+               FontSize="11"
+               TextColor="#666666"
+               Padding="24,12"
+               VerticalOptions="Center"
+               IsVisible="{Binding StatusText, Converter={StaticResource StringToVisibilityConverter}}" />
     </Grid>
 
 </ContentPage>

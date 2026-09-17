@@ -11,7 +11,7 @@ internal static class Database
 {
     internal static string DbPath { get; private set; } = default!;
 
-    internal const int CurrentUserVersion = 1;
+    internal const int CurrentUserVersion = 2;
 
     /// <summary>
     /// Initialize the database, creating it if necessary or running migrations.
@@ -42,9 +42,15 @@ internal static class Database
         if (userVersion < 1)
         {
             CreateCoreTables(connection);
-            SetUserVersion(connection, CurrentUserVersion);
-            return;
         }
+
+        // v1 → v2: add Projects table
+        if (userVersion < 2)
+        {
+            CreateProjectsTable(connection);
+        }
+
+        SetUserVersion(connection, CurrentUserVersion);
     }
 
     private static void CreateDatabase()
@@ -53,6 +59,7 @@ internal static class Database
         connection.Open();
 
         CreateCoreTables(connection);
+        CreateProjectsTable(connection);
         SetUserVersion(connection, CurrentUserVersion);
     }
 
@@ -67,6 +74,27 @@ internal static class Database
                 IsEnabled INTEGER NOT NULL DEFAULT 1,
                 ProjectCount INTEGER NOT NULL DEFAULT 0,
                 LastScanUnix INTEGER,
+                CreatedAt INTEGER NOT NULL
+            );
+            """, connection)
+        {
+            CommandTimeout = 10
+        };
+        command.ExecuteNonQuery();
+    }
+
+    private static void CreateProjectsTable(SqliteConnection connection)
+    {
+        using var command = new SqliteCommand(
+            """
+            CREATE TABLE IF NOT EXISTS Projects (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Name TEXT NOT NULL,
+                SolutionPath TEXT NOT NULL UNIQUE COLLATE NOCASE,
+                FolderPath TEXT NOT NULL,
+                LastSeenUnix INTEGER NOT NULL,
+                ScanUnix INTEGER NOT NULL,
+                RemovedAtUnix INTEGER,
                 CreatedAt INTEGER NOT NULL
             );
             """, connection)

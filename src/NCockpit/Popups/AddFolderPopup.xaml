@@ -6,11 +6,11 @@
                xmlns:vm="clr-namespace:NCockpit.ViewModels.Popups"
                x:Class="NCockpit.Popups.AddFolderPopup"
                x:DataType="vm:AddFolderPopupViewModel"
-               x:TypeArguments="system:String"
+               x:TypeArguments="vm:AddFolderResult"
                Padding="0"
                BackgroundColor="White"
                CanBeDismissedByTappingOutsideOfPopup="False">
-    
+
     <VerticalStackLayout Spacing="0">
         <!-- Header -->
         <Grid BackgroundColor="#1a2744" Padding="20,16" ColumnDefinitions="*,Auto">
@@ -20,7 +20,7 @@
                    FontAttributes="Bold"
                    TextColor="White"
                    VerticalOptions="Center" />
-            
+
             <Button Grid.Column="1"
                     Text="✕"
                     Padding="0"
@@ -30,13 +30,13 @@
                     BackgroundColor="Transparent"
                     TextColor="#b0b8c8"
                     FontSize="18"
-                    Clicked="OnCancelClicked"
+                    Command="{Binding CancelCommand}"
                     VerticalOptions="Center" />
         </Grid>
 
         <!-- Content -->
         <VerticalStackLayout Padding="20" Spacing="16" WidthRequest="400">
-            
+
             <!-- Folder Path Entry -->
             <VerticalStackLayout Spacing="6">
                 <Label Text="Folder Path"
@@ -75,13 +75,13 @@
                                FontSize="11"
                                TextColor="#666666" />
                     </VerticalStackLayout>
-                    
+
                     <Switch Grid.Column="1"
                             IsToggled="{Binding IsPrimary}"
                             OnColor="#0d7377"
                             VerticalOptions="Center" />
                 </Grid>
-                
+
                 <Label Text="Primary folders are scanned for projects. Secondary folders are indexed but not scanned."
                        FontSize="10"
                        TextColor="#999999"
@@ -98,9 +98,9 @@
         </VerticalStackLayout>
 
         <!-- Footer Buttons -->
-        <Grid BackgroundColor="#f5f5f5" 
-              Padding="20" 
-              ColumnDefinitions="*,*" 
+        <Grid BackgroundColor="#f5f5f5"
+              Padding="20"
+              ColumnDefinitions="*,*"
               ColumnSpacing="12">
             <Button Grid.Column="0"
                     Text="Cancel"
@@ -112,8 +112,8 @@
                     FontAttributes="Bold"
                     BorderColor="#e0e0e0"
                     BorderWidth="1"
-                    Clicked="OnCancelClicked" />
-            
+                    Command="{Binding CancelCommand}" />
+
             <Button Grid.Column="1"
                     Text="Add Folder"
                     Padding="12,10"
@@ -122,7 +122,7 @@
                     TextColor="White"
                     FontSize="12"
                     FontAttributes="Bold"
-                    Clicked="OnAddClicked" />
+                    Command="{Binding AddFolderCommand}" />
         </Grid>
     </VerticalStackLayout>
 

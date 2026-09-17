@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using CommunityToolkit.Maui;
 using NCockpit.Repositories;
 using NCockpit.Services;
@@ -29,13 +29,20 @@ public static class MauiProgram
 		
 		// Register repositories
 		builder.Services.AddSingleton<IProjectFolderRepository, ProjectFolderRepository>();
+		builder.Services.AddSingleton<IProjectRepository, ProjectRepository>();
 		// Register services
 		builder.Services.AddSingleton<IProjectFolderService, ProjectFolderService>();
+		builder.Services.AddSingleton<IScanService, ScanService>();
+		builder.Services.AddSingleton<IPageService, PageService>();
 		// Register ViewModels
 		builder.Services.AddSingleton<FoldersPageViewModel>();
+		builder.Services.AddSingleton<OverviewPageViewModel>();
 		// Register Popups
 		builder.Services.AddTransient<AddFolderPopupViewModel>();
 		builder.Services.AddTransientPopup<AddFolderPopup, AddFolderPopupViewModel>();
+		// Scan popup view-model is resolved from DI and configured at show-time.
+		builder.Services.AddSingleton<ScanPopupViewModel>();
+		builder.Services.AddTransientPopup<ScanPopup, ScanPopupViewModel>();
 
 #if DEBUG
 		builder.Logging.AddDebug();

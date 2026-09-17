@@ -1,0 +1,93 @@
+using Dapper;
+using NCockpit.Models;
+using Microsoft.Data.Sqlite;
+
+namespace NCockpit.Repositories;
+
+/// <summary>
+/// Repository for Project database operations.
+/// </summary>
+public interface IProjectRepository
+{
+    Task<List<Project>> GetAllAsync();
+
+    /// <summary>
+    /// Insert or update a project keyed by its solution path (case-insensitive).
+    /// If the project already exists it is re-activated (RemovedAtUnix reset to null).
+    /// </summary>
+    Task UpsertAsync(Project project);
+
+    /// <summary>
+    /// Prune projects that were not seen during the current scan (LastSeenUnix &lt; scanUnix)
+    /// and were not already removed.
+    /// </summary>
+    Task<int> PruneAsync(long scanUnix);
+}
+
+public class ProjectRepository : IProjectRepository
+{
+    private readonly string _dbPath;
+
+    public ProjectRepository()
+    {
+        _dbPath = Database.DbPath;
+    }
+
+    public async Task<List<Project>> GetAllAsync()
+    {
+        using var connection = new SqliteConnection($"Data Source={_dbPath}");
+        const string sql = """
+            SELECT Id, Name, SolutionPath, FolderPath, LastSeenUnix, ScanUnix, RemovedAtUnix
+            FROM Projects
+            WHERE RemovedAtUnix IS NULL
+            ORDER BY Name
+            """;
+        return (await connection.QueryAsync<Project>(sql)).ToList();
+    }
+
+    public async Task UpsertAsync(Project project)
+    {
+        using var connection = new SqliteConnection($"Data Source={_dbPath}");
+        await connection.OpenAsync();
+
+        const string sql = """
+            INSERT INTO Projects (Name, SolutionPath, FolderPath, LastSeenUnix, ScanUnix, RemovedAtUnix, CreatedAt)
+            VALUES (@Name, @SolutionPath, @FolderPath, @LastSeenUnix, @ScanUnix, NULL, @CreatedAt)
+            ON CONFLICT (SolutionPath) DO UPDATE SET
+                Name = excluded.Name,
+                FolderPath = excluded.FolderPath,
+                LastSeenUnix = excluded.LastSeenUnix,
+                ScanUnix = excluded.ScanUnix,
+                RemovedAtUnix = NULL;
+            """;
+
+        await connection.ExecuteAsync(sql, new
+        {
+            project.Name,
+            project.SolutionPath,
+            project.FolderPath,
+            project.LastSeenUnix,
+            project.ScanUnix,
+            CreatedAt = project.LastSeenUnix
+        });
+    }
+
+    public async Task<int> PruneAsync(long scanUnix)
+    {
+        using var connection = new SqliteConnection($"Data Source={_dbPath}");
+        await connection.OpenAsync();
+
+        const string sql = """
+            UPDATE Projects
+            SET RemovedAtUnix = @RemovedAtUnix
+            WHERE (RemovedAtUnix IS NULL OR LastSeenUnix < @ScanUnix)
+              AND LastSeenUnix < @ScanUnix;
+            """;
+
+        return await connection.ExecuteAsync(sql, new
+        {
+            ScanUnix = scanUnix,
+            RemovedAtUnix = scanUnix
+        });
+    }
+}
