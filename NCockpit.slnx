@@ -2,6 +2,7 @@
   <Folder Name="/Solutions items/">
     <File Path=".editorconfig" />
     <File Path=".gitignore" />
+    <File Path="AGENTS.md" />
     <File Path="CONTRIBUTING.md" />
     <File Path="README.md" />
   </Folder>
