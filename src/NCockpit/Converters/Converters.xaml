@@ -11,5 +11,8 @@
     <converters:InverseBoolToColorConverter x:Key="InverseBoolToColorConverter" />
     <converters:StringToColorConverter x:Key="StringToColorConverter" />
     <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
-    
+    <converters:BoolToStarGlyphConverter x:Key="BoolToStarGlyphConverter" />
+    <converters:BoolToFavoriteColorConverter x:Key="BoolToFavoriteColorConverter" />
+    <converters:IntToEmptyVisibilityConverter x:Key="IntToEmptyVisibilityConverter" />
+
 </ResourceDictionary>

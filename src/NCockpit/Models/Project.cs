@@ -38,4 +38,16 @@ public class Project
     /// Unix timestamp of the last scan during which this project was removed (pruned).
     /// </summary>
     public long? RemovedAtUnix { get; set; }
+
+    /// <summary>
+    /// Whether the user has marked this project as a favorite.
+    /// </summary>
+    public bool IsFavorite { get; set; }
+
+    /// <summary>
+    /// Unix timestamp of when the project was last opened/viewed. Null means the
+    /// project has never been opened, in which case it falls back to its last
+    /// scan time for ordering.
+    /// </summary>
+    public long? LastUsedUnix { get; set; }
 }

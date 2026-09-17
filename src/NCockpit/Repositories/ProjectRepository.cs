@@ -9,6 +9,10 @@ namespace NCockpit.Repositories;
 /// </summary>
 public interface IProjectRepository
 {
+    /// <summary>
+    /// Returns all active projects ordered by recent usage (most recently used first).
+    /// Projects that have never been opened fall back to their last scan time.
+    /// </summary>
     Task<List<Project>> GetAllAsync();
 
     /// <summary>
@@ -22,6 +26,16 @@ public interface IProjectRepository
     /// and were not already removed.
     /// </summary>
     Task<int> PruneAsync(long scanUnix);
+
+    /// <summary>
+    /// Stamp the project as "used now", used for recent-usage ordering.
+    /// </summary>
+    Task TouchAsync(int id);
+
+    /// <summary>
+    /// Set or clear the favorite flag for a project.
+    /// </summary>
+    Task SetFavoriteAsync(int id, bool isFavorite);
 }
 
 public class ProjectRepository : IProjectRepository
@@ -37,10 +51,11 @@ public class ProjectRepository : IProjectRepository
     {
         using var connection = new SqliteConnection($"Data Source={_dbPath}");
         const string sql = """
-            SELECT Id, Name, SolutionPath, FolderPath, LastSeenUnix, ScanUnix, RemovedAtUnix
+            SELECT Id, Name, SolutionPath, FolderPath, LastSeenUnix, ScanUnix, RemovedAtUnix,
+                   IsFavorite, LastUsedUnix
             FROM Projects
             WHERE RemovedAtUnix IS NULL
-            ORDER BY Name
+            ORDER BY COALESCE(LastUsedUnix, LastSeenUnix) DESC, Name
             """;
         return (await connection.QueryAsync<Project>(sql)).ToList();
     }
@@ -89,5 +104,37 @@ public class ProjectRepository : IProjectRepository
             ScanUnix = scanUnix,
             RemovedAtUnix = scanUnix
         });
+    }
+
+    public async Task TouchAsync(int id)
+    {
+        using var connection = new SqliteConnection($"Data Source={_dbPath}");
+        await connection.OpenAsync();
+
+        const string sql = """
+            UPDATE Projects
+            SET LastUsedUnix = @LastUsedUnix
+            WHERE Id = @Id;
+            """;
+
+        await connection.ExecuteAsync(sql, new
+        {
+            Id = id,
+            LastUsedUnix = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+        });
+    }
+
+    public async Task SetFavoriteAsync(int id, bool isFavorite)
+    {
+        using var connection = new SqliteConnection($"Data Source={_dbPath}");
+        await connection.OpenAsync();
+
+        const string sql = """
+            UPDATE Projects
+            SET IsFavorite = @IsFavorite
+            WHERE Id = @Id;
+            """;
+
+        await connection.ExecuteAsync(sql, new { Id = id, IsFavorite = isFavorite });
     }
 }

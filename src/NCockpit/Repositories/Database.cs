@@ -11,7 +11,7 @@ internal static class Database
 {
     internal static string DbPath { get; private set; } = default!;
 
-    internal const int CurrentUserVersion = 2;
+    internal const int CurrentUserVersion = 3;
 
     /// <summary>
     /// Initialize the database, creating it if necessary or running migrations.
@@ -48,6 +48,12 @@ internal static class Database
         if (userVersion < 2)
         {
             CreateProjectsTable(connection);
+        }
+
+        // v2 → v3: add favorites and recent-usage columns to Projects
+        if (userVersion < 3)
+        {
+            AddProjectFavoriteAndRecentUsageColumns(connection);
         }
 
         SetUserVersion(connection, CurrentUserVersion);
@@ -95,9 +101,53 @@ internal static class Database
                 LastSeenUnix INTEGER NOT NULL,
                 ScanUnix INTEGER NOT NULL,
                 RemovedAtUnix INTEGER,
-                CreatedAt INTEGER NOT NULL
+                CreatedAt INTEGER NOT NULL,
+                IsFavorite INTEGER NOT NULL DEFAULT 0,
+                LastUsedUnix INTEGER
             );
             """, connection)
+        {
+            CommandTimeout = 10
+        };
+        command.ExecuteNonQuery();
+    }
+
+    private static void AddProjectFavoriteAndRecentUsageColumns(SqliteConnection connection)
+    {
+        // IsFavorite
+        if (ColumnExists(connection, "Projects", "IsFavorite") is not true)
+        {
+            Execute(connection, "ALTER TABLE Projects ADD COLUMN IsFavorite INTEGER NOT NULL DEFAULT 0");
+        }
+
+        // LastUsedUnix (nullable: null means the project has never been opened)
+        if (ColumnExists(connection, "Projects", "LastUsedUnix") is not true)
+        {
+            Execute(connection, "ALTER TABLE Projects ADD COLUMN LastUsedUnix INTEGER");
+        }
+    }
+
+    private static bool? ColumnExists(SqliteConnection connection, string table, string column)
+    {
+        using var command = new SqliteCommand($"PRAGMA table_info({table})", connection)
+        {
+            CommandTimeout = 10
+        };
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            if (reader.GetString(1).Equals(column, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static void Execute(SqliteConnection connection, string sql)
+    {
+        using var command = new SqliteCommand(sql, connection)
         {
             CommandTimeout = 10
         };

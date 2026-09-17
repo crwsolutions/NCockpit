@@ -39,12 +39,6 @@
         ContentTemplate="{DataTemplate pages:OverviewPage}"
         Route="overview" />
 
-    <!-- Project Details -->
-    <ShellContent
-        Title="Project Details"
-        ContentTemplate="{DataTemplate pages:ProjectDetailsPage}"
-        Route="projectdetails" />
-
     <!-- Folders -->
     <ShellContent
         Title="Folders"

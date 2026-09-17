@@ -32,6 +32,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<IProjectRepository, ProjectRepository>();
 		// Register services
 		builder.Services.AddSingleton<IProjectFolderService, ProjectFolderService>();
+		builder.Services.AddSingleton<IProjectService, ProjectService>();
 		builder.Services.AddSingleton<IScanService, ScanService>();
 		builder.Services.AddSingleton<IPageService, PageService>();
 		// Register ViewModels

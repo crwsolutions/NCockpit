@@ -11,7 +11,6 @@ public class TitleToGlyphConverter : IValueConverter
     private static readonly Dictionary<string, string> Glyphs = new(StringComparer.OrdinalIgnoreCase)
     {
         ["Overview"] = "\uf015",        // house
-        ["Project Details"] = "\uf15b", // file-lines
         ["Folders"] = "\uf07b",         // folder
         ["Settings"] = "\uf013",        // gear
         ["About"] = "\uf05a"            // info
