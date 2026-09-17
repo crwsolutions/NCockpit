@@ -4,6 +4,7 @@
              xmlns:local="clr-namespace:NCockpit"
              xmlns:viewmodels="clr-namespace:NCockpit.ViewModels"
              x:Class="NCockpit.Pages.OverviewPage"
+             x:DataType="viewmodels:OverviewPageViewModel"
              Title="Overview"
              BackgroundColor="#f5f5f5">
 
@@ -101,9 +102,9 @@
                        FontAttributes="Bold"
                        TextColor="#1a2744" />
 
-                <CollectionView ItemsSource="{Binding Projects}"
-                                SelectionMode="Single"
-                                SelectionChanged="OnProjectSelectionChanged">
+                <CollectionView x:Name="ProjectListView"
+                                ItemsSource="{Binding Projects}"
+                                SelectionMode="None">
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="viewmodels:ProjectListItem">
                             <Border Margin="0,0,0,12"
@@ -111,7 +112,12 @@
                                     StrokeThickness="1"
                                     StrokeShape="RoundRectangle 8"
                                     BackgroundColor="White">
-                                <Grid Padding="16" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={x:Reference Page}, Path=BindingContext.OpenSolutionCommand, Mode=OneTime}"
+                                        CommandParameter="{Binding .}" />
+                                </Border.GestureRecognizers>
+                                <Grid Padding="16" ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="12">
                                     <!-- Favorite indicator -->
                                     <Button Grid.Column="0"
                                             Text="{Binding IsFavorite, Converter={StaticResource BoolToStarGlyphConverter}}"
@@ -138,12 +144,24 @@
                                                TextColor="#999999" />
                                     </VerticalStackLayout>
 
-                                    <!-- Recent usage -->
+                                    <!-- Last opened -->
                                     <Label Grid.Column="2"
-                                           Text="{Binding LastUsedDisplay}"
+                                           Text="{Binding LastOpenedDisplay}"
                                            FontSize="11"
                                            TextColor="#999999"
                                            VerticalOptions="Center" />
+
+                                    <!-- Details navigation -->
+                                    <Button Grid.Column="3"
+                                            Text="&#xf105;"
+                                            FontFamily="FontAwesomeSolid"
+                                            FontSize="12"
+                                            TextColor="#999999"
+                                            BackgroundColor="Transparent"
+                                            Padding="6"
+                                            VerticalOptions="Center"
+                                            Command="{Binding Source={x:Reference Page}, Path=BindingContext.OpenProjectDetailsCommand, Mode=OneTime}"
+                                            CommandParameter="{Binding .}" />
                                 </Grid>
                             </Border>
                         </DataTemplate>

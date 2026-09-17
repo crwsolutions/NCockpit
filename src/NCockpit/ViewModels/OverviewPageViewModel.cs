@@ -8,12 +8,14 @@ namespace NCockpit.ViewModels;
 
 /// <summary>
 /// ViewModel for the Overview (Projects) screen. Shows a time-of-day greeting,
-/// a compact summary, and the project list ordered by recent usage. Selecting
-/// a project opens its details page and records the usage.
+/// a compact summary, and the project list ordered by last opened and solution
+/// file timestamp. Opening a solution records the last opened timestamp, while
+/// opening project details does not.
 /// </summary>
 public partial class OverviewPageViewModel : ObservableObject
 {
     private readonly IProjectService _projectService;
+    private readonly IWindowsLauncher _windowsLauncher;
 
     /// <summary>
     /// Greeting line, e.g. "Good afternoon, Colin".
@@ -22,7 +24,7 @@ public partial class OverviewPageViewModel : ObservableObject
     private string greeting;
 
     /// <summary>
-    /// Projects ordered by recent usage.
+    /// Projects ordered by last opened, then solution file timestamp.
     /// </summary>
     [ObservableProperty]
     private List<ProjectListItem> projects = [];
@@ -43,9 +45,11 @@ public partial class OverviewPageViewModel : ObservableObject
     private string? errorMessage;
 
     public OverviewPageViewModel(
-        IProjectService projectService)
+        IProjectService projectService,
+        IWindowsLauncher windowsLauncher)
     {
         _projectService = projectService;
+        _windowsLauncher = windowsLauncher;
 
         Greeting = BuildGreeting();
     }
@@ -106,17 +110,45 @@ public partial class OverviewPageViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Open the selected project's details page and record the usage.
+    /// Open the project's solution file with its associated Windows application
+    /// and record the last opened timestamp if the launch succeeds.
     /// </summary>
     [RelayCommand]
-    public async Task OpenProject(ProjectListItem? item)
+    public async Task OpenSolution(ProjectListItem? item)
     {
         if (item is null)
         {
             return;
         }
 
-        await _projectService.TouchAsync(item.Project.Id);
+        try
+        {
+            if (_windowsLauncher.TryOpenFile(item.Project.SolutionPath))
+            {
+                await _projectService.TouchAsync(item.Project.Id);
+            }
+            else
+            {
+                ErrorMessage = $"Could not open {item.Project.SolutionPath}";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error opening solution: {ex.Message}";
+        }
+    }
+
+    /// <summary>
+    /// Open the selected project's details page without recording a last opened
+    /// timestamp.
+    /// </summary>
+    [RelayCommand]
+    public async Task OpenProjectDetails(ProjectListItem? item)
+    {
+        if (item is null)
+        {
+            return;
+        }
 
         try
         {

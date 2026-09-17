@@ -46,8 +46,13 @@ public class Project
 
     /// <summary>
     /// Unix timestamp of when the project was last opened/viewed. Null means the
-    /// project has never been opened, in which case it falls back to its last
-    /// scan time for ordering.
+    /// project has never been opened.
     /// </summary>
     public long? LastUsedUnix { get; set; }
+
+    /// <summary>
+    /// Unix timestamp of the solution file's last write time, captured during
+    /// scanning and used for overview ordering.
+    /// </summary>
+    public long? SolutionLastWriteUnix { get; set; }
 }

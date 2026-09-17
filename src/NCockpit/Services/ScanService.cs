@@ -75,7 +75,8 @@ public class ScanService : IScanService
                     SolutionPath = solution,
                     FolderPath = folder.Path,
                     LastSeenUnix = scanUnix,
-                    ScanUnix = scanUnix
+                    ScanUnix = scanUnix,
+                    SolutionLastWriteUnix = GetSolutionLastWriteUnix(solution)
                 });
             }
         }
@@ -169,6 +170,27 @@ public class ScanService : IScanService
         }
 
         return Task.FromResult(found);
+    }
+
+    /// <summary>
+    /// Returns the solution file's last write time as Unix seconds, or null if the
+    /// file cannot be accessed. Missing metadata must not fail the scan.
+    /// </summary>
+    private static long? GetSolutionLastWriteUnix(string path)
+    {
+        try
+        {
+            var lastWrite = File.GetLastWriteTimeUtc(path);
+            return (long)(lastWrite - System.DateTimeOffset.UnixEpoch).TotalSeconds;
+        }
+        catch (System.UnauthorizedAccessException)
+        {
+            return null;
+        }
+        catch (System.IO.IOException)
+        {
+            return null;
+        }
     }
 
     private static string GetFolderName(string path)

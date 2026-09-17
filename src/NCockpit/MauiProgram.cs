@@ -35,6 +35,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<IProjectService, ProjectService>();
 		builder.Services.AddSingleton<IScanService, ScanService>();
 		builder.Services.AddSingleton<IPageService, PageService>();
+		builder.Services.AddSingleton<IWindowsLauncher, WindowsLauncher>();
 		// Register ViewModels
 		builder.Services.AddSingleton<FoldersPageViewModel>();
 		builder.Services.AddSingleton<OverviewPageViewModel>();

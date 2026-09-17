@@ -18,7 +18,9 @@ public partial class ProjectListItem : ObservableObject
         Name = project.Name;
         FolderPath = project.FolderPath;
         IsFavorite = project.IsFavorite;
-        LastUsedDisplay = FormatUsed(project.LastUsedUnix ?? project.LastSeenUnix);
+        LastOpenedDisplay = project.LastUsedUnix is { } lastOpened
+            ? FormatUnix(lastOpened)
+            : "Never opened";
         StatusText = BuildStatus(project);
     }
 
@@ -42,17 +44,17 @@ public partial class ProjectListItem : ObservableObject
     private bool isFavorite;
 
     [ObservableProperty]
-    private string? lastUsedDisplay;
+    private string? lastOpenedDisplay;
 
     [ObservableProperty]
     private string? statusText;
 
-    private static string FormatUsed(long unix) =>
+    private static string FormatUnix(long unix) =>
         UnixEpoch.AddSeconds(unix).ToLocalTime().ToString("MMM d, yyyy");
 
     private static string BuildStatus(Project project)
     {
-        var seen = FormatUsed(project.LastSeenUnix);
+        var seen = FormatUnix(project.LastSeenUnix);
         return project.IsFavorite ? $"Favorite • Last seen {seen}" : $"Last seen {seen}";
     }
 }

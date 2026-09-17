@@ -11,7 +11,7 @@ internal static class Database
 {
     internal static string DbPath { get; private set; } = default!;
 
-    internal const int CurrentUserVersion = 3;
+    internal const int CurrentUserVersion = 4;
 
     /// <summary>
     /// Initialize the database, creating it if necessary or running migrations.
@@ -54,6 +54,12 @@ internal static class Database
         if (userVersion < 3)
         {
             AddProjectFavoriteAndRecentUsageColumns(connection);
+        }
+
+        // v3 → v4: add solution file last-write time to Projects
+        if (userVersion < 4)
+        {
+            AddProjectSolutionLastWriteColumn(connection);
         }
 
         SetUserVersion(connection, CurrentUserVersion);
@@ -103,7 +109,8 @@ internal static class Database
                 RemovedAtUnix INTEGER,
                 CreatedAt INTEGER NOT NULL,
                 IsFavorite INTEGER NOT NULL DEFAULT 0,
-                LastUsedUnix INTEGER
+                LastUsedUnix INTEGER,
+                SolutionLastWriteUnix INTEGER
             );
             """, connection)
         {
@@ -124,6 +131,15 @@ internal static class Database
         if (ColumnExists(connection, "Projects", "LastUsedUnix") is not true)
         {
             Execute(connection, "ALTER TABLE Projects ADD COLUMN LastUsedUnix INTEGER");
+        }
+    }
+
+    private static void AddProjectSolutionLastWriteColumn(SqliteConnection connection)
+    {
+        // SolutionLastWriteUnix (nullable: file metadata captured during scan)
+        if (ColumnExists(connection, "Projects", "SolutionLastWriteUnix") is not true)
+        {
+            Execute(connection, "ALTER TABLE Projects ADD COLUMN SolutionLastWriteUnix INTEGER");
         }
     }
 

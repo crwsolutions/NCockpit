@@ -22,20 +22,4 @@ public partial class OverviewPage : ContentPage
         base.OnNavigatedTo(args);
         await _viewModel.LoadProjectsCommand.ExecuteAsync(null);
     }
-
-    private async void OnProjectSelectionChanged(object? sender, SelectionChangedEventArgs e)
-    {
-        if (sender is not CollectionView collectionView)
-        {
-            return;
-        }
-
-        var item = e.CurrentSelection.OfType<ProjectListItem>().FirstOrDefault();
-        collectionView.SelectedItem = null;
-
-        if (item is not null)
-        {
-            await _viewModel.OpenProjectCommand.ExecuteAsync(item);
-        }
-    }
 }

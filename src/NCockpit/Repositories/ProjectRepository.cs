@@ -52,10 +52,12 @@ public class ProjectRepository : IProjectRepository
         using var connection = new SqliteConnection($"Data Source={_dbPath}");
         const string sql = """
             SELECT Id, Name, SolutionPath, FolderPath, LastSeenUnix, ScanUnix, RemovedAtUnix,
-                   IsFavorite, LastUsedUnix
+                   IsFavorite, LastUsedUnix, SolutionLastWriteUnix
             FROM Projects
             WHERE RemovedAtUnix IS NULL
-            ORDER BY COALESCE(LastUsedUnix, LastSeenUnix) DESC, Name
+            ORDER BY LastUsedUnix IS NULL, COALESCE(LastUsedUnix, 0) DESC,
+                     SolutionLastWriteUnix IS NULL, COALESCE(SolutionLastWriteUnix, 0) DESC,
+                     Name
             """;
         return (await connection.QueryAsync<Project>(sql)).ToList();
     }
@@ -66,14 +68,15 @@ public class ProjectRepository : IProjectRepository
         await connection.OpenAsync();
 
         const string sql = """
-            INSERT INTO Projects (Name, SolutionPath, FolderPath, LastSeenUnix, ScanUnix, RemovedAtUnix, CreatedAt)
-            VALUES (@Name, @SolutionPath, @FolderPath, @LastSeenUnix, @ScanUnix, NULL, @CreatedAt)
+            INSERT INTO Projects (Name, SolutionPath, FolderPath, LastSeenUnix, ScanUnix, RemovedAtUnix, CreatedAt, SolutionLastWriteUnix)
+            VALUES (@Name, @SolutionPath, @FolderPath, @LastSeenUnix, @ScanUnix, NULL, @CreatedAt, @SolutionLastWriteUnix)
             ON CONFLICT (SolutionPath) DO UPDATE SET
                 Name = excluded.Name,
                 FolderPath = excluded.FolderPath,
                 LastSeenUnix = excluded.LastSeenUnix,
                 ScanUnix = excluded.ScanUnix,
-                RemovedAtUnix = NULL;
+                RemovedAtUnix = NULL,
+                SolutionLastWriteUnix = excluded.SolutionLastWriteUnix;
             """;
 
         await connection.ExecuteAsync(sql, new
@@ -83,7 +86,8 @@ public class ProjectRepository : IProjectRepository
             project.FolderPath,
             project.LastSeenUnix,
             project.ScanUnix,
-            CreatedAt = project.LastSeenUnix
+            CreatedAt = project.LastSeenUnix,
+            project.SolutionLastWriteUnix
         });
     }
 
