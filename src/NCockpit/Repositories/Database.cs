@@ -11,7 +11,7 @@ internal static class Database
 {
     internal static string DbPath { get; private set; } = default!;
 
-    internal const int CurrentUserVersion = 4;
+    internal const int CurrentUserVersion = 5;
 
     /// <summary>
     /// Initialize the database, creating it if necessary or running migrations.
@@ -35,6 +35,8 @@ internal static class Database
     {
         using var connection = new SqliteConnection($"Data Source={DbPath}");
         connection.Open();
+
+        EnableForeignKeys(connection);
 
         var userVersion = GetInt(connection, "PRAGMA user_version");
 
@@ -62,6 +64,13 @@ internal static class Database
             AddProjectSolutionLastWriteColumn(connection);
         }
 
+        // v4 → v5: replace Projects table with a version that has a hard
+        // foreign key to ProjectFolders (ON DELETE CASCADE) and no soft-delete column.
+        if (userVersion < 5)
+        {
+            RecreateProjectsTableWithForeignKey(connection);
+        }
+
         SetUserVersion(connection, CurrentUserVersion);
     }
 
@@ -69,6 +78,8 @@ internal static class Database
     {
         using var connection = new SqliteConnection($"Data Source={DbPath}");
         connection.Open();
+
+        EnableForeignKeys(connection);
 
         CreateCoreTables(connection);
         CreateProjectsTable(connection);
@@ -104,9 +115,9 @@ internal static class Database
                 Name TEXT NOT NULL,
                 SolutionPath TEXT NOT NULL UNIQUE COLLATE NOCASE,
                 FolderPath TEXT NOT NULL,
+                FolderId INTEGER NOT NULL REFERENCES ProjectFolders(Id) ON DELETE CASCADE,
                 LastSeenUnix INTEGER NOT NULL,
                 ScanUnix INTEGER NOT NULL,
-                RemovedAtUnix INTEGER,
                 CreatedAt INTEGER NOT NULL,
                 IsFavorite INTEGER NOT NULL DEFAULT 0,
                 LastUsedUnix INTEGER,
@@ -143,6 +154,17 @@ internal static class Database
         }
     }
 
+    /// <summary>
+    /// Drops and recreates the Projects table with a hard foreign key to
+    /// ProjectFolders and without the soft-delete column. Existing project rows
+    /// are lost; they will be rediscovered on the next scan.
+    /// </summary>
+    private static void RecreateProjectsTableWithForeignKey(SqliteConnection connection)
+    {
+        Execute(connection, "DROP TABLE IF EXISTS Projects");
+        CreateProjectsTable(connection);
+    }
+
     private static bool? ColumnExists(SqliteConnection connection, string table, string column)
     {
         using var command = new SqliteCommand($"PRAGMA table_info({table})", connection)
@@ -159,6 +181,11 @@ internal static class Database
         }
 
         return false;
+    }
+
+    private static void EnableForeignKeys(SqliteConnection connection)
+    {
+        Execute(connection, "PRAGMA foreign_keys = ON");
     }
 
     private static void Execute(SqliteConnection connection, string sql)

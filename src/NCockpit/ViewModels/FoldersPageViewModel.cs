@@ -213,9 +213,14 @@ public partial class FoldersPageViewModel : ObservableObject
     {
         try
         {
+            var projectCount = await _folderService.CountProjectsAsync(folder.Id);
+            var message = projectCount > 0
+                ? $"Are you sure you want to delete this folder?\n\n{folder.Path}\n\nThe {projectCount} project(s) found in this folder will also be deleted."
+                : $"Are you sure you want to delete this folder?\n\n{folder.Path}";
+
             var confirmed = await _pageService.ConfirmAsync(
                 "Delete Folder",
-                $"Are you sure you want to delete this folder?\n\n{folder.Path}",
+                message,
                 "Delete", "Cancel");
 
             if (!confirmed)

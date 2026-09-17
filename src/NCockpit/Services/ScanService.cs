@@ -73,7 +73,8 @@ public class ScanService : IScanService
                 {
                     Name = System.IO.Path.GetFileNameWithoutExtension(solution),
                     SolutionPath = solution,
-                    FolderPath = folder.Path,
+                    FolderPath = GetProjectRootPath(folder.Path, solution),
+                    FolderId = folder.Id,
                     LastSeenUnix = scanUnix,
                     ScanUnix = scanUnix,
                     SolutionLastWriteUnix = GetSolutionLastWriteUnix(solution)
@@ -203,6 +204,30 @@ public class ScanService : IScanService
         catch
         {
             return path;
+        }
+    }
+
+    /// <summary>
+    /// Returns the project's root folder: the first directory under the scanned
+    /// folder that contains the solution. A solution directly in the scanned root
+    /// maps back to the scanned root itself.
+    /// </summary>
+    private static string GetProjectRootPath(string scanFolder, string solutionPath)
+    {
+        try
+        {
+            var relative = System.IO.Path.GetRelativePath(scanFolder, solutionPath);
+            var firstSegment = relative.Split(
+                System.IO.Path.DirectorySeparatorChar,
+                System.IO.Path.AltDirectorySeparatorChar)[0];
+
+            return string.IsNullOrEmpty(firstSegment)
+                ? scanFolder
+                : System.IO.Path.Combine(scanFolder, firstSegment);
+        }
+        catch
+        {
+            return scanFolder;
         }
     }
 }

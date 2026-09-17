@@ -26,7 +26,7 @@ public class ProjectFolderRepository : IProjectFolderRepository
 
     public async Task<List<ProjectFolder>> GetAllAsync()
     {
-        using var connection = new SqliteConnection($"Data Source={_dbPath}");
+        using var connection = OpenConnection();
         const string sql = """
             SELECT Id, Path, IsPrimary, IsEnabled, ProjectCount, LastScanUnix
             FROM ProjectFolders
@@ -37,7 +37,7 @@ public class ProjectFolderRepository : IProjectFolderRepository
 
     public async Task<ProjectFolder?> GetByIdAsync(int id)
     {
-        using var connection = new SqliteConnection($"Data Source={_dbPath}");
+        using var connection = OpenConnection();
         const string sql = """
             SELECT Id, Path, IsPrimary, IsEnabled, ProjectCount, LastScanUnix
             FROM ProjectFolders
@@ -48,7 +48,7 @@ public class ProjectFolderRepository : IProjectFolderRepository
 
     public async Task<ProjectFolder> UpsertAsync(ProjectFolder folder)
     {
-        using var connection = new SqliteConnection($"Data Source={_dbPath}");
+        using var connection = OpenConnection();
         await connection.OpenAsync();
 
         if (folder.Id == 0)
@@ -95,8 +95,13 @@ public class ProjectFolderRepository : IProjectFolderRepository
 
     public async Task DeleteAsync(int id)
     {
-        using var connection = new SqliteConnection($"Data Source={_dbPath}");
+        using var connection = OpenConnection();
         const string sql = "DELETE FROM ProjectFolders WHERE Id = @Id";
         await connection.ExecuteAsync(sql, new { Id = id });
+    }
+
+    private SqliteConnection OpenConnection()
+    {
+        return new SqliteConnection($"Data Source={_dbPath}");
     }
 }

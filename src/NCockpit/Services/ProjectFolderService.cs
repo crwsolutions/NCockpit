@@ -14,15 +14,23 @@ public interface IProjectFolderService
     Task UpdateFolderAsync(ProjectFolder folder);
     Task DeleteFolderAsync(int id);
     Task<bool> FolderExistsAsync(string path);
+
+    /// <summary>
+    /// Number of projects currently linked to the given folder. Deleting the
+    /// folder removes these projects as well (cascade delete).
+    /// </summary>
+    Task<int> CountProjectsAsync(int folderId);
 }
 
 public class ProjectFolderService : IProjectFolderService
 {
     private readonly IProjectFolderRepository _repository;
+    private readonly IProjectRepository _projectRepository;
 
-    public ProjectFolderService(IProjectFolderRepository repository)
+    public ProjectFolderService(IProjectFolderRepository repository, IProjectRepository projectRepository)
     {
         _repository = repository;
+        _projectRepository = projectRepository;
     }
 
     public async Task<List<ProjectFolder>> GetAllFoldersAsync()
@@ -86,5 +94,10 @@ public class ProjectFolderService : IProjectFolderService
         var folders = await _repository.GetAllAsync();
         var normalizedPath = Path.GetFullPath(path);
         return folders.Any(f => f.Path.Equals(normalizedPath, StringComparison.OrdinalIgnoreCase));
+    }
+
+    public Task<int> CountProjectsAsync(int folderId)
+    {
+        return _projectRepository.CountByFolderAsync(folderId);
     }
 }

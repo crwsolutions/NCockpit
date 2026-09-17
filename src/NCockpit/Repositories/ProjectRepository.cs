@@ -17,15 +17,21 @@ public interface IProjectRepository
 
     /// <summary>
     /// Insert or update a project keyed by its solution path (case-insensitive).
-    /// If the project already exists it is re-activated (RemovedAtUnix reset to null).
+    /// The project is linked to the folder it was discovered in; a re-scan from a
+    /// different folder re-links the row to that folder.
     /// </summary>
     Task UpsertAsync(Project project);
 
     /// <summary>
-    /// Prune projects that were not seen during the current scan (LastSeenUnix &lt; scanUnix)
-    /// and were not already removed.
+    /// Hard-delete projects that were not seen during the current scan.
+    /// Returns the number of deleted rows.
     /// </summary>
     Task<int> PruneAsync(long scanUnix);
+
+    /// <summary>
+    /// Number of projects currently linked to the given folder.
+    /// </summary>
+    Task<int> CountByFolderAsync(int folderId);
 
     /// <summary>
     /// Stamp the project as "used now", used for recent-usage ordering.
@@ -49,12 +55,11 @@ public class ProjectRepository : IProjectRepository
 
     public async Task<List<Project>> GetAllAsync()
     {
-        using var connection = new SqliteConnection($"Data Source={_dbPath}");
+        using var connection = OpenConnection();
         const string sql = """
-            SELECT Id, Name, SolutionPath, FolderPath, LastSeenUnix, ScanUnix, RemovedAtUnix,
+            SELECT Id, Name, SolutionPath, FolderPath, FolderId, LastSeenUnix, ScanUnix,
                    IsFavorite, LastUsedUnix, SolutionLastWriteUnix
             FROM Projects
-            WHERE RemovedAtUnix IS NULL
             ORDER BY LastUsedUnix IS NULL, COALESCE(LastUsedUnix, 0) DESC,
                      SolutionLastWriteUnix IS NULL, COALESCE(SolutionLastWriteUnix, 0) DESC,
                      Name
@@ -64,18 +69,18 @@ public class ProjectRepository : IProjectRepository
 
     public async Task UpsertAsync(Project project)
     {
-        using var connection = new SqliteConnection($"Data Source={_dbPath}");
+        using var connection = OpenConnection();
         await connection.OpenAsync();
 
         const string sql = """
-            INSERT INTO Projects (Name, SolutionPath, FolderPath, LastSeenUnix, ScanUnix, RemovedAtUnix, CreatedAt, SolutionLastWriteUnix)
-            VALUES (@Name, @SolutionPath, @FolderPath, @LastSeenUnix, @ScanUnix, NULL, @CreatedAt, @SolutionLastWriteUnix)
+            INSERT INTO Projects (Name, SolutionPath, FolderPath, FolderId, LastSeenUnix, ScanUnix, CreatedAt, SolutionLastWriteUnix)
+            VALUES (@Name, @SolutionPath, @FolderPath, @FolderId, @LastSeenUnix, @ScanUnix, @CreatedAt, @SolutionLastWriteUnix)
             ON CONFLICT (SolutionPath) DO UPDATE SET
                 Name = excluded.Name,
                 FolderPath = excluded.FolderPath,
+                FolderId = excluded.FolderId,
                 LastSeenUnix = excluded.LastSeenUnix,
                 ScanUnix = excluded.ScanUnix,
-                RemovedAtUnix = NULL,
                 SolutionLastWriteUnix = excluded.SolutionLastWriteUnix;
             """;
 
@@ -84,6 +89,7 @@ public class ProjectRepository : IProjectRepository
             project.Name,
             project.SolutionPath,
             project.FolderPath,
+            project.FolderId,
             project.LastSeenUnix,
             project.ScanUnix,
             CreatedAt = project.LastSeenUnix,
@@ -93,26 +99,34 @@ public class ProjectRepository : IProjectRepository
 
     public async Task<int> PruneAsync(long scanUnix)
     {
-        using var connection = new SqliteConnection($"Data Source={_dbPath}");
+        using var connection = OpenConnection();
         await connection.OpenAsync();
 
         const string sql = """
-            UPDATE Projects
-            SET RemovedAtUnix = @RemovedAtUnix
-            WHERE (RemovedAtUnix IS NULL OR LastSeenUnix < @ScanUnix)
-              AND LastSeenUnix < @ScanUnix;
+            DELETE FROM Projects
+            WHERE LastSeenUnix < @ScanUnix;
             """;
 
-        return await connection.ExecuteAsync(sql, new
-        {
-            ScanUnix = scanUnix,
-            RemovedAtUnix = scanUnix
-        });
+        return await connection.ExecuteAsync(sql, new { ScanUnix = scanUnix });
+    }
+
+    public async Task<int> CountByFolderAsync(int folderId)
+    {
+        using var connection = OpenConnection();
+        await connection.OpenAsync();
+
+        const string sql = """
+            SELECT COUNT(*)
+            FROM Projects
+            WHERE FolderId = @FolderId;
+            """;
+
+        return Convert.ToInt32(await connection.ExecuteScalarAsync(sql, new { FolderId = folderId }));
     }
 
     public async Task TouchAsync(int id)
     {
-        using var connection = new SqliteConnection($"Data Source={_dbPath}");
+        using var connection = OpenConnection();
         await connection.OpenAsync();
 
         const string sql = """
@@ -130,7 +144,7 @@ public class ProjectRepository : IProjectRepository
 
     public async Task SetFavoriteAsync(int id, bool isFavorite)
     {
-        using var connection = new SqliteConnection($"Data Source={_dbPath}");
+        using var connection = OpenConnection();
         await connection.OpenAsync();
 
         const string sql = """
@@ -140,5 +154,10 @@ public class ProjectRepository : IProjectRepository
             """;
 
         await connection.ExecuteAsync(sql, new { Id = id, IsFavorite = isFavorite });
+    }
+
+    private SqliteConnection OpenConnection()
+    {
+        return new SqliteConnection($"Data Source={_dbPath}");
     }
 }

@@ -35,9 +35,10 @@ public class Project
     public long ScanUnix { get; set; }
 
     /// <summary>
-    /// Unix timestamp of the last scan during which this project was removed (pruned).
+    /// The id of the folder this project was discovered in. Deleting that folder
+    /// cascades to this project.
     /// </summary>
-    public long? RemovedAtUnix { get; set; }
+    public int FolderId { get; set; }
 
     /// <summary>
     /// Whether the user has marked this project as a favorite.
