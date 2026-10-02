@@ -1,58 +1,71 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:models="clr-namespace:NCockpit.Models"
+             xmlns:viewmodels="clr-namespace:NCockpit.ViewModels"
              x:Class="NCockpit.Pages.ProjectDetailsPage"
+             x:DataType="viewmodels:ProjectDetailsPageViewModel"
              Title="Project Details"
              BackgroundColor="#f5f5f5">
 
-    <Grid RowDefinitions="Auto,*" Padding="0">
+    <Grid x:Name="Page" RowDefinitions="Auto,*" Padding="0">
         <!-- Header -->
-        <Grid Grid.Row="0" 
-              BackgroundColor="#1a2744" 
+        <Grid Grid.Row="0"
+              BackgroundColor="#1a2744"
               Padding="24,16">
             <VerticalStackLayout Spacing="8">
-                <Label Text="Project Details" 
-                       FontSize="24" 
-                       FontAttributes="Bold" 
+                <Label Text="{Binding CurrentProject.Name, FallbackValue='Project Details'}"
+                       FontSize="24"
+                       FontAttributes="Bold"
                        TextColor="White" />
-                <Label Text="View and manage project information" 
-                       FontSize="14" 
+                <Label Text="View and manage project information"
+                       FontSize="14"
                        TextColor="#b0b8c8" />
             </VerticalStackLayout>
         </Grid>
 
         <!-- Content -->
         <ScrollView Grid.Row="1">
-            <VerticalStackLayout Padding="24" Spacing="20">
-                
+            <VerticalStackLayout Padding="24" Spacing="20"
+                                 IsVisible="{Binding HasProject}">
+
+                <!-- Error / loading -->
+                <Label Text="{Binding ErrorMessage}"
+                       FontSize="13"
+                       TextColor="#d32f2f" />
+
+                <ActivityIndicator IsRunning="{Binding IsLoading}"
+                                   Color="#0d7377"
+                                   IsVisible="{Binding IsLoading}" />
+
                 <!-- Project Identity -->
                 <VerticalStackLayout Spacing="12">
-                    <Label Text="Project Identity" 
-                           FontSize="16" 
-                           FontAttributes="Bold" 
+                    <Label Text="Project Identity"
+                           FontSize="16"
+                           FontAttributes="Bold"
                            TextColor="#1a2744" />
-                    
-                    <Border Padding="16" 
+
+                    <Border Padding="16"
                             BackgroundColor="White"
                             Stroke="#e0e0e0"
                             StrokeThickness="1"
                             StrokeShape="RoundRectangle 8">
                         <VerticalStackLayout Spacing="12">
                             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                                <Label Grid.Column="0" Text="Name:" FontSize="12" TextColor="#666666" WidthRequest="80" />
-                                <Label Grid.Column="1" Text="NCockpit" FontSize="12" TextColor="#1a2744" FontAttributes="Bold" />
+                                <Label Grid.Column="0" Text="Name:" FontSize="12" TextColor="#666666" WidthRequest="100" />
+                                <Label Grid.Column="1" Text="{Binding CurrentProject.Name}" FontSize="12" TextColor="#1a2744" FontAttributes="Bold" />
                             </Grid>
                             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                                <Label Grid.Column="0" Text="Type:" FontSize="12" TextColor="#666666" WidthRequest="80" />
-                                <Label Grid.Column="1" Text=".NET MAUI Desktop App" FontSize="12" TextColor="#1a2744" />
+                                <Label Grid.Column="0" Text="Solution file:" FontSize="12" TextColor="#666666" WidthRequest="100" />
+                                <Label Grid.Column="1" Text="{Binding SolutionFileName}" FontSize="12" TextColor="#1a2744" />
                             </Grid>
                             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                                <Label Grid.Column="0" Text="Version:" FontSize="12" TextColor="#666666" WidthRequest="80" />
-                                <Label Grid.Column="1" Text="1.0.0" FontSize="12" TextColor="#1a2744" />
+                                <Label Grid.Column="0" Text="Solution path:" FontSize="12" TextColor="#666666" WidthRequest="100" />
+                                <Label Grid.Column="1" Text="{Binding CurrentProject.SolutionPath}" FontSize="12" TextColor="#0d7377" LineBreakMode="TailTruncation" />
                             </Grid>
                             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                                <Label Grid.Column="0" Text="Framework:" FontSize="12" TextColor="#666666" WidthRequest="80" />
-                                <Label Grid.Column="1" Text="net10.0" FontSize="12" TextColor="#1a2744" />
+                                <Label Grid.Column="0" Text="Last modified:" FontSize="12" TextColor="#666666" WidthRequest="100" />
+                                <Label Grid.Column="1" Text="{Binding SolutionLastWriteDisplay}" FontSize="12" TextColor="#1a2744" />
                             </Grid>
                         </VerticalStackLayout>
                     </Border>
@@ -60,29 +73,141 @@
 
                 <!-- Locations -->
                 <VerticalStackLayout Spacing="12">
-                    <Label Text="Locations" 
-                           FontSize="16" 
-                           FontAttributes="Bold" 
+                    <Label Text="Locations"
+                           FontSize="16"
+                           FontAttributes="Bold"
                            TextColor="#1a2744" />
-                    
-                    <Border Padding="16" 
+
+                    <Border Padding="16"
                             BackgroundColor="White"
                             Stroke="#e0e0e0"
                             StrokeThickness="1"
                             StrokeShape="RoundRectangle 8">
                         <VerticalStackLayout Spacing="8">
-                            <Label Text="e:\repos\crwsolutions\NCockpit" 
-                                   FontSize="12" 
+                            <Label Text="{Binding CurrentProject.FolderPath}"
+                                   FontSize="12"
                                    TextColor="#0d7377" />
-                            <Label Text="Primary location" 
-                                   FontSize="11" 
+                            <Label Text="Primary location"
+                                   FontSize="11"
                                    TextColor="#999999" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Button Text="Open project folder"
+                            Padding="12,8"
+                            CornerRadius="6"
+                            BackgroundColor="#0d7377"
+                            TextColor="White"
+                            FontSize="12"
+                            FontAttributes="Bold"
+                            HorizontalOptions="Start"
+                            Command="{Binding OpenLocationCommand}"
+                            CommandParameter="{Binding CurrentProject.FolderPath}" />
+                </VerticalStackLayout>
+
+                <!-- Linked Folders -->
+                <VerticalStackLayout Spacing="12">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                        <Label Grid.Column="0" Text="Linked Folders"
+                               FontSize="16"
+                               FontAttributes="Bold"
+                               TextColor="#1a2744"
+                               VerticalOptions="Center" />
+                        <Button Grid.Column="1"
+                                Text="+ Link"
+                                Padding="10,6"
+                                CornerRadius="6"
+                                BackgroundColor="#0d7377"
+                                TextColor="White"
+                                FontSize="12"
+                                FontAttributes="Bold"
+                                VerticalOptions="Center"
+                                Command="{Binding LinkSecondaryFolderCommand}" />
+                    </Grid>
+
+                    <Label Text="Link secondary folders with materials that must not end up in this project's source control (git/TFS)."
+                           FontSize="11"
+                           TextColor="#999999"
+                           LineBreakMode="WordWrap" />
+
+                    <Border Padding="12"
+                            BackgroundColor="White"
+                            Stroke="#e0e0e0"
+                            StrokeThickness="1"
+                            StrokeShape="RoundRectangle 8">
+                        <VerticalStackLayout>
+                            <!-- Linked folder list -->
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding LinkedFolders}"
+                                                 Spacing="8"
+                                                 IsVisible="{Binding HasLinkedFolders}">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="models:SupportingFolder">
+                                        <Border Padding="12"
+                                                BackgroundColor="#f5f5f5"
+                                                Stroke="#e0e0e0"
+                                                StrokeThickness="1"
+                                                StrokeShape="RoundRectangle 6">
+                                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                                <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                                    <Label Text="{Binding FolderName}"
+                                                           FontSize="13"
+                                                           FontAttributes="Bold"
+                                                           TextColor="#1a2744" />
+                                                    <Label Text="{Binding Path}"
+                                                           FontSize="11"
+                                                           TextColor="#999999"
+                                                           LineBreakMode="TailTruncation" />
+                                                </VerticalStackLayout>
+
+                                                <Button Grid.Column="1"
+                                                        Text="Open"
+                                                        Padding="8,6"
+                                                        CornerRadius="4"
+                                                        BackgroundColor="#666666"
+                                                        TextColor="White"
+                                                        FontSize="11"
+                                                        Command="{Binding Source={x:Reference Page}, Path=BindingContext.OpenLocationCommand, Mode=OneTime}"
+                                                        CommandParameter="{Binding Path}" />
+
+                                                <Button Grid.Column="2"
+                                                        Text="Delete"
+                                                        Padding="8,6"
+                                                        CornerRadius="4"
+                                                        BackgroundColor="#d32f2f"
+                                                        TextColor="White"
+                                                        FontSize="11"
+                                                        Command="{Binding Source={x:Reference Page}, Path=BindingContext.UnlinkSecondaryFolderCommand, Mode=OneTime}"
+                                                        CommandParameter="{Binding .}" />
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+
+                            <!-- Empty state -->
+                            <Label Text="No secondary folders linked yet."
+                                   FontSize="12"
+                                   TextColor="#999999"
+                                   Padding="4,8"
+                                   IsVisible="{Binding HasLinkedFolders, Converter={StaticResource InverseBoolConverter}}" />
                         </VerticalStackLayout>
                     </Border>
                 </VerticalStackLayout>
 
             </VerticalStackLayout>
         </ScrollView>
+
+        <!-- No project selected -->
+        <VerticalStackLayout Grid.Row="1"
+                             Spacing="8"
+                             HorizontalOptions="Center"
+                             VerticalOptions="Center"
+                             IsVisible="{Binding HasProject, Converter={StaticResource InverseBoolConverter}}">
+            <Label Text="Project not found."
+                   FontSize="14"
+                   TextColor="#999999"
+                   HorizontalOptions="Center" />
+        </VerticalStackLayout>
     </Grid>
 
 </ContentPage>

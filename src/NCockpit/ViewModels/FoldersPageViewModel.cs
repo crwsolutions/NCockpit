@@ -15,6 +15,7 @@ namespace NCockpit.ViewModels;
 public partial class FoldersPageViewModel : ObservableObject
 {
     private readonly IProjectFolderService _folderService;
+    private readonly ISupportingFolderService _supportingFolderService;
     private readonly IScanService _scanService;
     private readonly IPopupService _popupService;
     private readonly ScanPopupViewModel _scanPopupViewModel;
@@ -43,12 +44,14 @@ public partial class FoldersPageViewModel : ObservableObject
 
     public FoldersPageViewModel(
         IProjectFolderService folderService,
+        ISupportingFolderService supportingFolderService,
         IScanService scanService,
         IPopupService popupService,
         ScanPopupViewModel scanPopupViewModel,
         IPageService pageService)
     {
         _folderService = folderService;
+        _supportingFolderService = supportingFolderService;
         _scanService = scanService;
         _popupService = popupService;
         _scanPopupViewModel = scanPopupViewModel;
@@ -67,6 +70,14 @@ public partial class FoldersPageViewModel : ObservableObject
             ErrorMessage = null;
 
             var folders = await _folderService.GetAllFoldersAsync();
+
+            // Secondary folders show their supporting-folder count instead of
+            // project stats.
+            foreach (var folder in folders.Where(f => !f.IsPrimary))
+            {
+                folder.SupportingFolderCount = await _supportingFolderService.CountByFolderAsync(folder.Id);
+            }
+
             Folders = folders;
         }
         catch (Exception ex)
@@ -80,15 +91,17 @@ public partial class FoldersPageViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Open the Add Folder popup and, on success, scan the new folder and reload
-    /// the folder list. Cancellation is a no-op for this page.
+    /// Open the Add Folder popup and, on success, add the folder to the
+    /// folders list. Primary folders are scanned for projects and the found
+    /// projects go to the projects table; secondary folders register their
+    /// first-level subfolders as supporting folders. In both cases the
+    /// selected folder itself is added to the list.
     /// </summary>
     [RelayCommand]
     public async Task AddFolder()
     {
         try
         {
-            IsLoading = true;
             ErrorMessage = null;
 
             var result = await _popupService.ShowPopupAsync<AddFolderPopup, AddFolderResult>(Shell.Current);
@@ -99,14 +112,33 @@ public partial class FoldersPageViewModel : ObservableObject
             }
 
             var addResult = result.Result;
-            if (!addResult.Added || addResult.FolderId is not int folderId)
+            if (!addResult.Added)
             {
                 return;
             }
 
-            // Scan the newly added folder and save its projects to the database.
-            await RunScanWithPopupAsync(folderId);
-            SetScanCompletedStatus(addResult.FolderPath ?? string.Empty);
+            IsLoading = true;
+
+            // The selected folder is always added to the folders list.
+            var folder = await _folderService.AddFolderAsync(addResult.Path, addResult.IsPrimary);
+
+            if (addResult.IsPrimary)
+            {
+                // Primary folder: scan it and save the found projects.
+                await RunScanWithPopupAsync(folder.Id);
+                SetScanCompletedStatus(folder.Path);
+            }
+            else
+            {
+                // Secondary folder: its first-level subfolders become
+                // supporting folders; the container itself is not scanned.
+                var added = await _supportingFolderService.AddFromContainerAsync(folder.Id, folder.Path);
+                StatusText = added.Count == 0
+                    ? "No subfolders found to add as supporting folders"
+                    : added.Count == 1
+                        ? $"Added 1 supporting folder: {added[0].Path}"
+                        : $"Added {added.Count} supporting folders under {folder.Path}";
+            }
 
             await LoadFolders();
         }
@@ -214,9 +246,14 @@ public partial class FoldersPageViewModel : ObservableObject
         try
         {
             var projectCount = await _folderService.CountProjectsAsync(folder.Id);
+            var supportingCount = folder.IsPrimary
+                ? 0
+                : await _supportingFolderService.CountByFolderAsync(folder.Id);
             var message = projectCount > 0
                 ? $"Are you sure you want to delete this folder?\n\n{folder.Path}\n\nThe {projectCount} project(s) found in this folder will also be deleted."
-                : $"Are you sure you want to delete this folder?\n\n{folder.Path}";
+                : supportingCount > 0
+                    ? $"Are you sure you want to delete this folder?\n\n{folder.Path}\n\nThe {supportingCount} supporting folder(s) registered under it will also be deleted."
+                    : $"Are you sure you want to delete this folder?\n\n{folder.Path}";
 
             var confirmed = await _pageService.ConfirmAsync(
                 "Delete Folder",

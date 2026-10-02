@@ -152,7 +152,7 @@ public partial class OverviewPageViewModel : ObservableObject
 
         try
         {
-            await Shell.Current.GoToAsync("projectdetails");
+            await Shell.Current.GoToAsync($"projectdetails?id={item.Project.Id}");
         }
         catch (Exception ex)
         {

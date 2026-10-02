@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<toolkit:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+               xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+               xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+               xmlns:models="clr-namespace:NCockpit.Models"
+               xmlns:vm="clr-namespace:NCockpit.ViewModels.Popups"
+               x:Class="NCockpit.Popups.LinkSecondaryPopup"
+               x:DataType="vm:LinkSecondaryPopupViewModel"
+               x:TypeArguments="vm:LinkSecondaryResult"
+               Padding="0"
+               BackgroundColor="White"
+               CanBeDismissedByTappingOutsideOfPopup="False">
+
+    <Grid x:Name="PopupRoot" WidthRequest="440" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+
+        <!-- Header -->
+        <Grid Grid.Row="0"
+              BackgroundColor="#1a2744"
+              Padding="20,16"
+              ColumnDefinitions="*,Auto">
+            <Label Grid.Column="0"
+                   Text="Link Secondary Folder"
+                   FontSize="18"
+                   FontAttributes="Bold"
+                   TextColor="White"
+                   VerticalOptions="Center" />
+
+            <Button Grid.Column="1"
+                    Text="✕"
+                    Padding="0"
+                    WidthRequest="40"
+                    HeightRequest="40"
+                    CornerRadius="0"
+                    BackgroundColor="Transparent"
+                    TextColor="#b0b8c8"
+                    FontSize="18"
+                    Command="{Binding CancelCommand}"
+                    VerticalOptions="Center" />
+        </Grid>
+
+        <!-- Search -->
+        <Grid Grid.Row="1" Padding="20,16,20,8">
+            <Entry Text="{Binding SearchQuery}"
+                   Placeholder="Search by folder name..."
+                   PlaceholderColor="#999999"
+                   FontSize="13"
+                   TextColor="#1a2744"
+                   BackgroundColor="White" />
+        </Grid>
+
+        <!-- Error Message -->
+        <Label Grid.Row="2"
+               Text="{Binding ErrorMessage}"
+               FontSize="11"
+               TextColor="#d32f2f"
+               Padding="20,0,20,4"
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}"
+               LineBreakMode="WordWrap" />
+
+        <!-- Folder list -->
+        <Grid Grid.Row="3" Margin="20,0,20,12">
+            <CollectionView ItemsSource="{Binding AvailableFolders}"
+                            SelectionMode="None"
+                            HeightRequest="320">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:SupportingFolder">
+                        <Border Margin="0,0,0,8"
+                                Stroke="#e0e0e0"
+                                StrokeThickness="1"
+                                StrokeShape="RoundRectangle 6"
+                                BackgroundColor="White"
+                                Padding="12">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={x:Reference PopupRoot}, Path=BindingContext.SelectFolderCommand, Mode=OneTime}"
+                                    CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="{Binding FolderName}"
+                                       FontSize="13"
+                                       FontAttributes="Bold"
+                                       TextColor="#1a2744" />
+                                <Label Text="{Binding Path}"
+                                       FontSize="11"
+                                       TextColor="#999999"
+                                       LineBreakMode="TailTruncation" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Empty state -->
+            <VerticalStackLayout Spacing="6"
+                                 HorizontalOptions="Center"
+                                 VerticalOptions="Center"
+                                 IsVisible="{Binding AvailableFolders.Count, Converter={StaticResource IntToEmptyVisibilityConverter}}">
+                <Label Text="No unlinked secondary folders."
+                       FontSize="13"
+                       TextColor="#999999"
+                       HorizontalOptions="Center" />
+                <Label Text="Add secondary folders on the Folders page first."
+                       FontSize="12"
+                       TextColor="#999999"
+                       HorizontalOptions="Center" />
+            </VerticalStackLayout>
+        </Grid>
+
+        <!-- Footer -->
+        <Grid Grid.Row="4"
+              BackgroundColor="#f5f5f5"
+              Padding="20">
+            <Button Text="Cancel"
+                    Padding="12,10"
+                    CornerRadius="6"
+                    BackgroundColor="White"
+                    TextColor="#666666"
+                    FontSize="12"
+                    FontAttributes="Bold"
+                    BorderColor="#e0e0e0"
+                    BorderWidth="1"
+                    Command="{Binding CancelCommand}" />
+        </Grid>
+    </Grid>
+
+</toolkit:Popup>

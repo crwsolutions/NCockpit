@@ -26,6 +26,7 @@ public class ScanService : IScanService
 {
     private readonly IProjectFolderRepository _folderRepository;
     private readonly IProjectRepository _projectRepository;
+    private readonly ISupportingFolderRepository _supportingFolderRepository;
 
     private static readonly string[] SolutionExtensions = [".sln", ".slnx"];
     private static readonly string[] SkipDirectories =
@@ -34,10 +35,11 @@ public class ScanService : IScanService
         ".vs", ".idea", ".gradle", "dist", "build"
     ];
 
-    public ScanService(IProjectFolderRepository folderRepository, IProjectRepository projectRepository)
+    public ScanService(IProjectFolderRepository folderRepository, IProjectRepository projectRepository, ISupportingFolderRepository supportingFolderRepository)
     {
         _folderRepository = folderRepository;
         _projectRepository = projectRepository;
+        _supportingFolderRepository = supportingFolderRepository;
     }
 
     public async Task ScanAsync(int? folderId, IProgress<ScanProgress>? progress, CancellationToken cancellationToken)
@@ -48,9 +50,32 @@ public class ScanService : IScanService
             ? await GetTargetFolderAsync(folderId.Value)
             : await _folderRepository.GetAllAsync();
 
+        // Only primary folders are scanned for projects; secondary (supporting)
+        // containers never are.
+        folders = folders.Where(f => f.IsPrimary).ToList();
+
         var scanUnix = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         int totalFolders = Math.Max(folders.Count, 1);
         int projectsFound = 0;
+
+        if (folders.Count == 0)
+        {
+            // Nothing to scan (no primary folders are configured); do not
+            // prune, nothing new was discovered anyway.
+            progress?.Report(new ScanProgress
+            {
+                Status = "Scan complete. No primary folders to scan.",
+                Percentage = 100,
+                ProjectsFound = 0
+            });
+            return;
+        }
+
+        // Registered supporting folders are not scanned, even when a primary
+        // folder contains them.
+        _skipPaths = (await _supportingFolderRepository.GetAllAsync())
+            .Select(f => System.IO.Path.GetFullPath(f.Path))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         for (int i = 0; i < folders.Count; i++)
         {
@@ -118,10 +143,13 @@ public class ScanService : IScanService
         await _folderRepository.UpsertAsync(folder);
     }
 
+    private HashSet<string> _skipPaths = [];
+
     /// <summary>
     /// Recursively walks a folder and returns the full paths of all .sln / .slnx files found.
+    /// Registered supporting folders are skipped entirely.
     /// </summary>
-    private static Task<List<string>> ScanFolderAsync(string root, CancellationToken cancellationToken)
+    private Task<List<string>> ScanFolderAsync(string root, CancellationToken cancellationToken)
     {
         var found = new List<string>();
 
@@ -161,6 +189,9 @@ public class ScanService : IScanService
             foreach (var directory in directories)
             {
                 if (SkipDirectories.Contains(System.IO.Path.GetFileName(directory), StringComparer.OrdinalIgnoreCase))
+                    continue;
+
+                if (_skipPaths.Contains(directory))
                     continue;
 
                 enumeration.Push(directory);

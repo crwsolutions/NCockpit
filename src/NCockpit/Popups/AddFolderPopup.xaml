@@ -82,7 +82,7 @@
                             VerticalOptions="Center" />
                 </Grid>
 
-                <Label Text="Primary folders are scanned for projects. Secondary folders are indexed but not scanned."
+                <Label Text="Primary folders are scanned for projects. Secondary folders add every first-level subfolder of the chosen path (the path itself is not added) and can be linked to a project from the project details page."
                        FontSize="10"
                        TextColor="#999999"
                        LineBreakMode="WordWrap" />

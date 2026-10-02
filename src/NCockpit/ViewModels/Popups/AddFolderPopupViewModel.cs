@@ -2,7 +2,6 @@ using CommunityToolkit.Maui.Extensions;
 using CommunityToolkit.Maui.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using NCockpit.Services;
 
 namespace NCockpit.ViewModels.Popups;
 
@@ -12,21 +11,28 @@ namespace NCockpit.ViewModels.Popups;
 public sealed class AddFolderResult
 {
     public bool Added { get; init; }
-    public int? FolderId { get; init; }
-    public string? FolderPath { get; init; }
+
+    /// <summary>
+    /// The path of the folder the user selected.
+    /// </summary>
+    public string Path { get; init; } = string.Empty;
+
+    /// <summary>
+    /// True when the user chose a primary folder (scanned for projects);
+    /// false for a secondary folder (first-level subfolders become supporting
+    /// folders).
+    /// </summary>
     public bool IsPrimary { get; init; }
 }
 
 /// <summary>
-/// ViewModel for the Add Folder popup. Drives the popup's footer buttons and
-/// closes the popup via <c>Shell.Current.ClosePopupAsync(result)</c> so the
-/// parent <c>FoldersPageViewModel</code> can read the result and initiate the
-/// scan.
+/// ViewModel for the Add Folder popup. Collects a folder path and whether it
+/// is a primary or secondary folder. The popup closes with the result; the
+/// actual adding (scan for primary, supporting folders for secondary) is done
+/// by the <c>FoldersPageViewModel</c>.
 /// </summary>
 public partial class AddFolderPopupViewModel : ObservableObject
 {
-    private readonly IProjectFolderService _folderService;
-
     [ObservableProperty]
     private string folderPath = string.Empty;
 
@@ -35,11 +41,6 @@ public partial class AddFolderPopupViewModel : ObservableObject
 
     [ObservableProperty]
     private string? errorMessage;
-
-    public AddFolderPopupViewModel(IProjectFolderService folderService)
-    {
-        _folderService = folderService;
-    }
 
     /// <summary>
     /// Invoked when the user taps the folder browser ("...") button.
@@ -75,10 +76,9 @@ public partial class AddFolderPopupViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Invoked when the user taps "Add Folder". Validates and persists the
-    /// folder; on success the popup closes with the new folder id so the
-    /// parent view-model can initiate the scan. On validation failure the
-    /// popup stays open with the error message shown.
+    /// Invoked when the user taps "Add Folder". Validates the input; on success
+    /// the popup closes so the <c>FoldersPageViewModel</c> can add the folder.
+    /// On validation failure the popup stays open with the error message shown.
     /// </summary>
     [RelayCommand]
     private async Task AddFolderAsync()
@@ -91,33 +91,17 @@ public partial class AddFolderPopupViewModel : ObservableObject
             return;
         }
 
-        try
+        if (!Directory.Exists(FolderPath))
         {
-            if (!Directory.Exists(FolderPath))
-            {
-                ErrorMessage = "Folder does not exist";
-                return;
-            }
-
-            if (await _folderService.FolderExistsAsync(FolderPath))
-            {
-                ErrorMessage = "This folder is already configured";
-                return;
-            }
-
-            var added = await _folderService.AddFolderAsync(FolderPath, IsPrimary);
-
-            await Shell.Current.ClosePopupAsync(new AddFolderResult
-            {
-                Added = true,
-                FolderId = added.Id,
-                FolderPath = added.Path,
-                IsPrimary = IsPrimary
-            });
+            ErrorMessage = "Folder does not exist";
+            return;
         }
-        catch (Exception ex)
+
+        await Shell.Current.ClosePopupAsync(new AddFolderResult
         {
-            ErrorMessage = $"Error: {ex.Message}";
-        }
+            Added = true,
+            Path = FolderPath,
+            IsPrimary = IsPrimary
+        });
     }
 }

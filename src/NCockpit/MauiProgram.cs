@@ -30,21 +30,26 @@ public static class MauiProgram
 		// Register repositories
 		builder.Services.AddSingleton<IProjectFolderRepository, ProjectFolderRepository>();
 		builder.Services.AddSingleton<IProjectRepository, ProjectRepository>();
+		builder.Services.AddSingleton<ISupportingFolderRepository, SupportingFolderRepository>();
 		// Register services
 		builder.Services.AddSingleton<IProjectFolderService, ProjectFolderService>();
 		builder.Services.AddSingleton<IProjectService, ProjectService>();
+		builder.Services.AddSingleton<ISupportingFolderService, SupportingFolderService>();
 		builder.Services.AddSingleton<IScanService, ScanService>();
 		builder.Services.AddSingleton<IPageService, PageService>();
 		builder.Services.AddSingleton<IWindowsLauncher, WindowsLauncher>();
 		// Register ViewModels
 		builder.Services.AddSingleton<FoldersPageViewModel>();
 		builder.Services.AddSingleton<OverviewPageViewModel>();
+		builder.Services.AddSingleton<ProjectDetailsPageViewModel>();
 		// Register Popups
 		builder.Services.AddTransient<AddFolderPopupViewModel>();
 		builder.Services.AddTransientPopup<AddFolderPopup, AddFolderPopupViewModel>();
 		// Scan popup view-model is resolved from DI and configured at show-time.
 		builder.Services.AddSingleton<ScanPopupViewModel>();
 		builder.Services.AddTransientPopup<ScanPopup, ScanPopupViewModel>();
+		builder.Services.AddTransient<LinkSecondaryPopupViewModel>();
+		builder.Services.AddTransientPopup<LinkSecondaryPopup, LinkSecondaryPopupViewModel>();
 
 #if DEBUG
 		builder.Logging.AddDebug();

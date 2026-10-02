@@ -10,7 +10,8 @@ namespace NCockpit.Services;
 public interface IProjectService
 {
     /// <summary>
-    /// Returns all active projects ordered by recent usage (most recently used first).
+    /// Returns all projects ordered by recent usage (most recently used first).
+    /// Supporting folders are not projects, so no filtering is needed.
     /// </summary>
     Task<List<Project>> GetProjectsAsync();
 

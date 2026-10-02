@@ -4,7 +4,9 @@ using NCockpit.Repositories;
 namespace NCockpit.Services;
 
 /// <summary>
-/// Service for managing project folders.
+/// Service for managing project folders — the primary folders that NCockpit
+/// scans for projects. Supporting (secondary) folders are handled by
+/// <see cref="ISupportingFolderService"/>.
 /// </summary>
 public interface IProjectFolderService
 {
@@ -44,34 +46,14 @@ public class ProjectFolderService : IProjectFolderService
     }
 
     /// <summary>
-    /// Add a new folder with the specified path and type (primary/secondary).
+    /// Add a new folder to the folders list. Primary folders are scanned for
+    /// projects; secondary folders are listed but never scanned (their
+    /// first-level subfolders are supporting folders).
     /// </summary>
     public async Task<ProjectFolder> AddFolderAsync(string path, bool isPrimary)
     {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            throw new ArgumentException("Path cannot be empty", nameof(path));
-        }
-
-        // Normalize the path
-        var normalizedPath = Path.GetFullPath(path);
-
-        // Check if folder exists in filesystem
-        if (!Directory.Exists(normalizedPath))
-        {
-            throw new DirectoryNotFoundException($"Directory not found: {normalizedPath}");
-        }
-
-        var folder = new ProjectFolder
-        {
-            Path = normalizedPath,
-            IsPrimary = isPrimary,
-            IsEnabled = true,
-            ProjectCount = 0,
-            LastScanUnix = null
-        };
-
-        return await _repository.UpsertAsync(folder);
+        var normalizedPath = NormalizeAndVerifyPath(path, nameof(path));
+        return await _repository.UpsertAsync(CreateFolder(normalizedPath, isPrimary));
     }
 
     public async Task UpdateFolderAsync(ProjectFolder folder)
@@ -100,4 +82,39 @@ public class ProjectFolderService : IProjectFolderService
     {
         return _projectRepository.CountByFolderAsync(folderId);
     }
+
+    /// <summary>
+    /// Validate a folder path (non-empty, existing on disk) and return it in
+    /// full (normalized) form.
+    /// </summary>
+    private static string NormalizeAndVerifyPath(string path, string parameterName)
+    {
+        var normalizedPath = NormalizePath(path, parameterName);
+
+        if (!Directory.Exists(normalizedPath))
+        {
+            throw new DirectoryNotFoundException($"Directory not found: {normalizedPath}");
+        }
+
+        return normalizedPath;
+    }
+
+    private static string NormalizePath(string path, string parameterName = "path")
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            throw new ArgumentException("Path cannot be empty", parameterName);
+        }
+
+        return Path.GetFullPath(path);
+    }
+
+    private static ProjectFolder CreateFolder(string path, bool isPrimary) => new()
+    {
+        Path = path,
+        IsPrimary = isPrimary,
+        IsEnabled = true,
+        ProjectCount = 0,
+        LastScanUnix = null
+    };
 }

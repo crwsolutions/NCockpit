@@ -10,7 +10,7 @@ namespace NCockpit.Repositories;
 public interface IProjectRepository
 {
     /// <summary>
-    /// Returns all active projects ordered by recent usage (most recently used first).
+    /// Returns all projects ordered by recent usage (most recently used first).
     /// Projects that have never been opened fall back to their last scan time.
     /// </summary>
     Task<List<Project>> GetAllAsync();
@@ -56,6 +56,7 @@ public class ProjectRepository : IProjectRepository
     public async Task<List<Project>> GetAllAsync()
     {
         using var connection = OpenConnection();
+
         const string sql = """
             SELECT Id, Name, SolutionPath, FolderPath, FolderId, LastSeenUnix, ScanUnix,
                    IsFavorite, LastUsedUnix, SolutionLastWriteUnix
@@ -64,6 +65,7 @@ public class ProjectRepository : IProjectRepository
                      SolutionLastWriteUnix IS NULL, COALESCE(SolutionLastWriteUnix, 0) DESC,
                      Name
             """;
+
         return (await connection.QueryAsync<Project>(sql)).ToList();
     }
 

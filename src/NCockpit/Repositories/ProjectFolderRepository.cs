@@ -5,7 +5,9 @@ using Microsoft.Data.Sqlite;
 namespace NCockpit.Repositories;
 
 /// <summary>
-/// Repository for ProjectFolder database operations.
+/// Repository for ProjectFolder database operations. Primary folders are
+/// scanned for projects; secondary (supporting) folders are listed but never
+/// scanned.
 /// </summary>
 public interface IProjectFolderRepository
 {
@@ -30,7 +32,7 @@ public class ProjectFolderRepository : IProjectFolderRepository
         const string sql = """
             SELECT Id, Path, IsPrimary, IsEnabled, ProjectCount, LastScanUnix
             FROM ProjectFolders
-            ORDER BY IsPrimary DESC, Path
+            ORDER BY Path
             """;
         return (await connection.QueryAsync<ProjectFolder>(sql)).ToList();
     }
