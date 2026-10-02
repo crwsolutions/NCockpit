@@ -74,8 +74,4 @@
 		<PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="10.10.0" />
 	</ItemGroup>
 
-	<ItemGroup>
-	  <Folder Include="Resources\Images\" />
-	</ItemGroup>
-
 </Project>
