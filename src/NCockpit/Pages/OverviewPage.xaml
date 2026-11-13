@@ -6,183 +6,397 @@
              x:Class="NCockpit.Pages.OverviewPage"
              x:DataType="viewmodels:OverviewPageViewModel"
              Title="Overview"
-             BackgroundColor="#f5f5f5">
+             BackgroundColor="#f0f4f8">
 
-    <Grid x:Name="Page" RowDefinitions="Auto,*" Padding="0">
+    <Grid x:Name="Page" RowDefinitions="Auto,Auto,*" Padding="0">
         <!-- Header -->
         <Grid Grid.Row="0"
-              BackgroundColor="#1a2744"
+              BackgroundColor="#f0f4f8"
               Padding="24,16"
-              ColumnDefinitions="*">
-            <VerticalStackLayout Grid.Column="0" Spacing="8">
+              ColumnDefinitions="*,Auto,Auto"
+              ColumnSpacing="16">
+            <VerticalStackLayout Grid.Column="0" Spacing="4">
                 <Label Text="{Binding Greeting}"
                        FontSize="24"
                        FontAttributes="Bold"
-                       TextColor="White" />
+                       TextColor="#1a2744" />
                 <Label Text="Here's an overview of your projects."
                        FontSize="14"
-                       TextColor="#b0b8c8" />
+                       TextColor="#666666" />
             </VerticalStackLayout>
+
+            <!-- Search box -->
+            <Entry Grid.Column="1"
+                   WidthRequest="300"
+                   Text="{Binding SearchQuery, Mode=TwoWay}"
+                   Placeholder="Search projects..."
+                   FontSize="13"
+                   TextColor="#1a2744"
+                   PlaceholderColor="#999999"
+                   BackgroundColor="White"
+                   VerticalOptions="Center" />
+
+            <!-- Rescan button -->
+            <Button Grid.Column="2"
+                    Text="Rescan all"
+                    FontSize="13"
+                    FontAttributes="Bold"
+                    TextColor="White"
+                    BackgroundColor="#3b82f6"
+                    VerticalOptions="Center"
+                    Command="{Binding RescanAllCommand, Mode=OneTime}" />
+        </Grid>
+
+        <!-- Summary Cards -->
+        <Grid Grid.Row="1"
+              Padding="24,0,24,16"
+              ColumnDefinitions="*,*,*"
+              ColumnSpacing="12">
+            <!-- Total Projects -->
+            <Border Grid.Column="0"
+                    Padding="16"
+                    BackgroundColor="White"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 8">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                    <Border Grid.Column="0"
+                            WidthRequest="40"
+                            HeightRequest="40"
+                            Padding="8"
+                            BackgroundColor="#e3f2fd"
+                            StrokeShape="RoundRectangle 8">
+                        <Label Text="&#xf114;"
+                               FontFamily="FontAwesomeSolid"
+                               FontSize="18"
+                               TextColor="#3b82f6"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center" />
+                    </Border>
+                    <VerticalStackLayout Grid.Column="1" Spacing="4" VerticalOptions="Center">
+                        <Label Text="{Binding TotalProjects}"
+                               FontSize="24"
+                               FontAttributes="Bold"
+                               TextColor="#1a2744" />
+                        <Label Text="Total projects"
+                               FontSize="12"
+                               TextColor="#666666" />
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
+
+            <!-- Recently Used -->
+            <Border Grid.Column="1"
+                    Padding="16"
+                    BackgroundColor="White"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 8">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                    <Border Grid.Column="0"
+                            WidthRequest="40"
+                            HeightRequest="40"
+                            Padding="8"
+                            BackgroundColor="#e3f2fd"
+                            StrokeShape="RoundRectangle 8">
+                        <Label Text="&#xf017;"
+                               FontFamily="FontAwesomeSolid"
+                               FontSize="18"
+                               TextColor="#3b82f6"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center" />
+                    </Border>
+                    <VerticalStackLayout Grid.Column="1" Spacing="4" VerticalOptions="Center">
+                        <Label Text="{Binding RecentlyUsedCount}"
+                               FontSize="24"
+                               FontAttributes="Bold"
+                               TextColor="#1a2744" />
+                        <Label Text="Recently used"
+                               FontSize="12"
+                               TextColor="#666666" />
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
+
+            <!-- Favorites -->
+            <Border Grid.Column="2"
+                    Padding="16"
+                    BackgroundColor="White"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 8">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                    <Border Grid.Column="0"
+                            WidthRequest="40"
+                            HeightRequest="40"
+                            Padding="8"
+                            BackgroundColor="#fff3e0"
+                            StrokeShape="RoundRectangle 8">
+                        <Label Text="&#xf005;"
+                               FontFamily="FontAwesomeSolid"
+                               FontSize="18"
+                               TextColor="#f5a623"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center" />
+                    </Border>
+                    <VerticalStackLayout Grid.Column="1" Spacing="4" VerticalOptions="Center">
+                        <Label Text="{Binding FavoriteCount}"
+                               FontSize="24"
+                               FontAttributes="Bold"
+                               TextColor="#1a2744" />
+                        <Label Text="Favorites"
+                               FontSize="12"
+                               TextColor="#666666" />
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
         </Grid>
 
         <!-- Content -->
-        <ScrollView Grid.Row="1">
-            <VerticalStackLayout Padding="24" Spacing="20">
+        <Grid Grid.Row="2"
+              ColumnDefinitions="*,300"
+              ColumnSpacing="16">
+            <!-- Main content -->
+            <ScrollView>
+                <VerticalStackLayout Padding="24,0,24,24" Spacing="16">
 
-                <!-- Summary Cards -->
-                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
-                    <Border Grid.Column="0"
-                            Padding="16"
-                            BackgroundColor="White"
-                            Stroke="#e0e0e0"
-                            StrokeThickness="1"
-                            StrokeShape="RoundRectangle 8">
-                        <VerticalStackLayout Spacing="4">
-                            <Label Text="Total Projects"
-                                   FontSize="12"
-                                   TextColor="#666666"
-                                   FontAttributes="Bold" />
-                            <Label Text="{Binding TotalProjects}"
-                                   FontSize="28"
-                                   FontAttributes="Bold"
-                                   TextColor="#1a2744" />
+                    <!-- Error Message -->
+                    <Label Text="{Binding ErrorMessage}"
+                           FontSize="13"
+                           TextColor="#d32f2f"
+                           IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}" />
+
+                    <!-- Loading Indicator -->
+                    <ActivityIndicator IsRunning="{Binding IsLoading}"
+                                        Color="#0d7377"
+                                        IsVisible="{Binding IsLoading}" />
+
+                    <!-- Projects Section -->
+                    <Border BackgroundColor="White" StrokeShape="RoundRectangle 8" StrokeThickness="0"
+                            Stroke="#e0e0e0">
+                        <VerticalStackLayout>
+                            <Grid Padding="16,16,16,0" ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                <Label Grid.Column="0"
+                                       Text="Projects"
+                                       FontSize="16"
+                                       FontAttributes="Bold"
+                                       TextColor="#1a2744" />
+                                <Button Grid.Column="1"
+                                        Text="&#xf005; Favorites"
+                                        FontFamily="FontAwesomeSolid"
+                                        FontSize="12"
+                                        TextColor="#3b82f6"
+                                        BackgroundColor="Transparent"
+                                        VerticalOptions="Center" />
+                            </Grid>
+
+                            <CollectionView x:Name="ProjectListView"
+                                            ItemsSource="{Binding Projects}"
+                                            SelectionMode="None"
+                                            Margin="0,0,0,0">
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate x:DataType="viewmodels:ProjectListItem">
+                                        <Border Padding="16"
+                                                Margin="0,0,0,0"
+                                                Background="{Binding IsSelected, Converter={StaticResource SelectedToBackgroundColorConverter}}"
+                                                StrokeThickness="0">
+                                            <Border.GestureRecognizers>
+                                                <TapGestureRecognizer
+                                                    Command="{Binding Source={x:Reference Page}, Path=BindingContext.SelectProjectCommand, Mode=OneTime}"
+                                                    CommandParameter="{Binding .}" />
+                                            </Border.GestureRecognizers>
+                                            <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto" ColumnSpacing="12">
+                                                <!-- Favorite star -->
+                                                <Button Grid.Column="0"
+                                                        Text="{Binding IsFavorite, Converter={StaticResource BoolToStarGlyphConverter}}"
+                                                        FontFamily="FontAwesomeSolid"
+                                                        FontSize="14"
+                                                        TextColor="{Binding IsFavorite, Converter={StaticResource BoolToFavoriteColorConverter}}"
+                                                        BackgroundColor="Transparent"
+                                                        Padding="4"
+                                                        VerticalOptions="Center"
+                                                        InputTransparent="True" />
+
+                                                <!-- Icon box -->
+                                                <Border Grid.Column="1"
+                                                        WidthRequest="36"
+                                                        HeightRequest="36"
+                                                        Padding="6"
+                                                        Background="{Binding Name, Converter={StaticResource ProjectIconColorConverter}}"
+                                                        StrokeShape="RoundRectangle 8">
+                                                    <Label Text="{Binding Initial}"
+                                                           FontSize="16"
+                                                           FontAttributes="Bold"
+                                                           TextColor="White"
+                                                           HorizontalOptions="Center"
+                                                           VerticalOptions="Center" />
+                                                </Border>
+
+                                                <!-- Name + path -->
+                                                <VerticalStackLayout Grid.Column="2" Spacing="2">
+                                                    <Label Text="{Binding Name}"
+                                                           FontSize="15"
+                                                           FontAttributes="Bold"
+                                                           TextColor="#1a2744" />
+                                                    <Label Text="{Binding FolderPath}"
+                                                           FontSize="12"
+                                                           TextColor="#666666"
+                                                           LineBreakMode="TailTruncation" />
+                                                </VerticalStackLayout>
+
+                                                <!-- Status + time -->
+                                                <VerticalStackLayout Grid.Column="3"
+                                                                     Spacing="2"
+                                                                     HorizontalOptions="End"
+                                                                     VerticalOptions="Center">
+                                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
+                                                        <Ellipse Grid.Column="0"
+                                                                 WidthRequest="8"
+                                                                 HeightRequest="8"
+                                                                 Fill="#10b981"
+                                                                 VerticalOptions="Center" />
+                                                        <Label Grid.Column="1"
+                                                               Text="{Binding StatusText}"
+                                                               FontSize="12"
+                                                               TextColor="#666666" />
+                                                    </Grid>
+                                                    <Label Text="{Binding LastOpenedDisplay}"
+                                                           FontSize="11"
+                                                           TextColor="#999999"
+                                                           HorizontalOptions="End" />
+                                                </VerticalStackLayout>
+
+                                                <!-- Chevron -->
+                                                <Button Grid.Column="4"
+                                                        Text="&#xf105;"
+                                                        FontFamily="FontAwesomeSolid"
+                                                        FontSize="12"
+                                                        TextColor="#999999"
+                                                        BackgroundColor="Transparent"
+                                                        Padding="6"
+                                                        VerticalOptions="Center"
+                                                        Command="{Binding Source={x:Reference Page}, Path=BindingContext.OpenProjectDetailsCommand, Mode=OneTime}"
+                                                        CommandParameter="{Binding .}" />
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+
+                            <!-- Empty state -->
+                            <VerticalStackLayout Padding="16"
+                                                 Spacing="8"
+                                                 IsVisible="{Binding Projects.Count, Converter={StaticResource IntToEmptyVisibilityConverter}}">
+                                <Label Text="No projects found yet."
+                                       FontSize="14"
+                                       TextColor="#999999"
+                                       HorizontalOptions="Center" />
+                                <Label Text="Add a folder and scan to discover your projects."
+                                       FontSize="12"
+                                       TextColor="#999999"
+                                       HorizontalOptions="Center" />
+                            </VerticalStackLayout>
                         </VerticalStackLayout>
                     </Border>
 
-                    <Border Grid.Column="1"
-                            Padding="16"
-                            BackgroundColor="White"
-                            Stroke="#e0e0e0"
-                            StrokeThickness="1"
-                            StrokeShape="RoundRectangle 8">
-                        <VerticalStackLayout Spacing="4">
-                            <Label Text="Recently Used"
-                                   FontSize="12"
-                                   TextColor="#666666"
-                                   FontAttributes="Bold" />
-                            <Label Text="{Binding RecentlyUsedCount}"
-                                   FontSize="28"
-                                   FontAttributes="Bold"
-                                   TextColor="#1a2744" />
-                        </VerticalStackLayout>
-                    </Border>
-
-                    <Border Grid.Column="2"
-                            Padding="16"
-                            BackgroundColor="White"
-                            Stroke="#e0e0e0"
-                            StrokeThickness="1"
-                            StrokeShape="RoundRectangle 8">
-                        <VerticalStackLayout Spacing="4">
-                            <Label Text="Favorites"
-                                   FontSize="12"
-                                   TextColor="#666666"
-                                   FontAttributes="Bold" />
-                            <Label Text="{Binding FavoriteCount}"
-                                   FontSize="28"
-                                   FontAttributes="Bold"
-                                   TextColor="#0d7377" />
-                        </VerticalStackLayout>
-                    </Border>
-                </Grid>
-
-                <!-- Error Message -->
-                <Label Text="{Binding ErrorMessage}"
-                       FontSize="13"
-                       TextColor="#d32f2f" />
-
-                <!-- Loading Indicator -->
-                <ActivityIndicator IsRunning="{Binding IsLoading}"
-                                    Color="#0d7377"
-                                    IsVisible="{Binding IsLoading}" />
-
-                <!-- Projects Section -->
-                <Label Text="Projects"
-                       FontSize="16"
-                       FontAttributes="Bold"
-                       TextColor="#1a2744" />
-
-                <CollectionView x:Name="ProjectListView"
-                                ItemsSource="{Binding Projects}"
-                                SelectionMode="None">
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate x:DataType="viewmodels:ProjectListItem">
-                            <Border Margin="0,0,0,12"
-                                    Stroke="#e0e0e0"
-                                    StrokeThickness="1"
-                                    StrokeShape="RoundRectangle 8"
-                                    BackgroundColor="White">
-                                <Border.GestureRecognizers>
-                                    <TapGestureRecognizer
-                                        Command="{Binding Source={x:Reference Page}, Path=BindingContext.OpenSolutionCommand, Mode=OneTime}"
-                                        CommandParameter="{Binding .}" />
-                                </Border.GestureRecognizers>
-                                <Grid Padding="16" ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="12">
-                                    <!-- Favorite indicator -->
-                                    <Button Grid.Column="0"
-                                            Text="{Binding IsFavorite, Converter={StaticResource BoolToStarGlyphConverter}}"
-                                            FontFamily="FontAwesomeSolid"
-                                            FontSize="14"
-                                            TextColor="{Binding IsFavorite, Converter={StaticResource BoolToFavoriteColorConverter}}"
-                                            BackgroundColor="Transparent"
-                                            Padding="4"
-                                            VerticalOptions="Center"
-                                            InputTransparent="True" />
-
-                                    <!-- Name + path + status -->
-                                    <VerticalStackLayout Grid.Column="1" Spacing="3">
-                                        <Label Text="{Binding Name}"
-                                               FontSize="15"
-                                               FontAttributes="Bold"
-                                               TextColor="#1a2744" />
-                                        <Label Text="{Binding FolderPath}"
-                                               FontSize="12"
-                                               TextColor="#0d7377"
-                                               LineBreakMode="TailTruncation" />
-                                        <Label Text="{Binding StatusText}"
-                                               FontSize="11"
-                                               TextColor="#999999" />
-                                    </VerticalStackLayout>
-
-                                    <!-- Last opened -->
-                                    <Label Grid.Column="2"
-                                           Text="{Binding LastOpenedDisplay}"
-                                           FontSize="11"
-                                           TextColor="#999999"
-                                           VerticalOptions="Center" />
-
-                                    <!-- Details navigation -->
-                                    <Button Grid.Column="3"
-                                            Text="&#xf105;"
-                                            FontFamily="FontAwesomeSolid"
-                                            FontSize="12"
-                                            TextColor="#999999"
-                                            BackgroundColor="Transparent"
-                                            Padding="6"
-                                            VerticalOptions="Center"
-                                            Command="{Binding Source={x:Reference Page}, Path=BindingContext.OpenProjectDetailsCommand, Mode=OneTime}"
-                                            CommandParameter="{Binding .}" />
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
-
-                <!-- Empty state -->
-                <VerticalStackLayout Spacing="8"
-                                     IsVisible="{Binding Projects.Count, Converter={StaticResource IntToEmptyVisibilityConverter}}">
-                    <Label Text="No projects found yet."
-                           FontSize="14"
-                           TextColor="#999999"
-                           HorizontalOptions="Center" />
-                    <Label Text="Add a folder and scan to discover your projects."
-                           FontSize="12"
-                           TextColor="#999999"
-                           HorizontalOptions="Center" />
                 </VerticalStackLayout>
+            </ScrollView>
 
-            </VerticalStackLayout>
-        </ScrollView>
+            <!-- Right sidebar -->
+            <ScrollView Grid.Column="1">
+                <VerticalStackLayout  Spacing="16">
+
+                    <!-- Quick Actions -->
+                    <Border BackgroundColor="White" Padding="16" StrokeThickness="0" StrokeShape="RoundRectangle 8">
+                        <VerticalStackLayout Spacing="12">
+                            <Label Text="Quick actions"
+                                   FontSize="16"
+                                   FontAttributes="Bold"
+                                   TextColor="#1a2744" />
+
+                            <Border BackgroundColor="Transparent" Padding="4,8" StrokeThickness="0">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding OpenLastProjectCommand}" />
+                                </Border.GestureRecognizers>
+                                <HorizontalStackLayout Spacing="8">
+                                    <Label Text="&#xf061;" FontFamily="FontAwesomeSolid" FontSize="13" TextColor="#3b82f6" />
+                                    <Label Text="Open last project" FontSize="13" TextColor="#1a2744" />
+                                </HorizontalStackLayout>
+                            </Border>
+
+                            <Border BackgroundColor="Transparent" Padding="4,8" StrokeThickness="0">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding OpenInExplorerCommand}" />
+                                </Border.GestureRecognizers>
+                                <HorizontalStackLayout Spacing="8">
+                                    <Label Text="&#xf07c;" FontFamily="FontAwesomeSolid" FontSize="13" TextColor="#3b82f6" />
+                                    <Label Text="Open in file explorer" FontSize="13" TextColor="#1a2744" />
+                                </HorizontalStackLayout>
+                            </Border>
+
+                            <Border BackgroundColor="Transparent" Padding="4,8" StrokeThickness="0">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding OpenInIDECommand}" />
+                                </Border.GestureRecognizers>
+                                <HorizontalStackLayout Spacing="8">
+                                    <Label Text="&#xf121;" FontFamily="FontAwesomeSolid" FontSize="13" TextColor="#3b82f6" />
+                                    <Label Text="Open in IDE" FontSize="13" TextColor="#1a2744" />
+                                </HorizontalStackLayout>
+                            </Border>
+
+                            <Border BackgroundColor="Transparent" Padding="4,8" StrokeThickness="0">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding OpenGitHubCommand}" />
+                                </Border.GestureRecognizers>
+                                <HorizontalStackLayout Spacing="8">
+                                    <Label Text="&#xf09b;" FontFamily="FontAwesomeSolid" FontSize="13" TextColor="#3b82f6" />
+                                    <Label Text="Open GitHub" FontSize="13" TextColor="#1a2744" />
+                                </HorizontalStackLayout>
+                            </Border>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Recent Activity -->
+                    <Border BackgroundColor="White" Padding="16" StrokeThickness="0" StrokeShape="RoundRectangle 8">
+                        <VerticalStackLayout Spacing="12">
+                            <Label Text="Recent activity"
+                                   FontSize="16"
+                                   FontAttributes="Bold"
+                                   TextColor="#1a2744" />
+
+                            <CollectionView ItemsSource="{Binding RecentActivity}"
+                                            SelectionMode="None">
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate x:DataType="viewmodels:ProjectListItem">
+                                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                                            <Border Grid.Column="0"
+                                                    WidthRequest="24"
+                                                    HeightRequest="24"
+                                                    Padding="4"
+                                                    Background="{Binding Name, Converter={StaticResource ProjectIconColorConverter}}"
+                                                    StrokeShape="RoundRectangle 6">
+                                                <Label Text="{Binding Initial}"
+                                                       FontSize="10"
+                                                       FontAttributes="Bold"
+                                                       TextColor="White"
+                                                       HorizontalOptions="Center"
+                                                       VerticalOptions="Center" />
+                                            </Border>
+                                            <VerticalStackLayout Grid.Column="1" Spacing="1">
+                                                <Label Text="{Binding Name}"
+                                                       FontSize="13"
+                                                       TextColor="#1a2744" />
+                                                <Label Text="{Binding LastOpenedDisplay}"
+                                                       FontSize="11"
+                                                       TextColor="#999999" />
+                                            </VerticalStackLayout>
+                                        </Grid>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+                        </VerticalStackLayout>
+                    </Border>
+
+                </VerticalStackLayout>
+            </ScrollView>
+        </Grid>
     </Grid>
 
 </ContentPage>

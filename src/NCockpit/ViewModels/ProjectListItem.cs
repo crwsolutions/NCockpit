@@ -18,8 +18,9 @@ public partial class ProjectListItem : ObservableObject
         Name = project.Name;
         FolderPath = project.FolderPath;
         IsFavorite = project.IsFavorite;
+        Initial = Name?.Length > 0 ? Name[0].ToString() : "?";
         LastOpenedDisplay = project.LastUsedUnix is { } lastOpened
-            ? FormatUnix(lastOpened)
+            ? FormatRelativeTime(lastOpened)
             : "Never opened";
         StatusText = BuildStatus(project);
     }
@@ -44,17 +45,47 @@ public partial class ProjectListItem : ObservableObject
     private bool isFavorite;
 
     [ObservableProperty]
+    private bool isSelected;
+
+    /// <summary>
+    /// First letter of the project name, used for the colored icon box.
+    /// </summary>
+    public string? Initial { get; }
+
+    [ObservableProperty]
     private string? lastOpenedDisplay;
 
     [ObservableProperty]
     private string? statusText;
 
-    private static string FormatUnix(long unix) =>
-        UnixEpoch.AddSeconds(unix).ToLocalTime().ToString("MMM d, yyyy");
+    /// <summary>
+    /// Format a Unix timestamp as a relative time string, e.g. "Today 10:24",
+    /// "Yesterday 16:42", or "Sep 12, 14:18".
+    /// </summary>
+    private static string FormatRelativeTime(long unix)
+    {
+        var dateTime = UnixEpoch.AddSeconds(unix).ToLocalTime();
+        var now = DateTime.Now;
 
+        if (dateTime.Date == now.Date)
+        {
+            return $"Today {dateTime:HH:mm}";
+        }
+
+        if (dateTime.Date == now.Date.AddDays(-1))
+        {
+            return $"Yesterday {dateTime:HH:mm}";
+        }
+
+        return $"{dateTime:MMM d, HH:mm}";
+    }
+
+    /// <summary>
+    /// Build the status text shown in the project row.
+    /// </summary>
     private static string BuildStatus(Project project)
     {
-        var seen = FormatUnix(project.LastSeenUnix);
-        return project.IsFavorite ? $"Favorite • Last seen {seen}" : $"Last seen {seen}";
+        // No git status yet; show "Active" as default.
+        return "Active";
     }
 }

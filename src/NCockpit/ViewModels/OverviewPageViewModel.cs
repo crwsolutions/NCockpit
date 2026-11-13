@@ -1,8 +1,11 @@
 using CommunityToolkit.Maui;
+using CommunityToolkit.Maui.Extensions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NCockpit.Models;
+using NCockpit.Popups;
 using NCockpit.Services;
+using NCockpit.ViewModels.Popups;
 
 namespace NCockpit.ViewModels;
 
@@ -16,6 +19,10 @@ public partial class OverviewPageViewModel : ObservableObject
 {
     private readonly IProjectService _projectService;
     private readonly IWindowsLauncher _windowsLauncher;
+    private readonly IScanService _scanService;
+    private readonly IPopupService _popupService;
+    private readonly ScanPopupViewModel _scanPopupViewModel;
+    private CancellationTokenSource? _scanCts;
 
     /// <summary>
     /// Greeting line, e.g. "Good afternoon, Colin".
@@ -24,10 +31,28 @@ public partial class OverviewPageViewModel : ObservableObject
     private string greeting;
 
     /// <summary>
-    /// Projects ordered by last opened, then solution file timestamp.
+    /// All projects ordered by last opened, then solution file timestamp.
+    /// </summary>
+    private List<ProjectListItem> _allProjects = [];
+
+    /// <summary>
+    /// Projects shown in the list (filtered by search).
     /// </summary>
     [ObservableProperty]
     private List<ProjectListItem> projects = [];
+
+    /// <summary>
+    /// Currently selected project. Clicking a project selects it; clicking
+    /// the chevron navigates to details.
+    /// </summary>
+    [ObservableProperty]
+    private ProjectListItem? selectedProject;
+
+    /// <summary>
+    /// Search filter text.
+    /// </summary>
+    [ObservableProperty]
+    private string searchQuery = string.Empty;
 
     [ObservableProperty]
     private int totalProjects;
@@ -44,14 +69,31 @@ public partial class OverviewPageViewModel : ObservableObject
     [ObservableProperty]
     private string? errorMessage;
 
+    /// <summary>
+    /// Most recently opened projects for the Recent Activity sidebar.
+    /// </summary>
+    [ObservableProperty]
+    private List<ProjectListItem> recentActivity = [];
+
     public OverviewPageViewModel(
         IProjectService projectService,
-        IWindowsLauncher windowsLauncher)
+        IWindowsLauncher windowsLauncher,
+        IScanService scanService,
+        IPopupService popupService,
+        ScanPopupViewModel scanPopupViewModel)
     {
         _projectService = projectService;
         _windowsLauncher = windowsLauncher;
+        _scanService = scanService;
+        _popupService = popupService;
+        _scanPopupViewModel = scanPopupViewModel;
 
         Greeting = BuildGreeting();
+    }
+
+    partial void OnSearchQueryChanged(string value)
+    {
+        ApplySearchFilter(value);
     }
 
     /// <summary>
@@ -94,10 +136,15 @@ public partial class OverviewPageViewModel : ObservableObject
             ErrorMessage = null;
 
             var models = await _projectService.GetProjectsAsync();
-            Projects = models.Select(ProjectListItem.Create).ToList();
-            TotalProjects = Projects.Count;
-            FavoriteCount = Projects.Count(p => p.IsFavorite);
-            RecentlyUsedCount = Projects.Count(p => IsRecentlyUsed(p.Project));
+            _allProjects = models.Select(ProjectListItem.Create).ToList();
+            ApplySearchFilter(SearchQuery);
+
+            TotalProjects = _allProjects.Count;
+            FavoriteCount = _allProjects.Count(p => p.IsFavorite);
+            RecentlyUsedCount = _allProjects.Count(p => IsRecentlyUsed(p.Project));
+
+            // Most recently opened projects for the sidebar
+            RecentActivity = _allProjects.Take(5).ToList();
         }
         catch (Exception ex)
         {
@@ -107,6 +154,170 @@ public partial class OverviewPageViewModel : ObservableObject
         {
             IsLoading = false;
         }
+    }
+
+    /// <summary>
+    /// Select a project (highlight it) without opening the solution or
+    /// navigating.
+    /// </summary>
+    [RelayCommand]
+    public void SelectProject(ProjectListItem? item)
+    {
+        if (item is null)
+        {
+            return;
+        }
+
+        // Deselect previously selected item
+        if (SelectedProject is not null && SelectedProject != item)
+        {
+            SelectedProject.IsSelected = false;
+        }
+
+        item.IsSelected = true;
+        SelectedProject = item;
+    }
+
+    /// <summary>
+    /// Rescan all folders and reload the project list.
+    /// </summary>
+    [RelayCommand]
+    public async Task RescanAll()
+    {
+        try
+        {
+            _scanCts?.Cancel();
+            _scanCts?.Dispose();
+            _scanCts = new CancellationTokenSource();
+
+            _scanPopupViewModel.Reset();
+            _popupService.ShowPopup<ScanPopup>(
+                Shell.Current,
+                shellParameters: new Dictionary<string, object> { ["cts"] = _scanCts });
+
+            var progress = new Progress<ScanProgress>(p =>
+            {
+                _scanPopupViewModel.Progress = Math.Clamp(p.Percentage, 0, 100);
+                _scanPopupViewModel.StatusText = p.Status;
+            });
+
+            await _scanService.ScanAsync(null, progress, _scanCts.Token);
+
+            _scanPopupViewModel.Title = "Scan complete";
+            _scanPopupViewModel.StatusText = "Projects updated.";
+            _scanPopupViewModel.IsBusy = false;
+
+            await Shell.Current.ClosePopupAsync();
+
+            await LoadProjects();
+        }
+        catch (OperationCanceledException)
+        {
+            _scanPopupViewModel.Title = "Scan cancelled";
+            _scanPopupViewModel.StatusText = "The scan was stopped.";
+            _scanPopupViewModel.IsBusy = false;
+            await Shell.Current.ClosePopupAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error rescanning: {ex.Message}";
+        }
+        finally
+        {
+            _scanCts?.Dispose();
+            _scanCts = null;
+        }
+    }
+
+    /// <summary>
+    /// Open the last project that was opened.
+    /// </summary>
+    [RelayCommand]
+    public async Task OpenLastProject()
+    {
+        if (_allProjects.Count == 0)
+        {
+            return;
+        }
+
+        // Projects are already sorted by last opened
+        var lastProject = _allProjects[0];
+        await OpenProjectDetails(lastProject);
+    }
+
+    /// <summary>
+    /// Open the selected project's folder in File Explorer.
+    /// </summary>
+    [RelayCommand]
+    public void OpenInExplorer()
+    {
+        if (SelectedProject is null)
+        {
+            return;
+        }
+
+        try
+        {
+            _windowsLauncher.TryOpenFolder(SelectedProject.Project.FolderPath);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error opening folder: {ex.Message}";
+        }
+    }
+
+    /// <summary>
+    /// Open the selected project's solution in the IDE.
+    /// </summary>
+    [RelayCommand]
+    public async Task OpenInIDE()
+    {
+        if (SelectedProject is null)
+        {
+            return;
+        }
+
+        await OpenSolution(SelectedProject);
+    }
+
+    /// <summary>
+    /// Open the selected project's GitHub page.
+    /// </summary>
+    [RelayCommand]
+    public void OpenGitHub()
+    {
+        if (SelectedProject is null)
+        {
+            return;
+        }
+
+        try
+        {
+            // No git URL yet; show a message.
+            ErrorMessage = "Git URL not configured for this project.";
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error opening GitHub: {ex.Message}";
+        }
+    }
+
+    /// <summary>
+    /// Apply the search filter to the project list.
+    /// </summary>
+    private void ApplySearchFilter(string query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            Projects = _allProjects;
+            return;
+        }
+
+        var normalized = query.Trim().ToLowerInvariant();
+        Projects = _allProjects
+            .Where(p => p.Name?.ToLowerInvariant().Contains(normalized) == true
+                   || p.FolderPath?.ToLowerInvariant().Contains(normalized) == true)
+            .ToList();
     }
 
     /// <summary>

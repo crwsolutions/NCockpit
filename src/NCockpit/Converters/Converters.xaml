@@ -14,6 +14,8 @@
     <converters:BoolToStarGlyphConverter x:Key="BoolToStarGlyphConverter" />
     <converters:BoolToFavoriteColorConverter x:Key="BoolToFavoriteColorConverter" />
     <converters:IntToEmptyVisibilityConverter x:Key="IntToEmptyVisibilityConverter" />
+    <converters:ProjectIconColorConverter x:Key="ProjectIconColorConverter" />
+    <converters:SelectedToBackgroundColorConverter x:Key="SelectedToBackgroundColorConverter" />
 
 </ResourceDictionary>
 
