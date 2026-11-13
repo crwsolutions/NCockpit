@@ -145,6 +145,14 @@ dotnet build --framework net10.0-windows10.0.19041.0   # Target the Windows TFM 
 - Converters are registered once in `Converters/Converters.xaml` (merged in `App.xaml`) and referenced via `{StaticResource ...}`.
 - Reusable styles live in `Resources/Styles/Styles.xaml`; colors in `Resources/Styles/Colors.xaml`.
 
+### Custom Controls
+- Custom controls live in `Controls/` and follow the MAUI partial-class XAML pattern.
+- Use `ContentView` with `ControlTemplate` for composite controls with fixed chrome + user content (e.g., `SectionCard`).
+- Use `x:Name="This"` on the root element and `Source={x:Reference This}` for self-referencing bindings.
+- Use `TemplatedParent` for bindings inside a `ControlTemplate`.
+- Existing controls: `SummaryCard` (icon + count + label), `SectionCard` (title + content).
+- When a control hosts user-provided `Content`, mark the class with `[ContentProperty(nameof(Content))]` and leave the `ContentPresenter` unbound.
+
 ## Design Language
 Follow the visual direction from the mockup (see `docs/prototype.png` and `initial.md`) — a polished, compact, information-dense developer tool, not a generic admin dashboard:
 - Dark navy left navigation/flyout (`#1a2744`) with white text and FontAwesome6 glyphs.
@@ -174,6 +182,7 @@ NCockpit/
     ├── MauiProgram.cs    # DI registration, fonts, community toolkit
     ├── App.xaml(.cs)     # Merged resource dictionaries
     ├── AppShell.xaml(.cs) # Shell flyout + hidden "projectdetails" route
+    ├── Controls/         # SummaryCard, SectionCard
     ├── Models/           # Project, ProjectFolder
     ├── Pages/            # OverviewPage, ProjectDetailsPage, FoldersPage, SettingsPage, AboutPage
     ├── Popups/           # AddFolderPopup, ScanPopup
