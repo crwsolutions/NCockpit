@@ -150,12 +150,12 @@
         </Grid>
 
         <!-- Content -->
-        <Grid Grid.Row="2"
+        <Grid Grid.Row="2" RowDefinitions="*" Padding="0,0,0,24"
               ColumnDefinitions="*,300"
               ColumnSpacing="16">
             <!-- Main content -->
             <ScrollView>
-                <VerticalStackLayout Padding="24,0,24,24" Spacing="16">
+                <VerticalStackLayout Padding="24,0,0,24" Spacing="16">
 
                     <!-- Error Message -->
                     <Label Text="{Binding ErrorMessage}"
@@ -169,7 +169,7 @@
                                         IsVisible="{Binding IsLoading}" />
 
                     <!-- Projects Section -->
-                    <Border BackgroundColor="White" StrokeShape="RoundRectangle 8" StrokeThickness="0"
+                    <Border BackgroundColor="White" StrokeShape="RoundRectangle 8" StrokeThickness="0" Padding="16,0,16,16"
                             Stroke="#e0e0e0">
                         <VerticalStackLayout>
                             <Grid Padding="16,16,16,0" ColumnDefinitions="*,Auto" ColumnSpacing="12">
@@ -301,7 +301,7 @@
 
             <!-- Right sidebar -->
             <ScrollView Grid.Column="1">
-                <VerticalStackLayout  Spacing="16">
+                <VerticalStackLayout Spacing="16" Padding="0,0,24,0">
 
                     <!-- Quick Actions -->
                     <Border BackgroundColor="White" Padding="16" StrokeThickness="0" StrokeShape="RoundRectangle 8">
