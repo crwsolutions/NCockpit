@@ -69,6 +69,9 @@ public partial class OverviewPageViewModel : ObservableObject
     [ObservableProperty]
     private string? errorMessage;
 
+    [ObservableProperty]
+    private bool showFavoritesOnly;
+
     /// <summary>
     /// Most recently opened projects for the Recent Activity sidebar.
     /// </summary>
@@ -176,6 +179,30 @@ public partial class OverviewPageViewModel : ObservableObject
 
         item.IsSelected = true;
         SelectedProject = item;
+    }
+
+    /// <summary>
+    /// Toggle the favorite flag for a project.
+    /// </summary>
+    [RelayCommand]
+    public async Task ToggleFavorite(ProjectListItem? item)
+    {
+        if (item is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var newValue = await _projectService.ToggleFavoriteAsync(item.Project.Id);
+            item.IsFavorite = newValue;
+            item.Project.IsFavorite = newValue;
+            FavoriteCount = _allProjects.Count(p => p.IsFavorite);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error toggling favorite: {ex.Message}";
+        }
     }
 
     /// <summary>
@@ -303,21 +330,35 @@ public partial class OverviewPageViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Apply the search filter to the project list.
+    /// Toggle the favorites-only filter.
+    /// </summary>
+    [RelayCommand]
+    public void ToggleFavoritesFilter()
+    {
+        ShowFavoritesOnly = !ShowFavoritesOnly;
+        ApplySearchFilter(SearchQuery);
+    }
+
+    /// <summary>
+    /// Apply the search and favorites filters to the project list.
     /// </summary>
     private void ApplySearchFilter(string query)
     {
-        if (string.IsNullOrWhiteSpace(query))
+        IEnumerable<ProjectListItem> filtered = _allProjects;
+
+        if (ShowFavoritesOnly)
         {
-            Projects = _allProjects;
-            return;
+            filtered = filtered.Where(p => p.IsFavorite);
         }
 
-        var normalized = query.Trim().ToLowerInvariant();
-        Projects = _allProjects
-            .Where(p => p.Name?.ToLowerInvariant().Contains(normalized) == true
-                   || p.FolderPath?.ToLowerInvariant().Contains(normalized) == true)
-            .ToList();
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            var normalized = query.Trim().ToLowerInvariant();
+            filtered = filtered.Where(p => p.Name?.ToLowerInvariant().Contains(normalized) == true
+                                       || p.FolderPath?.ToLowerInvariant().Contains(normalized) == true);
+        }
+
+        Projects = filtered.ToList();
     }
 
     /// <summary>

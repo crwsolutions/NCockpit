@@ -183,8 +183,9 @@
                                         FontFamily="FontAwesomeSolid"
                                         FontSize="12"
                                         TextColor="#3b82f6"
-                                        BackgroundColor="Transparent"
-                                        VerticalOptions="Center" />
+                                        Background="Transparent"
+                                        VerticalOptions="Center"
+                                        Command="{Binding ToggleFavoritesFilterCommand, Mode=OneTime}" />
                             </Grid>
 
                             <CollectionView x:Name="ProjectListView"
@@ -209,10 +210,11 @@
                                                         FontFamily="FontAwesomeSolid"
                                                         FontSize="14"
                                                         TextColor="{Binding IsFavorite, Converter={StaticResource BoolToFavoriteColorConverter}}"
-                                                        BackgroundColor="Transparent"
+                                                        Background="Transparent"
                                                         Padding="4"
                                                         VerticalOptions="Center"
-                                                        InputTransparent="True" />
+                                                        Command="{Binding Source={x:Reference Page}, Path=BindingContext.ToggleFavoriteCommand, Mode=OneTime}"
+                                                        CommandParameter="{Binding .}" />
 
                                                 <!-- Icon box -->
                                                 <Border Grid.Column="1"
