@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:cv="clr-namespace:NCockpit.Controls"
+             x:Class="NCockpit.Controls.SummaryCard"
+             x:Name="This"
+             x:DataType="cv:SummaryCard">
+    <Border Padding="16"
+            BackgroundColor="White"
+            StrokeThickness="0"
+            StrokeShape="RoundRectangle 8">
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+            <Border Grid.Column="0"
+                    WidthRequest="40"
+                    HeightRequest="40"
+                    Padding="8"
+                    BackgroundColor="{Binding IconBackgroundColor, Source={x:Reference This}}"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 20">
+                <Label Text="{Binding IconGlyph, Source={x:Reference This}}"
+                       FontFamily="FontAwesomeSolid"
+                       FontSize="18"
+                       TextColor="{Binding IconColor, Source={x:Reference This}}"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center" />
+            </Border>
+            <VerticalStackLayout Grid.Column="1" Spacing="4" VerticalOptions="Center">
+                <Label Text="{Binding CountValue, Source={x:Reference This}}"
+                       FontSize="24"
+                       FontAttributes="Bold"
+                       TextColor="#1a2744" />
+                <Label Text="{Binding CountLabel, Source={x:Reference This}}"
+                       FontSize="12"
+                       TextColor="#666666" />
+            </VerticalStackLayout>
+        </Grid>
+    </Border>
+</ContentView>

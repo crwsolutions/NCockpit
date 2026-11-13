@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:NCockpit"
+             xmlns:cv="clr-namespace:NCockpit.Controls"
              xmlns:viewmodels="clr-namespace:NCockpit.ViewModels"
              x:Class="NCockpit.Pages.OverviewPage"
              x:DataType="viewmodels:OverviewPageViewModel"
@@ -53,100 +54,28 @@
               ColumnDefinitions="*,*,*"
               ColumnSpacing="12">
             <!-- Total Projects -->
-            <Border Grid.Column="0"
-                    Padding="16"
-                    BackgroundColor="White"
-                    StrokeThickness="0"
-                    StrokeShape="RoundRectangle 8">
-                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                    <Border Grid.Column="0"
-                            WidthRequest="40"
-                            HeightRequest="40"
-                            Padding="8"
-                            BackgroundColor="#e3f2fd"
-                            StrokeShape="RoundRectangle 8">
-                        <Label Text="&#xf114;"
-                               FontFamily="FontAwesomeSolid"
-                               FontSize="18"
-                               TextColor="#3b82f6"
-                               HorizontalOptions="Center"
-                               VerticalOptions="Center" />
-                    </Border>
-                    <VerticalStackLayout Grid.Column="1" Spacing="4" VerticalOptions="Center">
-                        <Label Text="{Binding TotalProjects}"
-                               FontSize="24"
-                               FontAttributes="Bold"
-                               TextColor="#1a2744" />
-                        <Label Text="Total projects"
-                               FontSize="12"
-                               TextColor="#666666" />
-                    </VerticalStackLayout>
-                </Grid>
-            </Border>
+            <cv:SummaryCard Grid.Column="0"
+                            IconGlyph="&#xf114;"
+                            IconColor="#3b82f6"
+                            IconBackgroundColor="#e3f2fd"
+                            CountValue="{Binding TotalProjects}"
+                            CountLabel="Total projects" />
 
             <!-- Recently Used -->
-            <Border Grid.Column="1"
-                    Padding="16"
-                    BackgroundColor="White"
-                    StrokeThickness="0"
-                    StrokeShape="RoundRectangle 8">
-                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                    <Border Grid.Column="0"
-                            WidthRequest="40"
-                            HeightRequest="40"
-                            Padding="8"
-                            BackgroundColor="#e3f2fd"
-                            StrokeShape="RoundRectangle 8">
-                        <Label Text="&#xf017;"
-                               FontFamily="FontAwesomeSolid"
-                               FontSize="18"
-                               TextColor="#3b82f6"
-                               HorizontalOptions="Center"
-                               VerticalOptions="Center" />
-                    </Border>
-                    <VerticalStackLayout Grid.Column="1" Spacing="4" VerticalOptions="Center">
-                        <Label Text="{Binding RecentlyUsedCount}"
-                               FontSize="24"
-                               FontAttributes="Bold"
-                               TextColor="#1a2744" />
-                        <Label Text="Recently used"
-                               FontSize="12"
-                               TextColor="#666666" />
-                    </VerticalStackLayout>
-                </Grid>
-            </Border>
+            <cv:SummaryCard Grid.Column="1"
+                            IconGlyph="&#xf017;"
+                            IconColor="#3b82f6"
+                            IconBackgroundColor="#e3f2fd"
+                            CountValue="{Binding RecentlyUsedCount}"
+                            CountLabel="Recently used" />
 
             <!-- Favorites -->
-            <Border Grid.Column="2"
-                    Padding="16"
-                    BackgroundColor="White"
-                    StrokeThickness="0"
-                    StrokeShape="RoundRectangle 8">
-                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                    <Border Grid.Column="0"
-                            WidthRequest="40"
-                            HeightRequest="40"
-                            Padding="8"
-                            BackgroundColor="#fff3e0"
-                            StrokeShape="RoundRectangle 8">
-                        <Label Text="&#xf005;"
-                               FontFamily="FontAwesomeSolid"
-                               FontSize="18"
-                               TextColor="#f5a623"
-                               HorizontalOptions="Center"
-                               VerticalOptions="Center" />
-                    </Border>
-                    <VerticalStackLayout Grid.Column="1" Spacing="4" VerticalOptions="Center">
-                        <Label Text="{Binding FavoriteCount}"
-                               FontSize="24"
-                               FontAttributes="Bold"
-                               TextColor="#1a2744" />
-                        <Label Text="Favorites"
-                               FontSize="12"
-                               TextColor="#666666" />
-                    </VerticalStackLayout>
-                </Grid>
-            </Border>
+            <cv:SummaryCard Grid.Column="2"
+                            IconGlyph="&#xf005;"
+                            IconColor="#f5a623"
+                            IconBackgroundColor="#fff3e0"
+                            CountValue="{Binding FavoriteCount}"
+                            CountLabel="Favorites" />
         </Grid>
 
         <!-- Content -->
