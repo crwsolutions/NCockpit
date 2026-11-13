@@ -28,6 +28,10 @@ public static class MauiProgram
 				fonts.AddFont("FontAwesome6FreeSolid.otf", "FontAwesomeSolid");
 			});
 		
+		// Register window and shell
+		builder.Services.AddSingleton<AppShell>();
+		builder.Services.AddSingleton<AppWindow>();
+
 		// Register repositories
 		builder.Services.AddSingleton<IProjectFolderRepository, ProjectFolderRepository>();
 		builder.Services.AddSingleton<IProjectRepository, ProjectRepository>();

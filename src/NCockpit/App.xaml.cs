@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace NCockpit;
 
@@ -11,6 +11,7 @@ public partial class App : Application
 
 	protected override Window CreateWindow(IActivationState? activationState)
 	{
-		return new Window(new AppShell());
+		return IPlatformApplication.Current!.Services.GetService<AppWindow>()
+			?? throw new InvalidOperationException("AppWindow not found in services");
 	}
 }
