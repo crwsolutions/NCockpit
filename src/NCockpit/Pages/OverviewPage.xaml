@@ -235,13 +235,8 @@
                 <VerticalStackLayout Spacing="16" Padding="0,0,24,0">
 
                     <!-- Quick Actions -->
-                    <Border BackgroundColor="White" Padding="16" StrokeThickness="0" StrokeShape="RoundRectangle 8">
-                        <VerticalStackLayout Spacing="12">
-                            <Label Text="Quick actions"
-                                   FontSize="16"
-                                   FontAttributes="Bold"
-                                   TextColor="#1a2744" />
-
+                    <cv:SectionCard Title="Quick actions">
+                        <VerticalStackLayout Spacing="8">
                             <Border BackgroundColor="Transparent" Padding="4,8" StrokeThickness="0">
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer Command="{Binding OpenLastProjectCommand}" />
@@ -282,17 +277,11 @@
                                 </HorizontalStackLayout>
                             </Border>
                         </VerticalStackLayout>
-                    </Border>
+                    </cv:SectionCard>
 
                     <!-- Recent Activity -->
-                    <Border BackgroundColor="White" Padding="16" StrokeThickness="0" StrokeShape="RoundRectangle 8">
-                        <VerticalStackLayout Spacing="12">
-                            <Label Text="Recent activity"
-                                   FontSize="16"
-                                   FontAttributes="Bold"
-                                   TextColor="#1a2744" />
-
-                            <CollectionView ItemsSource="{Binding RecentActivity}"
+                    <cv:SectionCard Title="Recent activity">
+                        <CollectionView ItemsSource="{Binding RecentActivity}"
                                             SelectionMode="None">
                                 <CollectionView.ItemTemplate>
                                     <DataTemplate x:DataType="viewmodels:ProjectListItem">
@@ -322,8 +311,7 @@
                                     </DataTemplate>
                                 </CollectionView.ItemTemplate>
                             </CollectionView>
-                        </VerticalStackLayout>
-                    </Border>
+                    </cv:SectionCard>
 
                 </VerticalStackLayout>
             </ScrollView>

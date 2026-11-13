@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:cv="clr-namespace:NCockpit.Controls"
+             x:Class="NCockpit.Controls.SectionCard"
+             x:Name="This"
+             x:DataType="cv:SectionCard">
+    <Border Padding="16"
+            BackgroundColor="White"
+            StrokeThickness="0"
+            StrokeShape="RoundRectangle 8">
+        <Grid RowDefinitions="Auto,*" RowSpacing="12">
+            <Label Grid.Row="0"
+                   Text="{Binding Title, Source={x:Reference This}}"
+                   FontSize="16"
+                   FontAttributes="Bold"
+                   TextColor="#1a2744" />
+            <ContentPresenter Grid.Row="1" />
+        </Grid>
+    </Border>
+</ContentView>
