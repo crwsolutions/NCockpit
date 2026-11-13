@@ -72,6 +72,7 @@
 		<PackageReference Include="Dapper" Version="2.1.86" />
 		<PackageReference Include="Microsoft.Extensions.AI" Version="10.10.0" />
 		<PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="10.10.0" />
+		<PackageReference Include="Microsoft.Maui.DevFlow.Agent" Version="0.1.0-preview.14.26555.2" />
 	</ItemGroup>
 
 </Project>

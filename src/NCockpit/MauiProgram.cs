@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Maui.DevFlow.Agent;
 using CommunityToolkit.Maui;
 using NCockpit.Repositories;
 using NCockpit.Services;
@@ -53,6 +54,7 @@ public static class MauiProgram
 
 #if DEBUG
 		builder.Logging.AddDebug();
+		builder.AddMauiDevFlowAgent();
 #endif
 
 		return builder.Build();
