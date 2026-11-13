@@ -241,9 +241,9 @@
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer Command="{Binding OpenLastProjectCommand}" />
                                 </Border.GestureRecognizers>
-                                <HorizontalStackLayout Spacing="8">
-                                    <Label Text="&#xf061;" FontFamily="FontAwesomeSolid" FontSize="13" TextColor="#3b82f6" />
-                                    <Label Text="Open last project" FontSize="13" TextColor="#1a2744" />
+                                <HorizontalStackLayout Spacing="10">
+                                    <Label Text="&#xf061;" FontFamily="FontAwesomeSolid" FontSize="22" WidthRequest="28" TextColor="#3b82f6" />
+                                    <Label Text="Open last project" FontSize="14" TextColor="#1a2744" VerticalOptions="Start" />
                                 </HorizontalStackLayout>
                             </Border>
 
@@ -251,9 +251,9 @@
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer Command="{Binding OpenInExplorerCommand}" />
                                 </Border.GestureRecognizers>
-                                <HorizontalStackLayout Spacing="8">
-                                    <Label Text="&#xf07c;" FontFamily="FontAwesomeSolid" FontSize="13" TextColor="#3b82f6" />
-                                    <Label Text="Open in file explorer" FontSize="13" TextColor="#1a2744" />
+                                <HorizontalStackLayout Spacing="10">
+                                    <Label Text="&#xf07b;" FontFamily="FontAwesomeSolid" FontSize="22" WidthRequest="28" TextColor="#3b82f6" />
+                                    <Label Text="Open in file explorer" FontSize="14" TextColor="#1a2744" />
                                 </HorizontalStackLayout>
                             </Border>
 
@@ -261,9 +261,9 @@
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer Command="{Binding OpenInIDECommand}" />
                                 </Border.GestureRecognizers>
-                                <HorizontalStackLayout Spacing="8">
-                                    <Label Text="&#xf121;" FontFamily="FontAwesomeSolid" FontSize="13" TextColor="#3b82f6" />
-                                    <Label Text="Open in IDE" FontSize="13" TextColor="#1a2744" />
+                                <HorizontalStackLayout Spacing="10">
+                                    <Label Text="&#xf121;" FontFamily="FontAwesomeSolid" FontSize="22" WidthRequest="28" TextColor="#3b82f6" />
+                                    <Label Text="Open in IDE" FontSize="14" TextColor="#1a2744"  />
                                 </HorizontalStackLayout>
                             </Border>
 
@@ -271,9 +271,9 @@
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer Command="{Binding OpenGitHubCommand}" />
                                 </Border.GestureRecognizers>
-                                <HorizontalStackLayout Spacing="8">
-                                    <Label Text="&#xf09b;" FontFamily="FontAwesomeSolid" FontSize="13" TextColor="#3b82f6" />
-                                    <Label Text="Open GitHub" FontSize="13" TextColor="#1a2744" />
+                                <HorizontalStackLayout Spacing="10">
+                                    <Image Source="github.png" HeightRequest="28" WidthRequest="28" />
+                                    <Label Text="Open GitHub" FontSize="14" TextColor="#1a2744" VerticalOptions="Center"  />
                                 </HorizontalStackLayout>
                             </Border>
                         </VerticalStackLayout>
