@@ -43,6 +43,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<IScanService, ScanService>();
 		builder.Services.AddSingleton<IPageService, PageService>();
 		builder.Services.AddSingleton<IWindowsLauncher, WindowsLauncher>();
+		builder.Services.AddSingleton<IReadmeLinkParserService, ReadmeLinkParserService>();
 		// Register ViewModels
 		builder.Services.AddSingleton<FoldersPageViewModel>();
 		builder.Services.AddSingleton<OverviewPageViewModel>();

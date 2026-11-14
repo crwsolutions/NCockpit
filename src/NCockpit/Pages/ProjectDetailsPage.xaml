@@ -4,6 +4,7 @@
              xmlns:models="clr-namespace:NCockpit.Models"
              xmlns:viewmodels="clr-namespace:NCockpit.ViewModels"
              xmlns:cv="clr-namespace:NCockpit.Controls"
+             xmlns:services="clr-namespace:NCockpit.Services"
              x:Class="NCockpit.Pages.ProjectDetailsPage"
              x:DataType="viewmodels:ProjectDetailsPageViewModel"
              Title="Project Details"
@@ -347,10 +348,39 @@
                     <VerticalStackLayout Grid.Column="2" Spacing="20">
                         <cv:SectionCard Title="Mobile">
                             <VerticalStackLayout Spacing="8">
-                                <Label Text="No mobile configuration yet."
+                                <!-- Mobile links grouped by platform -->
+                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding MobileLinks}"
+                                                     Spacing="8"
+                                                     IsVisible="{Binding HasMobileLinks}">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="services:ReadmeLink">
+                                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                                                <Image Grid.Column="0"
+                                                       Source="{Binding Platform, Converter={StaticResource LinkIconConverter}}"
+                                                       WidthRequest="18"
+                                                       HeightRequest="18"
+                                                       VerticalOptions="Center" />
+                                                <Label Grid.Column="1"
+                                                       Text="{Binding Text}"
+                                                       FontSize="12"
+                                                       TextColor="#3b82f6"
+                                                       VerticalOptions="Center" />
+                                                <Label Grid.Column="2"
+                                                       Text="&#xf061;"
+                                                       FontFamily="FontAwesomeSolid"
+                                                       FontSize="10"
+                                                       TextColor="#9ca3af"
+                                                       VerticalOptions="Center" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </VerticalStackLayout>
+
+                                <Label Text="No mobile links found in README."
                                        FontSize="12"
                                        TextColor="#9ca3af"
-                                       Padding="0,8" />
+                                       Padding="0,8"
+                                       IsVisible="{Binding HasMobileLinks, Converter={StaticResource InverseBoolConverter}}" />
                             </VerticalStackLayout>
                         </cv:SectionCard>
 
@@ -365,10 +395,39 @@
 
                         <cv:SectionCard Title="Related links">
                             <VerticalStackLayout Spacing="8">
-                                <Label Text="No related links yet."
+                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding RelatedLinks}"
+                                                     Spacing="8"
+                                                     IsVisible="{Binding HasRelatedLinks}">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="services:ReadmeLink">
+                                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                                                <Label Grid.Column="0"
+                                                       Text="&#xf0c1;"
+                                                       FontFamily="FontAwesomeSolid"
+                                                       FontSize="12"
+                                                       TextColor="#3b82f6"
+                                                       VerticalOptions="Center" />
+                                                <Label Grid.Column="1"
+                                                       Text="{Binding Text}"
+                                                       FontSize="12"
+                                                       TextColor="#3b82f6"
+                                                       VerticalOptions="Center" />
+                                                <Label Grid.Column="2"
+                                                       Text="&#xf061;"
+                                                       FontFamily="FontAwesomeSolid"
+                                                       FontSize="10"
+                                                       TextColor="#9ca3af"
+                                                       VerticalOptions="Center" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </VerticalStackLayout>
+
+                                <Label Text="No related links found in README."
                                        FontSize="12"
                                        TextColor="#9ca3af"
-                                       Padding="0,8" />
+                                       Padding="0,8"
+                                       IsVisible="{Binding HasRelatedLinks, Converter={StaticResource InverseBoolConverter}}" />
                             </VerticalStackLayout>
                         </cv:SectionCard>
                     </VerticalStackLayout>

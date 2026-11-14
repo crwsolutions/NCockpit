@@ -26,6 +26,7 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
     private readonly ISupportingFolderService _supportingFolderService;
     private readonly IPopupService _popupService;
     private readonly IWindowsLauncher _windowsLauncher;
+    private readonly IReadmeLinkParserService _readmeLinkParser;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasProject))]
@@ -44,6 +45,18 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
 
     [ObservableProperty]
     public partial string? ErrorMessage { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasMobileLinks))]
+    public partial List<ReadmeLink> MobileLinks { get; set; } = [];
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasRelatedLinks))]
+    public partial List<ReadmeLink> RelatedLinks { get; set; } = [];
+
+    public bool HasMobileLinks => MobileLinks.Count > 0;
+
+    public bool HasRelatedLinks => RelatedLinks.Count > 0;
 
     /// <summary>
     /// Whether a project is currently selected and can be shown.
@@ -108,12 +121,14 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
         IProjectService projectService,
         ISupportingFolderService supportingFolderService,
         IPopupService popupService,
-        IWindowsLauncher windowsLauncher)
+        IWindowsLauncher windowsLauncher,
+        IReadmeLinkParserService readmeLinkParser)
     {
         _projectService = projectService;
         _supportingFolderService = supportingFolderService;
         _popupService = popupService;
         _windowsLauncher = windowsLauncher;
+        _readmeLinkParser = readmeLinkParser;
     }
 
     /// <summary>
@@ -148,6 +163,13 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
             CurrentProject = projects.FirstOrDefault(p => p.Id == projectId);
 
             await LoadLinkedFoldersAsync();
+
+            if (CurrentProject is not null)
+            {
+                var links = await _readmeLinkParser.ParseLinksAsync(CurrentProject.FolderPath);
+                MobileLinks = links.MobileLinks;
+                RelatedLinks = links.RelatedLinks;
+            }
         }
         catch (Exception ex)
         {
@@ -342,6 +364,30 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
         catch (Exception ex)
         {
             ErrorMessage = $"Error opening GitHub: {ex.Message}";
+        }
+    }
+
+    /// <summary>
+    /// Open a link URL in the default browser.
+    /// </summary>
+    [RelayCommand]
+    private void OpenLink(string url)
+    {
+        if (string.IsNullOrEmpty(url))
+        {
+            return;
+        }
+
+        try
+        {
+            if (!_windowsLauncher.TryOpenUrl(url))
+            {
+                ErrorMessage = $"Could not open {url}";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error opening link: {ex.Message}";
         }
     }
 

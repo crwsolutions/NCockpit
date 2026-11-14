@@ -16,6 +16,7 @@
     <converters:IntToEmptyVisibilityConverter x:Key="IntToEmptyVisibilityConverter" />
     <converters:ProjectIconColorConverter x:Key="ProjectIconColorConverter" />
     <converters:SelectedToBackgroundColorConverter x:Key="SelectedToBackgroundColorConverter" />
+    <converters:LinkIconConverter x:Key="LinkIconConverter" />
 
 </ResourceDictionary>
 
