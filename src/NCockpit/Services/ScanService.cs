@@ -1,3 +1,4 @@
+using System.Text.Json;
 using NCockpit.Models;
 using NCockpit.Repositories;
 
@@ -33,6 +34,27 @@ public class ScanService : IScanService
     [
         ".git", "bin", "obj", "node_modules", "packages",
         ".vs", ".idea", ".gradle", "dist", "build"
+    ];
+
+    /// <summary>
+    /// Common root-level files worth quickly opening from the project details page.
+    /// Checked in order; first match per name wins.
+    /// </summary>
+    private static readonly string[] KnownRootFiles =
+    [
+        "AGENTS.md",
+        "README.md",
+        "README",
+        "README.txt",
+        "LICENSE",
+        "LICENSE.md",
+        "LICENSE.txt",
+        "CONTRIBUTING.md",
+        "CONTRIBUTING",
+        "CHANGELOG.md",
+        "CHANGELOG",
+        "SECURITY.md",
+        "CODE_OF_CONDUCT.md"
     ];
 
     public ScanService(IProjectFolderRepository folderRepository, IProjectRepository projectRepository, ISupportingFolderRepository supportingFolderRepository)
@@ -94,15 +116,17 @@ public class ScanService : IScanService
 
             foreach (var solution in solutions)
             {
+                var projectPath = GetProjectRootPath(solution);
                 await _projectRepository.UpsertAsync(new Project
                 {
                     Name = System.IO.Path.GetFileNameWithoutExtension(solution),
                     SolutionPath = solution,
-                    FolderPath = GetProjectRootPath(folder.Path, solution),
+                    FolderPath = projectPath,
                     FolderId = folder.Id,
                     LastSeenUnix = scanUnix,
                     ScanUnix = scanUnix,
-                    SolutionLastWriteUnix = GetSolutionLastWriteUnix(solution)
+                    SolutionLastWriteUnix = GetSolutionLastWriteUnix(solution),
+                    FilesJson = DiscoverRootFilesJson(projectPath)
                 });
             }
         }
@@ -239,26 +263,70 @@ public class ScanService : IScanService
     }
 
     /// <summary>
-    /// Returns the project's root folder: the first directory under the scanned
-    /// folder that contains the solution. A solution directly in the scanned root
-    /// maps back to the scanned root itself.
+    /// Discovers common root files in the project folder and returns them as a JSON
+    /// array of file names. Missing or inaccessible files are silently ignored so
+    /// a missing optional file never fails the scan.
     /// </summary>
-    private static string GetProjectRootPath(string scanFolder, string solutionPath)
+    private static string? DiscoverRootFilesJson(string projectPath)
     {
         try
         {
-            var relative = System.IO.Path.GetRelativePath(scanFolder, solutionPath);
-            var firstSegment = relative.Split(
-                System.IO.Path.DirectorySeparatorChar,
-                System.IO.Path.AltDirectorySeparatorChar)[0];
+            var found = new List<string>();
+            foreach (var fileName in KnownRootFiles)
+            {
+                if (found.Count > 0 && SameBaseName(fileName, found[^1]))
+                {
+                    // Already recorded a variant of this file (e.g. README and README.md);
+                    // prefer the first one seen in the priority list.
+                    continue;
+                }
 
-            return string.IsNullOrEmpty(firstSegment)
-                ? scanFolder
-                : System.IO.Path.Combine(scanFolder, firstSegment);
+                if (File.Exists(System.IO.Path.Combine(projectPath, fileName)))
+                {
+                    found.Add(fileName);
+                }
+            }
+
+            return found.Count > 0 ? JsonSerializer.Serialize(found) : null;
         }
         catch
         {
-            return scanFolder;
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// True when two file names share the same base name (ignoring extension).
+    /// </summary>
+    private static bool SameBaseName(string a, string b)
+    {
+        var baseA = System.IO.Path.GetFileNameWithoutExtension(a) ?? a;
+        var baseB = System.IO.Path.GetFileNameWithoutExtension(b) ?? b;
+        return string.Equals(baseA, baseB, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Returns the project's root folder: the folder containing the solution
+    /// file, unless that folder is named "src", in which case the parent folder
+    /// is returned.
+    /// </summary>
+    private static string GetProjectRootPath(string solutionPath)
+    {
+        try
+        {
+            var solutionFolder = System.IO.Path.GetDirectoryName(solutionPath)!;
+            var folderName = System.IO.Path.GetFileName(solutionFolder);
+
+            if (string.Equals(folderName, "src", StringComparison.OrdinalIgnoreCase))
+            {
+                return System.IO.Path.GetDirectoryName(solutionFolder)!;
+            }
+
+            return solutionFolder;
+        }
+        catch
+        {
+            return System.IO.Path.GetDirectoryName(solutionPath)!;
         }
     }
 }

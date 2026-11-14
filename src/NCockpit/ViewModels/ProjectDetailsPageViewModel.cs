@@ -1,3 +1,4 @@
+using System.Text.Json;
 using CommunityToolkit.Maui;
 using CommunityToolkit.Maui.Extensions;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -48,6 +49,35 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
     public bool HasLinkedFolders => LinkedFolders.Count > 0;
 
     /// <summary>
+    /// Root files discovered during scanning, parsed from the project's
+    /// FilesJson. Returns an empty list when no files were recorded.
+    /// </summary>
+    public List<string> Files
+    {
+        get
+        {
+            if (CurrentProject?.FilesJson is not { Length: > 0 } json)
+            {
+                return [];
+            }
+
+            try
+            {
+                return JsonSerializer.Deserialize<List<string>>(json) ?? [];
+            }
+            catch
+            {
+                return [];
+            }
+        }
+    }
+
+    /// <summary>
+    /// Whether any root files were discovered for the current project.
+    /// </summary>
+    public bool HasFiles => Files.Count > 0;
+
+    /// <summary>
     /// File name of the solution file, e.g. "NCockpit.slnx".
     /// </summary>
     public string? SolutionFileName =>
@@ -88,6 +118,8 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
     partial void OnCurrentProjectChanged(Project? value)
     {
         OnPropertyChanged(nameof(HasProject));
+        OnPropertyChanged(nameof(Files));
+        OnPropertyChanged(nameof(HasFiles));
         OnPropertyChanged(nameof(SolutionFileName));
         OnPropertyChanged(nameof(SolutionLastWriteDisplay));
     }
@@ -216,6 +248,40 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
         {
             ErrorMessage = $"Error opening solution: {ex.Message}";
         }
+    }
+
+    /// <summary>
+    /// Open a project root file in the View File popup.
+    /// </summary>
+    [RelayCommand]
+    private async Task OpenFileAsync(string fileName)
+    {
+        if (CurrentProject is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var fullPath = System.IO.Path.Combine(CurrentProject.FolderPath, fileName);
+            await _popupService.ShowPopupAsync<ViewFilePopup>(
+                Shell.Current,
+                options: null,
+                shellParameters: new Dictionary<string, object> { ["path"] = fullPath });
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error opening file: {ex.Message}";
+        }
+    }
+
+    /// <summary>
+    /// Navigate back to the projects overview.
+    /// </summary>
+    [RelayCommand]
+    private async Task BackAsync()
+    {
+        await Shell.Current.GoToAsync("..");
     }
 
     /// <summary>

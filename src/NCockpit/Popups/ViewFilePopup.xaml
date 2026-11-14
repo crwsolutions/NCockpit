@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<toolkit:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+               xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+               xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+               xmlns:vm="clr-namespace:NCockpit.ViewModels.Popups"
+               x:Class="NCockpit.Popups.ViewFilePopup"
+               x:DataType="vm:ViewFilePopupViewModel"
+               Padding="0"
+               BackgroundColor="White"
+               CanBeDismissedByTappingOutsideOfPopup="True"
+               Width="800"
+               Height="600">
+
+    <Grid RowDefinitions="Auto,*">
+        <!-- Header -->
+        <Grid Grid.Row="0" BackgroundColor="#1a2744" Padding="20,16" ColumnDefinitions="*,Auto">
+            <Label Grid.Column="0"
+                   Text="{Binding FileName}"
+                   FontSize="16"
+                   FontAttributes="Bold"
+                   TextColor="White"
+                   VerticalOptions="Center" />
+
+            <Button Grid.Column="1"
+                    Text="&#xf00d;"
+                    FontFamily="FontAwesomeSolid"
+                    Padding="0"
+                    WidthRequest="40"
+                    HeightRequest="40"
+                    CornerRadius="0"
+                    BackgroundColor="Transparent"
+                    TextColor="#b0b8c8"
+                    FontSize="16"
+                    Command="{Binding CloseCommand}"
+                    VerticalOptions="Center" />
+        </Grid>
+
+        <!-- Content -->
+        <Border Grid.Row="1" Padding="20">
+            <Editor Text="{Binding Content}"
+                    BackgroundColor="White"
+                    FontFamily="Consolas"
+                    FontSize="13"
+                    TextColor="#1a2744"
+                    IsReadOnly="True" />
+        </Border>
+    </Grid>
+
+</toolkit:Popup>

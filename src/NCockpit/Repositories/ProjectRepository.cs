@@ -59,7 +59,7 @@ public class ProjectRepository : IProjectRepository
 
         const string sql = """
             SELECT Id, Name, SolutionPath, FolderPath, FolderId, LastSeenUnix, ScanUnix,
-                   IsFavorite, LastUsedUnix, SolutionLastWriteUnix
+                   IsFavorite, LastUsedUnix, SolutionLastWriteUnix, FilesJson
             FROM Projects
             ORDER BY LastUsedUnix IS NULL, COALESCE(LastUsedUnix, 0) DESC,
                      SolutionLastWriteUnix IS NULL, COALESCE(SolutionLastWriteUnix, 0) DESC,
@@ -75,15 +75,16 @@ public class ProjectRepository : IProjectRepository
         await connection.OpenAsync();
 
         const string sql = """
-            INSERT INTO Projects (Name, SolutionPath, FolderPath, FolderId, LastSeenUnix, ScanUnix, CreatedAt, SolutionLastWriteUnix)
-            VALUES (@Name, @SolutionPath, @FolderPath, @FolderId, @LastSeenUnix, @ScanUnix, @CreatedAt, @SolutionLastWriteUnix)
+            INSERT INTO Projects (Name, SolutionPath, FolderPath, FolderId, LastSeenUnix, ScanUnix, CreatedAt, SolutionLastWriteUnix, FilesJson)
+            VALUES (@Name, @SolutionPath, @FolderPath, @FolderId, @LastSeenUnix, @ScanUnix, @CreatedAt, @SolutionLastWriteUnix, @FilesJson)
             ON CONFLICT (SolutionPath) DO UPDATE SET
                 Name = excluded.Name,
                 FolderPath = excluded.FolderPath,
                 FolderId = excluded.FolderId,
                 LastSeenUnix = excluded.LastSeenUnix,
                 ScanUnix = excluded.ScanUnix,
-                SolutionLastWriteUnix = excluded.SolutionLastWriteUnix;
+                SolutionLastWriteUnix = excluded.SolutionLastWriteUnix,
+                FilesJson = excluded.FilesJson;
             """;
 
         await connection.ExecuteAsync(sql, new
@@ -95,7 +96,8 @@ public class ProjectRepository : IProjectRepository
             project.LastSeenUnix,
             project.ScanUnix,
             CreatedAt = project.LastSeenUnix,
-            project.SolutionLastWriteUnix
+            project.SolutionLastWriteUnix,
+            project.FilesJson
         });
     }
 

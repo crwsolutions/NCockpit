@@ -55,6 +55,8 @@ public static class MauiProgram
 		builder.Services.AddTransientPopup<ScanPopup, ScanPopupViewModel>();
 		builder.Services.AddTransient<LinkSecondaryPopupViewModel>();
 		builder.Services.AddTransientPopup<LinkSecondaryPopup, LinkSecondaryPopupViewModel>();
+		builder.Services.AddTransient<ViewFilePopupViewModel>();
+		builder.Services.AddTransientPopup<ViewFilePopup, ViewFilePopupViewModel>();
 
 #if DEBUG
 		builder.Logging.AddDebug();

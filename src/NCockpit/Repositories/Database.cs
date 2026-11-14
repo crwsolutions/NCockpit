@@ -56,13 +56,47 @@ internal static class Database
                 CreatedAt INTEGER NOT NULL,
                 IsFavorite INTEGER NOT NULL DEFAULT 0,
                 LastUsedUnix INTEGER,
-                SolutionLastWriteUnix INTEGER
+                SolutionLastWriteUnix INTEGER,
+                FilesJson TEXT
             );
             """, connection)
         {
             CommandTimeout = 10
         };
         command.ExecuteNonQuery();
+
+        Migrate(connection);
+    }
+
+    private static void Migrate(SqliteConnection connection)
+    {
+        // CurrentUserVersion should track the highest migration step applied.
+        const int CurrentUserVersion = 2;
+
+        using var versionCommand = new SqliteCommand("PRAGMA user_version;", connection);
+        var userVersion = Convert.ToInt32(versionCommand.ExecuteScalar());
+
+        if (userVersion < 1)
+        {
+            // Initial schema is created by the CREATE TABLE statements.
+            // No migration needed.
+        }
+
+        if (userVersion < 2)
+        {
+            // Add FilesJson column for discovered root files, if it doesn't
+            // already exist (fresh databases have it in the CREATE TABLE).
+            try
+            {
+                Execute(connection, "ALTER TABLE Projects ADD COLUMN FilesJson TEXT");
+            }
+            catch (SqliteException ex) when (ex.Message.Contains("duplicate column name"))
+            {
+                // Column already exists — nothing to do.
+            }
+        }
+
+        Execute(connection, $"PRAGMA user_version = {CurrentUserVersion};");
     }
 
     private static void Execute(SqliteConnection connection, string sql)

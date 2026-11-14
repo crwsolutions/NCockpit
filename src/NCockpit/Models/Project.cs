@@ -56,4 +56,9 @@ public class Project
     /// scanning and used for overview ordering.
     /// </summary>
     public long? SolutionLastWriteUnix { get; set; }
+
+    /// <summary>
+    /// JSON array of file names for common root files discovered during scanning.
+    /// </summary>
+    public string? FilesJson { get; set; }
 }
