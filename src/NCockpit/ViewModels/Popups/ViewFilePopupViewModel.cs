@@ -13,13 +13,13 @@ namespace NCockpit.ViewModels.Popups;
 public partial class ViewFilePopupViewModel : ObservableObject, IQueryAttributable
 {
     [ObservableProperty]
-    private string fileName = string.Empty;
+    public partial string FileName { get; set; } = string.Empty;
 
     [ObservableProperty]
-    private string content = string.Empty;
+    public partial string Content { get; set; } = string.Empty;
 
     [ObservableProperty]
-    private string? errorMessage;
+    public partial string? ErrorMessage { get; set; }
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {

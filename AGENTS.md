@@ -24,7 +24,7 @@ dotnet build --framework net10.0-windows10.0.19041.0   # Target the Windows TFM 
 - The agent can build to verify compilation but should **not** run the app — the developer handles manual validation.
 
 ### Linting
-- Rely on .NET compiler warnings; the build currently emits `MVVMTK0045` (see [ViewModel Implementation](#view-model-implementation)) and these are intentionally accepted for this project.
+- Rely on .NET compiler warnings.
 - Ensure code compiles without errors; keep warning output from growing.
 
 ## Code Style and Conventions
@@ -108,13 +108,12 @@ dotnet build --framework net10.0-windows10.0.19041.0   # Target the Windows TFM 
 
 ### View-Model Implementation
 - Use `public partial class <Name>ViewModel : ObservableObject`.
-- Use `[ObservableProperty]` on **private camelCase fields** (the pattern used throughout this project):
+- Use `[ObservableProperty]` on **public partial properties**:
   ```csharp
   [ObservableProperty]
-  private List<ProjectListItem> projects = [];
+  public partial List<ProjectListItem> Projects { get; set; } = [];
   ```
-  The source generator creates the `Projects` property and a private backing field.
-- **MVVMTK0045**: applying `[ObservableProperty]` to a field generates code that is not AOT-compatible in WinRT scenarios. This is accepted for NCockpit (it runs unpackaged on Windows), so do **not** treat these warnings as build breakers — but keep new code consistent with the existing field-based style.
+  The source generator provides the backing field and property change notification.
 - Use `[RelayCommand]` for commands; prefer `async Task` command methods so `IAsyncRelayCommand` is generated.
 
 ### Data Flow

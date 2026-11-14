@@ -34,13 +34,13 @@ public sealed class AddFolderResult
 public partial class AddFolderPopupViewModel : ObservableObject
 {
     [ObservableProperty]
-    private string folderPath = string.Empty;
+    public partial string FolderPath { get; set; } = string.Empty;
 
     [ObservableProperty]
-    private bool isPrimary = true;
+    public partial bool IsPrimary { get; set; } = true;
 
     [ObservableProperty]
-    private string? errorMessage;
+    public partial string? ErrorMessage { get; set; }
 
     /// <summary>
     /// Invoked when the user taps the folder browser ("...") button.

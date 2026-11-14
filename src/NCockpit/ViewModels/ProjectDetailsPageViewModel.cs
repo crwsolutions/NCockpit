@@ -8,6 +8,7 @@ using NCockpit.Models;
 using NCockpit.Popups;
 using NCockpit.Services;
 using NCockpit.ViewModels.Popups;
+using static System.Net.WebRequestMethods;
 
 namespace NCockpit.ViewModels;
 
@@ -27,16 +28,22 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
     private readonly IWindowsLauncher _windowsLauncher;
 
     [ObservableProperty]
-    private Project? currentProject;
+    [NotifyPropertyChangedFor(nameof(HasProject))]
+    [NotifyPropertyChangedFor(nameof(HasGitHubUrl))]
+    [NotifyPropertyChangedFor(nameof(Files))]
+    [NotifyPropertyChangedFor(nameof(HasFiles))]
+    [NotifyPropertyChangedFor(nameof(SolutionFileName))]
+    [NotifyPropertyChangedFor(nameof(SolutionLastWriteDisplay))]
+    public partial Project? CurrentProject { get; set; }
 
     [ObservableProperty]
-    private List<SupportingFolder> linkedFolders = [];
+    public partial List<SupportingFolder> LinkedFolders { get; set; } = [];
 
     [ObservableProperty]
-    private bool isLoading;
+    public partial bool IsLoading { get; set; }
 
     [ObservableProperty]
-    private string? errorMessage;
+    public partial string? ErrorMessage { get; set; }
 
     /// <summary>
     /// Whether a project is currently selected and can be shown.
@@ -121,15 +128,6 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
         }
     }
 
-    partial void OnCurrentProjectChanged(Project? value)
-    {
-        OnPropertyChanged(nameof(HasProject));
-        OnPropertyChanged(nameof(HasGitHubUrl));
-        OnPropertyChanged(nameof(Files));
-        OnPropertyChanged(nameof(HasFiles));
-        OnPropertyChanged(nameof(SolutionFileName));
-        OnPropertyChanged(nameof(SolutionLastWriteDisplay));
-    }
 
     partial void OnLinkedFoldersChanged(List<SupportingFolder> value)
     {

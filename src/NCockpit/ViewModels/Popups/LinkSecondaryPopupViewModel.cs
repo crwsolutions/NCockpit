@@ -31,13 +31,13 @@ public partial class LinkSecondaryPopupViewModel : ObservableObject, IQueryAttri
     private int projectId;
 
     [ObservableProperty]
-    private string searchQuery = string.Empty;
+    public partial string SearchQuery { get; set; } = string.Empty;
 
     [ObservableProperty]
-    private List<SupportingFolder> availableFolders = [];
+    public partial List<SupportingFolder> AvailableFolders { get; set; } = [];
 
     [ObservableProperty]
-    private string? errorMessage;
+    public partial string? ErrorMessage { get; set; }
 
     public LinkSecondaryPopupViewModel(ISupportingFolderService supportingFolderService)
     {

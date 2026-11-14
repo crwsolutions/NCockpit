@@ -36,16 +36,16 @@ public partial class ProjectListItem : ObservableObject
     public Project Project { get; }
 
     [ObservableProperty]
-    private string? name;
+    public partial string? Name { get; set; }
 
     [ObservableProperty]
-    private string? folderPath;
+    public partial string? FolderPath { get; set; }
 
     [ObservableProperty]
-    private bool isFavorite;
+    public partial bool IsFavorite { get; set; }
 
     [ObservableProperty]
-    private bool isSelected;
+    public partial bool IsSelected { get; set; }
 
     /// <summary>
     /// First letter of the project name, used for the colored icon box.
@@ -53,10 +53,10 @@ public partial class ProjectListItem : ObservableObject
     public string? Initial { get; }
 
     [ObservableProperty]
-    private string? lastOpenedDisplay;
+    public partial string? LastOpenedDisplay { get; set; }
 
     [ObservableProperty]
-    private string? statusText;
+    public partial string? StatusText { get; set; }
 
     /// <summary>
     /// Format a Unix timestamp as a relative time string, e.g. "Today 10:24",

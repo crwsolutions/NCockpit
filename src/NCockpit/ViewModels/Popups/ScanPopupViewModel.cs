@@ -18,16 +18,16 @@ public partial class ScanPopupViewModel : ObservableObject, IQueryAttributable
     private CancellationTokenSource? _cts;
 
     [ObservableProperty]
-    private string title = "Scanning...";
+    public partial string Title { get; set; } = "Scanning...";
 
     [ObservableProperty]
-    private string statusText = "Starting scan...";
+    public partial string StatusText { get; set; } = "Starting scan...";
 
     [ObservableProperty]
-    private bool isBusy = true;
+    public partial bool IsBusy { get; set; } = true;
 
     [ObservableProperty]
-    private double progress;
+    public partial double Progress { get; set; }
 
     /// <summary>
     /// Receives the cancellation token from the parent view-model via

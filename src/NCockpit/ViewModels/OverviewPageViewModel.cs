@@ -28,7 +28,7 @@ public partial class OverviewPageViewModel : ObservableObject
     /// Greeting line, e.g. "Good afternoon, Colin".
     /// </summary>
     [ObservableProperty]
-    private string greeting;
+    public partial string Greeting { get; set; }
 
     /// <summary>
     /// All projects ordered by last opened, then solution file timestamp.
@@ -39,7 +39,7 @@ public partial class OverviewPageViewModel : ObservableObject
     /// Projects shown in the list (filtered by search).
     /// </summary>
     [ObservableProperty]
-    private List<ProjectListItem> projects = [];
+    public partial List<ProjectListItem> Projects { get; set; } = [];
 
     /// <summary>
     /// Currently selected project. Clicking a project selects it; clicking
@@ -47,37 +47,37 @@ public partial class OverviewPageViewModel : ObservableObject
     /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasGitHubUrl))]
-    private ProjectListItem? selectedProject;
+    public partial ProjectListItem? SelectedProject { get; set; }
 
     /// <summary>
     /// Search filter text.
     /// </summary>
     [ObservableProperty]
-    private string searchQuery = string.Empty;
+    public partial string SearchQuery { get; set; } = string.Empty;
 
     [ObservableProperty]
-    private int totalProjects;
+    public partial int TotalProjects { get; set; }
 
     [ObservableProperty]
-    private int favoriteCount;
+    public partial int FavoriteCount { get; set; }
 
     [ObservableProperty]
-    private int recentlyUsedCount;
+    public partial int RecentlyUsedCount { get; set; }
 
     [ObservableProperty]
-    private bool isLoading;
+    public partial bool IsLoading { get; set; }
 
     [ObservableProperty]
-    private string? errorMessage;
+    public partial string? ErrorMessage { get; set; }
 
     [ObservableProperty]
-    private bool showFavoritesOnly;
+    public partial bool ShowFavoritesOnly { get; set; }
 
     /// <summary>
     /// Most recently opened projects for the Recent Activity sidebar.
     /// </summary>
     [ObservableProperty]
-    private List<ProjectListItem> recentActivity = [];
+    public partial List<ProjectListItem> RecentActivity { get; set; } = [];
 
     /// <summary>
     /// Whether the selected project has a git repo URL configured. Used to
@@ -186,7 +186,6 @@ public partial class OverviewPageViewModel : ObservableObject
 
         item.IsSelected = true;
         SelectedProject = item;
-        OnPropertyChanged(nameof(HasGitHubUrl));
     }
 
     /// <summary>

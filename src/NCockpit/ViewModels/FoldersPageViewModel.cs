@@ -24,23 +24,23 @@ public partial class FoldersPageViewModel : ObservableObject
     private CancellationTokenSource? _scanCts;
 
     [ObservableProperty]
-    private List<ProjectFolder> folders = [];
+    public partial List<ProjectFolder> Folders { get; set; } = [];
 
     [ObservableProperty]
-    private bool isLoading;
+    public partial bool IsLoading { get; set; }
 
     /// <summary>
     /// Transient status message shown at the bottom of the page (e.g. after a
     /// scan). Includes a timestamp so the user knows when the action happened.
     /// </summary>
     [ObservableProperty]
-    private string? statusText;
+    public partial string? StatusText { get; set; }
 
     [ObservableProperty]
-    private string? errorMessage;
+    public partial string? ErrorMessage { get; set; }
 
     [ObservableProperty]
-    private ProjectFolder? selectedFolder;
+    public partial ProjectFolder? SelectedFolder { get; set; }
 
     public FoldersPageViewModel(
         IProjectFolderService folderService,
