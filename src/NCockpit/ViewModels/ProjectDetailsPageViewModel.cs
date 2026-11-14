@@ -44,6 +44,12 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
     public bool HasProject => CurrentProject is not null;
 
     /// <summary>
+    /// Whether the project has a git repo URL configured. Used to toggle
+    /// the visibility of the GitHub action.
+    /// </summary>
+    public bool HasGitHubUrl => CurrentProject?.GitRepoUrl is { Length: > 0 };
+
+    /// <summary>
     /// Whether any supporting folders are linked to the current project.
     /// </summary>
     public bool HasLinkedFolders => LinkedFolders.Count > 0;
@@ -118,6 +124,7 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
     partial void OnCurrentProjectChanged(Project? value)
     {
         OnPropertyChanged(nameof(HasProject));
+        OnPropertyChanged(nameof(HasGitHubUrl));
         OnPropertyChanged(nameof(Files));
         OnPropertyChanged(nameof(HasFiles));
         OnPropertyChanged(nameof(SolutionFileName));
@@ -313,6 +320,30 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
         catch (Exception ex)
         {
             ErrorMessage = $"Error opening folder: {ex.Message}";
+        }
+    }
+
+    /// <summary>
+    /// Open the project's git repo URL in the default browser.
+    /// </summary>
+    [RelayCommand]
+    private void OpenGitHub()
+    {
+        if (CurrentProject is null || string.IsNullOrEmpty(CurrentProject.GitRepoUrl))
+        {
+            return;
+        }
+
+        try
+        {
+            if (!_windowsLauncher.TryOpenUrl(CurrentProject.GitRepoUrl))
+            {
+                ErrorMessage = $"Could not open {CurrentProject.GitRepoUrl}";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error opening GitHub: {ex.Message}";
         }
     }
 

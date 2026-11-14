@@ -79,11 +79,14 @@
                                 GlyphColor="#3b82f6"
                                 Command="{Binding OpenSolutionCommand}" />
                 <cv:QuickAction Text="GitHub"
-                                ImageSource="github.png" />
+                                ImageSource="github.png"
+                                Command="{Binding OpenGitHubCommand}"
+                                IsVisible="{Binding HasGitHubUrl}" />
                 <Label Text="View on GitHub"
                        FontSize="13"
                        TextColor="#3b82f6"
-                       VerticalOptions="Center" />
+                       VerticalOptions="Center"
+                       IsVisible="{Binding HasGitHubUrl}" />
             </HorizontalStackLayout>
         </Border>
 

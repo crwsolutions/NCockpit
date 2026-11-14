@@ -46,6 +46,7 @@ public partial class OverviewPageViewModel : ObservableObject
     /// the chevron navigates to details.
     /// </summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasGitHubUrl))]
     private ProjectListItem? selectedProject;
 
     /// <summary>
@@ -77,6 +78,12 @@ public partial class OverviewPageViewModel : ObservableObject
     /// </summary>
     [ObservableProperty]
     private List<ProjectListItem> recentActivity = [];
+
+    /// <summary>
+    /// Whether the selected project has a git repo URL configured. Used to
+    /// toggle the visibility of the GitHub quick action.
+    /// </summary>
+    public bool HasGitHubUrl => SelectedProject?.Project.GitRepoUrl is { Length: > 0 };
 
     public OverviewPageViewModel(
         IProjectService projectService,
@@ -179,6 +186,7 @@ public partial class OverviewPageViewModel : ObservableObject
 
         item.IsSelected = true;
         SelectedProject = item;
+        OnPropertyChanged(nameof(HasGitHubUrl));
     }
 
     /// <summary>
@@ -308,20 +316,22 @@ public partial class OverviewPageViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Open the selected project's GitHub page.
+    /// Open the selected project's git repo URL in the default browser.
     /// </summary>
     [RelayCommand]
     public void OpenGitHub()
     {
-        if (SelectedProject is null)
+        if (SelectedProject is null || string.IsNullOrEmpty(SelectedProject.Project.GitRepoUrl))
         {
             return;
         }
 
         try
         {
-            // No git URL yet; show a message.
-            ErrorMessage = "Git URL not configured for this project.";
+            if (!_windowsLauncher.TryOpenUrl(SelectedProject.Project.GitRepoUrl))
+            {
+                ErrorMessage = $"Could not open {SelectedProject.Project.GitRepoUrl}";
+            }
         }
         catch (Exception ex)
         {

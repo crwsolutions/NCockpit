@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using NCockpit.Models;
 using NCockpit.Repositories;
 
@@ -126,7 +127,8 @@ public class ScanService : IScanService
                     LastSeenUnix = scanUnix,
                     ScanUnix = scanUnix,
                     SolutionLastWriteUnix = GetSolutionLastWriteUnix(solution),
-                    FilesJson = DiscoverRootFilesJson(projectPath)
+                    FilesJson = DiscoverRootFilesJson(projectPath),
+                    GitRepoUrl = GetGitRepoUrl(projectPath)
                 });
             }
         }
@@ -327,6 +329,45 @@ public class ScanService : IScanService
         catch
         {
             return System.IO.Path.GetDirectoryName(solutionPath)!;
+        }
+    }
+
+    /// <summary>
+    /// Reads the git remote URL (origin) from .git/config. Returns null when
+    /// the project is not a git repo, has no remote, or the URL cannot be
+    /// parsed. A missing file or parse failure must not fail the scan.
+    /// </summary>
+    private static string? GetGitRepoUrl(string projectPath)
+    {
+        try
+        {
+            var gitDir = System.IO.Path.Combine(projectPath, ".git");
+            if (!Directory.Exists(gitDir))
+            {
+                return null;
+            }
+
+            var configFile = System.IO.Path.Combine(gitDir, "config");
+            if (!File.Exists(configFile))
+            {
+                return null;
+            }
+
+            var content = File.ReadAllText(configFile);
+
+            // Look for [remote "origin"] section and extract the url line
+            var match = Regex.Match(content, @"\[remote\s+""origin""\][\s\S]*?url\s*=\s*(.+)", RegexOptions.IgnoreCase);
+            if (match.Success)
+            {
+                var url = match.Groups[1].Value.Trim();
+                return string.IsNullOrEmpty(url) ? null : url;
+            }
+
+            return null;
+        }
+        catch
+        {
+            return null;
         }
     }
 }

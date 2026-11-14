@@ -59,7 +59,7 @@ public class ProjectRepository : IProjectRepository
 
         const string sql = """
             SELECT Id, Name, SolutionPath, FolderPath, FolderId, LastSeenUnix, ScanUnix,
-                   IsFavorite, LastUsedUnix, SolutionLastWriteUnix, FilesJson
+                   IsFavorite, LastUsedUnix, SolutionLastWriteUnix, FilesJson, GitRepoUrl
             FROM Projects
             ORDER BY LastUsedUnix IS NULL, COALESCE(LastUsedUnix, 0) DESC,
                      SolutionLastWriteUnix IS NULL, COALESCE(SolutionLastWriteUnix, 0) DESC,
@@ -75,8 +75,8 @@ public class ProjectRepository : IProjectRepository
         await connection.OpenAsync();
 
         const string sql = """
-            INSERT INTO Projects (Name, SolutionPath, FolderPath, FolderId, LastSeenUnix, ScanUnix, CreatedAt, SolutionLastWriteUnix, FilesJson)
-            VALUES (@Name, @SolutionPath, @FolderPath, @FolderId, @LastSeenUnix, @ScanUnix, @CreatedAt, @SolutionLastWriteUnix, @FilesJson)
+            INSERT INTO Projects (Name, SolutionPath, FolderPath, FolderId, LastSeenUnix, ScanUnix, CreatedAt, SolutionLastWriteUnix, FilesJson, GitRepoUrl)
+            VALUES (@Name, @SolutionPath, @FolderPath, @FolderId, @LastSeenUnix, @ScanUnix, @CreatedAt, @SolutionLastWriteUnix, @FilesJson, @GitRepoUrl)
             ON CONFLICT (SolutionPath) DO UPDATE SET
                 Name = excluded.Name,
                 FolderPath = excluded.FolderPath,
@@ -84,7 +84,8 @@ public class ProjectRepository : IProjectRepository
                 LastSeenUnix = excluded.LastSeenUnix,
                 ScanUnix = excluded.ScanUnix,
                 SolutionLastWriteUnix = excluded.SolutionLastWriteUnix,
-                FilesJson = excluded.FilesJson;
+                FilesJson = excluded.FilesJson,
+                GitRepoUrl = excluded.GitRepoUrl;
             """;
 
         await connection.ExecuteAsync(sql, new
@@ -97,7 +98,8 @@ public class ProjectRepository : IProjectRepository
             project.ScanUnix,
             CreatedAt = project.LastSeenUnix,
             project.SolutionLastWriteUnix,
-            project.FilesJson
+            project.FilesJson,
+            project.GitRepoUrl
         });
     }
 

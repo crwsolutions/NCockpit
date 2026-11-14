@@ -16,6 +16,11 @@ public interface IWindowsLauncher
     /// Open a local folder in File Explorer.
     /// </summary>
     bool TryOpenFolder(string path);
+
+    /// <summary>
+    /// Open a URL in the default browser.
+    /// </summary>
+    bool TryOpenUrl(string url);
 }
 
 /// <summary>
@@ -64,6 +69,27 @@ public class WindowsLauncher : IWindowsLauncher
             Process.Start(new ProcessStartInfo
             {
                 FileName = path,
+                UseShellExecute = true
+            });
+            return true;
+#else
+            return false;
+#endif
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public bool TryOpenUrl(string url)
+    {
+        try
+        {
+#if WINDOWS
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = url,
                 UseShellExecute = true
             });
             return true;

@@ -251,7 +251,8 @@
 
                             <cv:QuickAction Text="Open GitHub"
                                             ImageSource="github.png"
-                                            Command="{Binding OpenGitHubCommand}" />
+                                            Command="{Binding OpenGitHubCommand}"
+                                            IsVisible="{Binding HasGitHubUrl}" />
                         </VerticalStackLayout>
                     </cv:SectionCard>
 

@@ -61,4 +61,10 @@ public class Project
     /// JSON array of file names for common root files discovered during scanning.
     /// </summary>
     public string? FilesJson { get; set; }
+
+    /// <summary>
+    /// The git remote URL (origin) discovered during scanning, or null if the
+    /// project has no git remote or the URL could not be determined.
+    /// </summary>
+    public string? GitRepoUrl { get; set; }
 }

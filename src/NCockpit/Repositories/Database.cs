@@ -71,7 +71,7 @@ internal static class Database
     private static void Migrate(SqliteConnection connection)
     {
         // CurrentUserVersion should track the highest migration step applied.
-        const int CurrentUserVersion = 2;
+        const int CurrentUserVersion = 3;
 
         using var versionCommand = new SqliteCommand("PRAGMA user_version;", connection);
         var userVersion = Convert.ToInt32(versionCommand.ExecuteScalar());
@@ -89,6 +89,19 @@ internal static class Database
             try
             {
                 Execute(connection, "ALTER TABLE Projects ADD COLUMN FilesJson TEXT");
+            }
+            catch (SqliteException ex) when (ex.Message.Contains("duplicate column name"))
+            {
+                // Column already exists — nothing to do.
+            }
+        }
+
+        if (userVersion < 3)
+        {
+            // Add GitRepoUrl column for the git remote URL discovered during scanning.
+            try
+            {
+                Execute(connection, "ALTER TABLE Projects ADD COLUMN GitRepoUrl TEXT");
             }
             catch (SqliteException ex) when (ex.Message.Contains("duplicate column name"))
             {
