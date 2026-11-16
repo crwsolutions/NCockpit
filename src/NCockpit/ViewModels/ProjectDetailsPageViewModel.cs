@@ -35,6 +35,9 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
     [NotifyPropertyChangedFor(nameof(HasFiles))]
     [NotifyPropertyChangedFor(nameof(SolutionFileName))]
     [NotifyPropertyChangedFor(nameof(SolutionLastWriteDisplay))]
+    [NotifyPropertyChangedFor(nameof(SolutionProjects))]
+    [NotifyPropertyChangedFor(nameof(HasSolutionProjects))]
+    [NotifyPropertyChangedFor(nameof(OpenSolutionQuickActionText))]
     public partial Project? CurrentProject { get; set; }
 
     [ObservableProperty]
@@ -116,6 +119,43 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
         CurrentProject?.SolutionLastWriteUnix is { } lastWrite
             ? FormatUnix(lastWrite)
             : "Unknown";
+
+    /// <summary>
+    /// The projects referenced by the solution file, parsed from the
+    /// project's ProjectsJson. Returns an empty list when no projects were
+    /// recorded.
+    /// </summary>
+    public List<SolutionProject> SolutionProjects
+    {
+        get
+        {
+            if (CurrentProject?.ProjectsJson is not { Length: > 0 } json)
+            {
+                return [];
+            }
+
+            try
+            {
+                return JsonSerializer.Deserialize<List<SolutionProject>>(json) ?? [];
+            }
+            catch
+            {
+                return [];
+            }
+        }
+    }
+
+    /// <summary>
+    /// Whether any projects were resolved for the current solution.
+    /// </summary>
+    public bool HasSolutionProjects => SolutionProjects.Count > 0;
+
+    /// <summary>
+    /// Label for the solution-file quick action in the Solution &amp; projects
+    /// section.
+    /// </summary>
+    public string OpenSolutionQuickActionText =>
+        SolutionFileName is { Length: > 0 } name ? $"Open {name}" : "Open solution";
 
     public ProjectDetailsPageViewModel(
         IProjectService projectService,

@@ -67,4 +67,11 @@ public class Project
     /// project has no git remote or the URL could not be determined.
     /// </summary>
     public string? GitRepoUrl { get; set; }
+
+    /// <summary>
+    /// JSON array of the projects referenced by the solution file (Name,
+    /// FolderPath, ProjectPath), discovered during scanning. Null when no
+    /// projects could be resolved.
+    /// </summary>
+    public string? ProjectsJson { get; set; }
 }

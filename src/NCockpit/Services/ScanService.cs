@@ -117,18 +117,19 @@ public class ScanService : IScanService
 
             foreach (var solution in solutions)
             {
-                var projectPath = GetProjectRootPath(solution);
+                var projectRootPath = GetProjectRootPath(solution);
                 await _projectRepository.UpsertAsync(new Project
                 {
                     Name = System.IO.Path.GetFileNameWithoutExtension(solution),
                     SolutionPath = solution,
-                    FolderPath = projectPath,
+                    FolderPath = projectRootPath,
                     FolderId = folder.Id,
                     LastSeenUnix = scanUnix,
                     ScanUnix = scanUnix,
                     SolutionLastWriteUnix = GetSolutionLastWriteUnix(solution),
-                    FilesJson = DiscoverRootFilesJson(projectPath),
-                    GitRepoUrl = GetGitRepoUrl(projectPath)
+                    FilesJson = DiscoverRootFilesJson(projectRootPath),
+                    GitRepoUrl = GetGitRepoUrl(projectRootPath),
+                    ProjectsJson = await DiscoverSolutionProjectsJsonAsync(solution)
                 });
             }
         }
@@ -330,6 +331,18 @@ public class ScanService : IScanService
         {
             return System.IO.Path.GetDirectoryName(solutionPath)!;
         }
+    }
+
+    /// <summary>
+    /// Parses the solution file and returns the referenced projects as a JSON
+    /// array of { Name, FolderPath, ProjectPath } objects. Returns null when
+    /// no projects are resolved. A malformed or missing solution file must
+    /// never fail the scan.
+    /// </summary>
+    private static async Task<string?> DiscoverSolutionProjectsJsonAsync(string solutionPath)
+    {
+        var projects = await SolutionFileParser.ParseSolutionAsync(solutionPath);
+        return projects.Count > 0 ? JsonSerializer.Serialize(projects) : null;
     }
 
     /// <summary>

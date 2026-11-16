@@ -57,7 +57,8 @@ internal static class Database
                 IsFavorite INTEGER NOT NULL DEFAULT 0,
                 LastUsedUnix INTEGER,
                 SolutionLastWriteUnix INTEGER,
-                FilesJson TEXT
+                FilesJson TEXT,
+                ProjectsJson TEXT
             );
             """, connection)
         {
@@ -71,7 +72,7 @@ internal static class Database
     private static void Migrate(SqliteConnection connection)
     {
         // CurrentUserVersion should track the highest migration step applied.
-        const int CurrentUserVersion = 3;
+        const int CurrentUserVersion = 4;
 
         using var versionCommand = new SqliteCommand("PRAGMA user_version;", connection);
         var userVersion = Convert.ToInt32(versionCommand.ExecuteScalar());
@@ -102,6 +103,21 @@ internal static class Database
             try
             {
                 Execute(connection, "ALTER TABLE Projects ADD COLUMN GitRepoUrl TEXT");
+            }
+            catch (SqliteException ex) when (ex.Message.Contains("duplicate column name"))
+            {
+                // Column already exists — nothing to do.
+            }
+        }
+
+        if (userVersion < 4)
+        {
+            // Add ProjectsJson column for the solution's projects discovered
+            // during scanning, if it doesn't already exist (fresh databases
+            // have it in the CREATE TABLE).
+            try
+            {
+                Execute(connection, "ALTER TABLE Projects ADD COLUMN ProjectsJson TEXT");
             }
             catch (SqliteException ex) when (ex.Message.Contains("duplicate column name"))
             {

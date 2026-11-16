@@ -59,7 +59,7 @@ public class ProjectRepository : IProjectRepository
 
         const string sql = """
             SELECT Id, Name, SolutionPath, FolderPath, FolderId, LastSeenUnix, ScanUnix,
-                   IsFavorite, LastUsedUnix, SolutionLastWriteUnix, FilesJson, GitRepoUrl
+                   IsFavorite, LastUsedUnix, SolutionLastWriteUnix, FilesJson, GitRepoUrl, ProjectsJson
             FROM Projects
             ORDER BY LastUsedUnix IS NULL, COALESCE(LastUsedUnix, 0) DESC,
                      SolutionLastWriteUnix IS NULL, COALESCE(SolutionLastWriteUnix, 0) DESC,
@@ -75,8 +75,8 @@ public class ProjectRepository : IProjectRepository
         await connection.OpenAsync();
 
         const string sql = """
-            INSERT INTO Projects (Name, SolutionPath, FolderPath, FolderId, LastSeenUnix, ScanUnix, CreatedAt, SolutionLastWriteUnix, FilesJson, GitRepoUrl)
-            VALUES (@Name, @SolutionPath, @FolderPath, @FolderId, @LastSeenUnix, @ScanUnix, @CreatedAt, @SolutionLastWriteUnix, @FilesJson, @GitRepoUrl)
+            INSERT INTO Projects (Name, SolutionPath, FolderPath, FolderId, LastSeenUnix, ScanUnix, CreatedAt, SolutionLastWriteUnix, FilesJson, GitRepoUrl, ProjectsJson)
+            VALUES (@Name, @SolutionPath, @FolderPath, @FolderId, @LastSeenUnix, @ScanUnix, @CreatedAt, @SolutionLastWriteUnix, @FilesJson, @GitRepoUrl, @ProjectsJson)
             ON CONFLICT (SolutionPath) DO UPDATE SET
                 Name = excluded.Name,
                 FolderPath = excluded.FolderPath,
@@ -85,7 +85,8 @@ public class ProjectRepository : IProjectRepository
                 ScanUnix = excluded.ScanUnix,
                 SolutionLastWriteUnix = excluded.SolutionLastWriteUnix,
                 FilesJson = excluded.FilesJson,
-                GitRepoUrl = excluded.GitRepoUrl;
+                GitRepoUrl = excluded.GitRepoUrl,
+                ProjectsJson = excluded.ProjectsJson;
             """;
 
         await connection.ExecuteAsync(sql, new
@@ -99,7 +100,8 @@ public class ProjectRepository : IProjectRepository
             CreatedAt = project.LastSeenUnix,
             project.SolutionLastWriteUnix,
             project.FilesJson,
-            project.GitRepoUrl
+            project.GitRepoUrl,
+            project.ProjectsJson
         });
     }
 

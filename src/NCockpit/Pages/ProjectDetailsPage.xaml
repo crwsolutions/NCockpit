@@ -151,10 +151,6 @@
                                     <Label Grid.Column="1" Text="{Binding CurrentProject.Name}" FontSize="12" TextColor="#1a2744" />
                                 </Grid>
                                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                                    <Label Grid.Column="0" Text="Solution file" FontSize="12" TextColor="#6b7280" WidthRequest="100" />
-                                    <Label Grid.Column="1" Text="{Binding SolutionFileName}" FontSize="12" TextColor="#3b82f6" />
-                                </Grid>
-                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
                                     <Label Grid.Column="0" Text="Solution path" FontSize="12" TextColor="#6b7280" WidthRequest="100" />
                                     <Label Grid.Column="1" Text="{Binding CurrentProject.SolutionPath}" FontSize="12" TextColor="#3b82f6" LineBreakMode="TailTruncation" />
                                 </Grid>
@@ -279,11 +275,13 @@
                                            Text="Solution file"
                                            FontSize="12"
                                            TextColor="#6b7280"
-                                           WidthRequest="100" />
-                                    <Label Grid.Column="1"
-                                           Text="{Binding SolutionFileName}"
-                                           FontSize="12"
-                                           TextColor="#3b82f6" />
+                                           WidthRequest="100"
+                                           VerticalOptions="Center" />
+                                    <cv:QuickAction Grid.Column="1"
+                                                    Text="{Binding OpenSolutionQuickActionText}"
+                                                    ImageSource="visual_studio_icon.png"
+                                                    IconSize="20"
+                                                    Command="{Binding OpenSolutionCommand}" />
                                 </Grid>
                                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
                                     <Label Grid.Column="0"
@@ -291,10 +289,21 @@
                                            FontSize="12"
                                            TextColor="#6b7280"
                                            WidthRequest="100" />
+                                    <VerticalStackLayout Grid.Column="1"
+                                                         BindableLayout.ItemsSource="{Binding SolutionProjects}"
+                                                         Spacing="6">
+                                        <BindableLayout.ItemTemplate>
+                                            <DataTemplate x:DataType="services:SolutionProject">
+                                                <cv:FileAction Text="{Binding Name}"
+                                                               Path="{Binding ProjectPath}" />
+                                            </DataTemplate>
+                                        </BindableLayout.ItemTemplate>
+                                    </VerticalStackLayout>
                                     <Label Grid.Column="1"
                                            Text="No projects listed yet."
                                            FontSize="12"
-                                           TextColor="#9ca3af" />
+                                           TextColor="#9ca3af"
+                                           IsVisible="{Binding HasSolutionProjects, Converter={StaticResource InverseBoolConverter}}" />
                                 </Grid>
                             </VerticalStackLayout>
                         </cv:SectionCard>
