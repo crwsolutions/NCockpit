@@ -30,7 +30,7 @@
 		<ApplicationTitle>NCockpit</ApplicationTitle>
 
 		<!-- App Identifier -->
-		<ApplicationId>com.companyname.ncockpit</ApplicationId>
+		<ApplicationId>nl.crwsolutions.ncockpit</ApplicationId>
 
 		<!-- Versions -->
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
