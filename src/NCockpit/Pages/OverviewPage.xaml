@@ -195,16 +195,14 @@
                                                 </VerticalStackLayout>
 
                                                 <!-- Chevron -->
-                                                <Button Grid.Column="4"
-                                                        Text="&#xf105;"
-                                                        FontFamily="FontAwesomeSolid"
-                                                        FontSize="12"
-                                                        TextColor="#999999"
-                                                        BackgroundColor="Transparent"
-                                                        Padding="6"
-                                                        VerticalOptions="Center"
-                                                        Command="{Binding Source={x:Reference Page}, Path=BindingContext.OpenProjectDetailsCommand, Mode=OneTime}"
-                                                        CommandParameter="{Binding .}" />
+                                                <cv:GlyphButton Grid.Column="4"
+                                                                Glyph="&#xf105;"
+                                                                GlyphColor="#999999"
+                                                                IconSize="18"
+                                                                ButtonPadding="8"
+                                                                VerticalOptions="Center"
+                                                                Command="{Binding Source={x:Reference Page}, Path=BindingContext.OpenProjectDetailsCommand, Mode=OneTime}"
+                                                                CommandParameter="{Binding .}" />
                                             </Grid>
                                         </Border>
                                     </DataTemplate>

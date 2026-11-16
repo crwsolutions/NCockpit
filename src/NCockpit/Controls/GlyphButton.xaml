@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:cv="clr-namespace:NCockpit.Controls"
+             x:Class="NCockpit.Controls.GlyphButton"
+             x:Name="This"
+             x:DataType="cv:GlyphButton" WidthRequest="48" HeightRequest="42">
+    <Border x:Name="Border"
+            BackgroundColor="Transparent"
+            Padding="8"
+            StrokeThickness="0"
+            StrokeShape="RoundRectangle 6">
+        <Border.GestureRecognizers>
+            <TapGestureRecognizer Command="{Binding Command, Source={x:Reference This}}"
+                                  CommandParameter="{Binding CommandParameter, Source={x:Reference This}}" />
+            <PointerGestureRecognizer PointerEntered="OnPointerEntered" PointerExited="OnPointerExited" />
+        </Border.GestureRecognizers>
+        <Label x:Name="GlyphLabel"
+               FontFamily="FontAwesomeSolid"
+               FontSize="14"
+               TextColor="#3b82f6"
+               HorizontalOptions="Center"
+               VerticalOptions="Center" />
+    </Border>
+</ContentView>

@@ -18,15 +18,13 @@
               ColumnDefinitions="Auto,*,Auto"
               ColumnSpacing="12">
             <!-- Back button -->
-            <Button Grid.Column="0"
-                    Text="&#xf060;"
-                    FontFamily="FontAwesomeSolid"
-                    FontSize="18"
-                    TextColor="#3b82f6"
-                    Background="Transparent"
-                    Padding="8"
-                    VerticalOptions="Center"
-                    Command="{Binding BackCommand}" />
+            <cv:GlyphButton Grid.Column="0"
+                            Glyph="&#xf060;"
+                            GlyphColor="#3b82f6"
+                            IconSize="18"
+                            ButtonPadding="8"
+                            VerticalOptions="Center"
+                            Command="{Binding BackCommand}" />
 
             <!-- Title + status -->
             <VerticalStackLayout Grid.Column="1" Spacing="4">
