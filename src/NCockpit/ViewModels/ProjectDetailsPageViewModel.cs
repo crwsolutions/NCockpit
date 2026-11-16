@@ -367,30 +367,6 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
         }
     }
 
-    /// <summary>
-    /// Open a link URL in the default browser.
-    /// </summary>
-    [RelayCommand]
-    private void OpenLink(string url)
-    {
-        if (string.IsNullOrEmpty(url))
-        {
-            return;
-        }
-
-        try
-        {
-            if (!_windowsLauncher.TryOpenUrl(url))
-            {
-                ErrorMessage = $"Could not open {url}";
-            }
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"Error opening link: {ex.Message}";
-        }
-    }
-
     private static string FormatUnix(long unix) =>
         UnixEpoch.AddSeconds(unix).ToLocalTime().ToString("MMM d, yyyy");
 }

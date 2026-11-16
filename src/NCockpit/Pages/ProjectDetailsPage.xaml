@@ -342,24 +342,9 @@
                                                      IsVisible="{Binding HasMobileLinks}">
                                     <BindableLayout.ItemTemplate>
                                         <DataTemplate x:DataType="services:ReadmeLink">
-                                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
-                                                <Image Grid.Column="0"
-                                                       Source="{Binding Platform, Converter={StaticResource LinkIconConverter}}"
-                                                       WidthRequest="18"
-                                                       HeightRequest="18"
-                                                       VerticalOptions="Center" />
-                                                <Label Grid.Column="1"
-                                                       Text="{Binding Text}"
-                                                       FontSize="12"
-                                                       TextColor="#3b82f6"
-                                                       VerticalOptions="Center" />
-                                                <Label Grid.Column="2"
-                                                       Text="&#xf105;"
-                                                       FontFamily="FontAwesomeSolid"
-                                                       FontSize="12"
-                                                       TextColor="#9ca3af"
-                                                       VerticalOptions="Center" />
-                                            </Grid>
+                                            <cv:LinkAction Text="{Binding Text}"
+                                                           Platform="{Binding Platform}"
+                                                           Url="{Binding Url}" />
                                         </DataTemplate>
                                     </BindableLayout.ItemTemplate>
                                 </VerticalStackLayout>
@@ -388,25 +373,9 @@
                                                      IsVisible="{Binding HasRelatedLinks}">
                                     <BindableLayout.ItemTemplate>
                                         <DataTemplate x:DataType="services:ReadmeLink">
-                                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
-                                                <Label Grid.Column="0"
-                                                       Text="&#xf0c1;"
-                                                       FontFamily="FontAwesomeSolid"
-                                                       FontSize="12"
-                                                       TextColor="#3b82f6"
-                                                       VerticalOptions="Center" />
-                                                <Label Grid.Column="1"
-                                                       Text="{Binding Text}"
-                                                       FontSize="12"
-                                                       TextColor="#3b82f6"
-                                                       VerticalOptions="Center" />
-                                                <Label Grid.Column="2"
-                                                       Text="&#xf061;"
-                                                       FontFamily="FontAwesomeSolid"
-                                                       FontSize="10"
-                                                       TextColor="#9ca3af"
-                                                       VerticalOptions="Center" />
-                                            </Grid>
+                                            <cv:LinkAction Text="{Binding Text}"
+                                                           Platform="Other"
+                                                           Url="{Binding Url}" />
                                         </DataTemplate>
                                     </BindableLayout.ItemTemplate>
                                 </VerticalStackLayout>

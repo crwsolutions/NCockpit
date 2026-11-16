@@ -1,6 +1,8 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.DevFlow.Agent;
 using CommunityToolkit.Maui;
+using NCockpit.Controls;
 using NCockpit.Repositories;
 using NCockpit.Services;
 using NCockpit.ViewModels;
@@ -64,6 +66,15 @@ public static class MauiProgram
 		builder.AddMauiDevFlowAgent();
 #endif
 
-		return builder.Build();
+		var app = builder.Build();
+
+		// Let the LinkAction control open URLs in the default browser.
+		LinkAction.OpenUrlHandler = url =>
+		{
+			var launcher = app.Services.GetRequiredService<IWindowsLauncher>();
+			launcher.TryOpenUrl(url);
+		};
+
+		return app;
 	}
 }
