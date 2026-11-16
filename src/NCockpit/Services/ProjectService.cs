@@ -24,6 +24,14 @@ public interface IProjectService
     /// Record that a project was just opened/viewed, used for recent-usage ordering.
     /// </summary>
     Task TouchAsync(int id);
+
+    /// <summary>
+    /// Re-read the on-disk metadata for a single project (solution last-write
+    /// time, root files, git remote, referenced solution projects) and persist
+    /// it. The filesystem is the source of truth; this is a lightweight refresh
+    /// that does not walk the folder tree.
+    /// </summary>
+    Task<Project> RefreshProjectAsync(Project project);
 }
 
 public class ProjectService : IProjectService
@@ -57,5 +65,19 @@ public class ProjectService : IProjectService
     public Task TouchAsync(int id)
     {
         return _repository.TouchAsync(id);
+    }
+
+    public async Task<Project> RefreshProjectAsync(Project project)
+    {
+        project.SolutionLastWriteUnix = ProjectMetadataDiscovery.GetSolutionLastWriteUnix(project.SolutionPath);
+        project.FilesJson = ProjectMetadataDiscovery.DiscoverRootFilesJson(project.FolderPath);
+        project.GitRepoUrl = ProjectMetadataDiscovery.GetGitRepoUrl(project.FolderPath);
+        project.ProjectsJson = await ProjectMetadataDiscovery.DiscoverSolutionProjectsJsonAsync(project.SolutionPath);
+
+        // The refresh does not change discovery state; keep the original
+        // LastSeenUnix/ScanUnix so the project is not pruned by the next scan.
+        await _repository.UpsertAsync(project);
+
+        return project;
     }
 }

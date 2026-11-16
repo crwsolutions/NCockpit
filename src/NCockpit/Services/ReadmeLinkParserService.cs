@@ -11,9 +11,11 @@ public interface IReadmeLinkParserService
 {
     /// <summary>
     /// Parse links from the project's README.md file and return them
-    /// categorized into mobile and related links.
+    /// categorized into mobile and related links. When <paramref name="cache"/>
+    /// is true (the default) a previous parse of the same file is returned
+    /// without re-reading it; pass false to force a fresh read from disk.
     /// </summary>
-    Task<ReadmeLinks> ParseLinksAsync(string projectFolderPath);
+    Task<ReadmeLinks> ParseLinksAsync(string projectFolderPath, bool cache = true);
 }
 
 /// <summary>
@@ -105,7 +107,7 @@ public class ReadmeLinkParserService : IReadmeLinkParserService
     private static readonly ConcurrentDictionary<string, ReadmeLinks> Cache = new();
 
     /// <inheritdoc />
-    public async Task<ReadmeLinks> ParseLinksAsync(string projectFolderPath)
+    public async Task<ReadmeLinks> ParseLinksAsync(string projectFolderPath, bool cache = true)
     {
         try
         {
@@ -120,10 +122,13 @@ public class ReadmeLinkParserService : IReadmeLinkParserService
                 return new ReadmeLinks();
             }
 
-            var cached = Cache.GetOrAdd(readmePath, _ => null);
-            if (cached is not null)
+            if (cache)
             {
-                return cached;
+                var cached = Cache.GetOrAdd(readmePath, _ => null);
+                if (cached is not null)
+                {
+                    return cached;
+                }
             }
 
             var content = await File.ReadAllTextAsync(readmePath);

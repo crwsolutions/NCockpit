@@ -29,6 +29,15 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
     private readonly IReadmeLinkParserService _readmeLinkParser;
 
     [ObservableProperty]
+    public partial bool IsRefreshing { get; set; }
+
+    /// <summary>
+    /// When the project was last refreshed, shown next to the refresh button.
+    /// </summary>
+    [ObservableProperty]
+    public partial string? LastRefreshedDisplay { get; set; }
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasProject))]
     [NotifyPropertyChangedFor(nameof(HasGitHubUrl))]
     [NotifyPropertyChangedFor(nameof(Files))]
@@ -214,6 +223,9 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
             CurrentProject = projects.FirstOrDefault(p => p.Id == projectId);
             IsFavorite = CurrentProject?.IsFavorite ?? false;
 
+            // A freshly loaded project has not been refreshed in this session.
+            LastRefreshedDisplay = null;
+
             await LoadLinkedFoldersAsync();
 
             if (CurrentProject is not null)
@@ -392,6 +404,49 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
             ErrorMessage = $"Error toggling favorite: {ex.Message}";
         }
     }
+
+    /// <summary>
+    /// Refresh the current project only: re-read its on-disk metadata (solution
+    /// last-write time, root files, git remote, referenced solution projects),
+    /// then re-parse the README and reload the linked supporting folders. This
+    /// does not walk the folder tree or touch other projects.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanRefreshProject))]
+    private async Task RefreshProjectAsync()
+    {
+        if (CurrentProject is null)
+        {
+            return;
+        }
+
+        IsRefreshing = true;
+
+        try
+        {
+            ErrorMessage = null;
+
+            var refreshed = await _projectService.RefreshProjectAsync(CurrentProject);
+            CurrentProject = refreshed;
+
+            var links = await _readmeLinkParser.ParseLinksAsync(refreshed.FolderPath, cache: false);
+            MobileLinks = links.MobileLinks;
+            RelatedLinks = links.RelatedLinks;
+
+            await LoadLinkedFoldersAsync();
+
+            LastRefreshedDisplay = $"Updated {DateTime.Now:HH:mm:ss}";
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error refreshing project: {ex.Message}";
+        }
+        finally
+        {
+            IsRefreshing = false;
+        }
+    }
+
+    private bool CanRefreshProject() => CurrentProject is not null && !IsRefreshing;
 
     /// <summary>
     /// Open the project's git repo URL in the default browser.

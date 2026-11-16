@@ -57,13 +57,20 @@
                 </HorizontalStackLayout>
             </VerticalStackLayout>
 
-            <!-- More button -->
-            <Label Grid.Column="2"
-                   Text="&#xf142;"
-                   FontFamily="FontAwesomeSolid"
-                   FontSize="16"
-                   TextColor="#9ca3af"
-                   VerticalOptions="Center" />
+            <!-- Last updated + Refresh button -->
+            <HorizontalStackLayout Grid.Column="2" Spacing="12" VerticalOptions="Center">
+                <Label Text="{Binding LastRefreshedDisplay}"
+                       FontSize="12"
+                       TextColor="#9ca3af"
+                       VerticalOptions="Center" />
+                <cv:GlyphButton Glyph="&#xf2f1;"
+                                GlyphColor="#3b82f6"
+                                IconSize="18"
+                                ButtonPadding="8"
+                                VerticalOptions="Center"
+                                Command="{Binding RefreshProjectCommand}"
+                                CanExecute="{Binding IsRefreshing, Converter={StaticResource InverseBoolConverter}}" />
+            </HorizontalStackLayout>
         </Grid>
 
         <!-- Action row -->

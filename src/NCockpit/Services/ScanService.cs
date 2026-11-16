@@ -1,5 +1,3 @@
-using System.Text.Json;
-using System.Text.RegularExpressions;
 using NCockpit.Models;
 using NCockpit.Repositories;
 
@@ -35,27 +33,6 @@ public class ScanService : IScanService
     [
         ".git", "bin", "obj", "node_modules", "packages",
         ".vs", ".idea", ".gradle", "dist", "build"
-    ];
-
-    /// <summary>
-    /// Common root-level files worth quickly opening from the project details page.
-    /// Checked in order; first match per name wins.
-    /// </summary>
-    private static readonly string[] KnownRootFiles =
-    [
-        "AGENTS.md",
-        "README.md",
-        "README",
-        "README.txt",
-        "LICENSE",
-        "LICENSE.md",
-        "LICENSE.txt",
-        "CONTRIBUTING.md",
-        "CONTRIBUTING",
-        "CHANGELOG.md",
-        "CHANGELOG",
-        "SECURITY.md",
-        "CODE_OF_CONDUCT.md"
     ];
 
     public ScanService(IProjectFolderRepository folderRepository, IProjectRepository projectRepository, ISupportingFolderRepository supportingFolderRepository)
@@ -126,10 +103,10 @@ public class ScanService : IScanService
                     FolderId = folder.Id,
                     LastSeenUnix = scanUnix,
                     ScanUnix = scanUnix,
-                    SolutionLastWriteUnix = GetSolutionLastWriteUnix(solution),
-                    FilesJson = DiscoverRootFilesJson(projectRootPath),
-                    GitRepoUrl = GetGitRepoUrl(projectRootPath),
-                    ProjectsJson = await DiscoverSolutionProjectsJsonAsync(solution)
+                    SolutionLastWriteUnix = ProjectMetadataDiscovery.GetSolutionLastWriteUnix(solution),
+                    FilesJson = ProjectMetadataDiscovery.DiscoverRootFilesJson(projectRootPath),
+                    GitRepoUrl = ProjectMetadataDiscovery.GetGitRepoUrl(projectRootPath),
+                    ProjectsJson = await ProjectMetadataDiscovery.DiscoverSolutionProjectsJsonAsync(solution)
                 });
             }
         }
@@ -231,27 +208,6 @@ public class ScanService : IScanService
         return Task.FromResult(found);
     }
 
-    /// <summary>
-    /// Returns the solution file's last write time as Unix seconds, or null if the
-    /// file cannot be accessed. Missing metadata must not fail the scan.
-    /// </summary>
-    private static long? GetSolutionLastWriteUnix(string path)
-    {
-        try
-        {
-            var lastWrite = File.GetLastWriteTimeUtc(path);
-            return (long)(lastWrite - System.DateTimeOffset.UnixEpoch).TotalSeconds;
-        }
-        catch (System.UnauthorizedAccessException)
-        {
-            return null;
-        }
-        catch (System.IO.IOException)
-        {
-            return null;
-        }
-    }
-
     private static string GetFolderName(string path)
     {
         try
@@ -263,49 +219,6 @@ public class ScanService : IScanService
         {
             return path;
         }
-    }
-
-    /// <summary>
-    /// Discovers common root files in the project folder and returns them as a JSON
-    /// array of file names. Missing or inaccessible files are silently ignored so
-    /// a missing optional file never fails the scan.
-    /// </summary>
-    private static string? DiscoverRootFilesJson(string projectPath)
-    {
-        try
-        {
-            var found = new List<string>();
-            foreach (var fileName in KnownRootFiles)
-            {
-                if (found.Count > 0 && SameBaseName(fileName, found[^1]))
-                {
-                    // Already recorded a variant of this file (e.g. README and README.md);
-                    // prefer the first one seen in the priority list.
-                    continue;
-                }
-
-                if (File.Exists(System.IO.Path.Combine(projectPath, fileName)))
-                {
-                    found.Add(fileName);
-                }
-            }
-
-            return found.Count > 0 ? JsonSerializer.Serialize(found) : null;
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
-    /// <summary>
-    /// True when two file names share the same base name (ignoring extension).
-    /// </summary>
-    private static bool SameBaseName(string a, string b)
-    {
-        var baseA = System.IO.Path.GetFileNameWithoutExtension(a) ?? a;
-        var baseB = System.IO.Path.GetFileNameWithoutExtension(b) ?? b;
-        return string.Equals(baseA, baseB, StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>
@@ -333,55 +246,5 @@ public class ScanService : IScanService
         }
     }
 
-    /// <summary>
-    /// Parses the solution file and returns the referenced projects as a JSON
-    /// array of { Name, FolderPath, ProjectPath } objects. Returns null when
-    /// no projects are resolved. A malformed or missing solution file must
-    /// never fail the scan.
-    /// </summary>
-    private static async Task<string?> DiscoverSolutionProjectsJsonAsync(string solutionPath)
-    {
-        var projects = await SolutionFileParser.ParseSolutionAsync(solutionPath);
-        return projects.Count > 0 ? JsonSerializer.Serialize(projects) : null;
-    }
-
-    /// <summary>
-    /// Reads the git remote URL (origin) from .git/config. Returns null when
-    /// the project is not a git repo, has no remote, or the URL cannot be
-    /// parsed. A missing file or parse failure must not fail the scan.
-    /// </summary>
-    private static string? GetGitRepoUrl(string projectPath)
-    {
-        try
-        {
-            var gitDir = System.IO.Path.Combine(projectPath, ".git");
-            if (!Directory.Exists(gitDir))
-            {
-                return null;
-            }
-
-            var configFile = System.IO.Path.Combine(gitDir, "config");
-            if (!File.Exists(configFile))
-            {
-                return null;
-            }
-
-            var content = File.ReadAllText(configFile);
-
-            // Look for [remote "origin"] section and extract the url line
-            var match = Regex.Match(content, @"\[remote\s+""origin""\][\s\S]*?url\s*=\s*(.+)", RegexOptions.IgnoreCase);
-            if (match.Success)
-            {
-                var url = match.Groups[1].Value.Trim();
-                return string.IsNullOrEmpty(url) ? null : url;
-            }
-
-            return null;
-        }
-        catch
-        {
-            return null;
-        }
-    }
 }
 

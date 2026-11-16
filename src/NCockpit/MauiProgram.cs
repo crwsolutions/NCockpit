@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Maui.DevFlow.Agent;
 using CommunityToolkit.Maui;
 using NCockpit.Controls;
+using NCockpit.Pages;
 using NCockpit.Repositories;
 using NCockpit.Services;
 using NCockpit.ViewModels;
@@ -49,7 +50,7 @@ public static class MauiProgram
 		// Register ViewModels
 		builder.Services.AddSingleton<FoldersPageViewModel>();
 		builder.Services.AddSingleton<OverviewPageViewModel>();
-		builder.Services.AddSingleton<ProjectDetailsPageViewModel>();
+		builder.Services.AddTransient<ProjectDetailsPageViewModel>();
 		// Register Popups
 		builder.Services.AddTransient<AddFolderPopupViewModel>();
 		builder.Services.AddTransientPopup<AddFolderPopup, AddFolderPopupViewModel>();
@@ -91,11 +92,18 @@ public static class MauiProgram
 		// Let the FileAction control open files in the View File popup.
 		FileAction.OpenFileHandler = async path =>
 		{
-			// Resolve a file name to a full path via the current project.
-			var details = app.Services.GetRequiredService<ProjectDetailsPageViewModel>();
-			var fullPath = string.IsNullOrEmpty(details.CurrentProject?.FolderPath)
+			// Resolve a file name to a full path via the project shown on the
+			// currently visible details page. The view-model is transient, so it
+			// must be taken from the page, not created here.
+			string? folderPath = null;
+			if (Shell.Current?.CurrentPage?.BindingContext is ProjectDetailsPageViewModel details)
+			{
+				folderPath = details.CurrentProject?.FolderPath;
+			}
+
+			var fullPath = string.IsNullOrEmpty(folderPath)
 				? path
-				: System.IO.Path.Combine(details.CurrentProject.FolderPath, path);
+				: System.IO.Path.Combine(folderPath, path);
 
 			var popupService = app.Services.GetRequiredService<IPopupService>();
 			await popupService.ShowPopupAsync<ViewFilePopup>(

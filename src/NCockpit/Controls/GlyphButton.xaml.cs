@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Windows.Input;
 using Microsoft.Maui.Controls;
 
@@ -6,6 +7,9 @@ namespace NCockpit.Controls;
 public partial class GlyphButton : ContentView
 {
     private static readonly Color HoverColor = Color.Parse("#f5f5f5");
+    private static readonly Color DisabledColor = Color.Parse("#d1d5db");
+
+    private bool _lastCanExecute = true;
 
     public GlyphButton()
     {
@@ -50,7 +54,8 @@ public partial class GlyphButton : ContentView
     }
 
     public static readonly BindableProperty CommandProperty = BindableProperty.Create(
-        nameof(Command), typeof(ICommand), typeof(GlyphButton), null);
+        nameof(Command), typeof(ICommand), typeof(GlyphButton), null,
+        propertyChanged: OnCommandChanged);
 
     public ICommand Command
     {
@@ -67,10 +72,29 @@ public partial class GlyphButton : ContentView
         set => SetValue(CommandParameterProperty, value);
     }
 
+    public static readonly BindableProperty CanExecuteProperty = BindableProperty.Create(
+        nameof(CanExecute), typeof(bool), typeof(GlyphButton), true);
+
+    /// <summary>
+    /// Whether the <see cref="Command"/> can currently be executed.
+    /// When the glyph is disabled the text color is dimmed.
+    /// </summary>
+    public bool CanExecute
+    {
+        get => (bool)GetValue(CanExecuteProperty);
+        set => SetValue(CanExecuteProperty, value);
+    }
+
     private static void OnGlyphColorChanged(BindableObject sender, object oldValue, object newValue)
     {
         var control = (GlyphButton)sender;
-        control.GlyphLabel.TextColor = control.GlyphColor;
+        control.ApplyCanExecuteState();
+    }
+
+    private static void OnCommandChanged(BindableObject sender, object oldValue, object newValue)
+    {
+        var control = (GlyphButton)sender;
+        control.UpdateCanExecuteFromCommand();
     }
 
     private void OnPointerEntered(object? sender, PointerEventArgs e)
@@ -83,6 +107,33 @@ public partial class GlyphButton : ContentView
         Border.Background = Colors.Transparent;
     }
 
+    /// <summary>
+    /// Reads CanExecute from the bound command (if it implements
+    /// <c>ICommand.CanExecute</c>) and updates the glyph color accordingly.
+    /// </summary>
+    private void UpdateCanExecuteFromCommand()
+    {
+        if (Command is not null)
+        {
+            CanExecute = Command.CanExecute(CommandParameter);
+        }
+        ApplyCanExecuteState();
+    }
+
+    /// <summary>
+    /// Dims the glyph when the bound command is not runnable.
+    /// </summary>
+    private void ApplyCanExecuteState()
+    {
+        if (CanExecute == _lastCanExecute)
+        {
+            return;
+        }
+
+        _lastCanExecute = CanExecute;
+        GlyphLabel.TextColor = CanExecute ? GlyphColor : DisabledColor;
+    }
+
     protected override void OnHandlerChanged()
     {
         base.OnHandlerChanged();
@@ -90,5 +141,22 @@ public partial class GlyphButton : ContentView
         GlyphLabel.TextColor = GlyphColor;
         GlyphLabel.FontSize = IconSize;
         Border.Padding = new Thickness(ButtonPadding);
+        UpdateCanExecuteFromCommand();
+
+        // Subscribe to PropertyChanged so that CanExecute changes raised by
+        // IAsyncRelayCommand (or any other INotifyPropertyChanged command)
+        // are picked up automatically.
+        if (Command is INotifyPropertyChanged npc)
+        {
+            npc.PropertyChanged += OnCommandPropertyChanged;
+        }
+    }
+
+    private void OnCommandPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == "CanExecute" || e.PropertyName == string.Empty)
+        {
+            UpdateCanExecuteFromCommand();
+        }
     }
 }
