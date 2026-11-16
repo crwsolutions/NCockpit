@@ -3,15 +3,16 @@ using System.Globalization;
 namespace NCockpit.Converters;
 
 /// <summary>
-/// Converts a boolean favorite flag to a FontAwesome6 Free Solid star glyph so
-/// the star is always visible (used together with a color converter to make it
-/// filled/faint).
+/// Converts a boolean favorite flag to the FontAwesome6 solid star glyph. The
+/// star is always shown; the color converter (amber vs. light gray) is what
+/// distinguishes the favorited and non-favorited states.
 /// </summary>
 public class BoolToStarGlyphConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        return value is true ? "\uf005" : "\uf005";
+        // \uf005 = star (solid). The only star glyph in the bundled Solid font.
+        return "\uf005";
     }
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
@@ -21,13 +22,14 @@ public class BoolToStarGlyphConverter : IValueConverter
 }
 
 /// <summary>
-/// Colors a favorite star: amber when favorited, light gray otherwise.
+/// Colors a favorite star: amber when favorited, a faint gray otherwise so the
+/// state change is clearly visible on the light page background.
 /// </summary>
 public class BoolToFavoriteColorConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        return value is true ? Color.FromArgb("#f5a623") : Color.FromArgb("#cfcfcf");
+        return value is true ? Color.FromArgb("#f5a623") : Color.FromArgb("#d9d9d9");
     }
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

@@ -30,17 +30,22 @@
 
             <!-- Title + status -->
             <VerticalStackLayout Grid.Column="1" Spacing="4">
-                <Grid ColumnDefinitions="*,Auto">
-                    <Label Grid.Column="0" Text="{Binding CurrentProject.Name, FallbackValue='Project Details'}"
+                <Grid ColumnDefinitions="Auto,*">
+                    <Button Grid.Column="0"
+                            Text="{Binding IsFavorite, Converter={StaticResource BoolToStarGlyphConverter}}"
+                            FontFamily="FontAwesomeSolid"
+                            FontSize="18"
+                            TextColor="{Binding IsFavorite, Converter={StaticResource BoolToFavoriteColorConverter}}"
+                            Background="Transparent"
+                            Padding="0"
+                            VerticalOptions="Center"
+                            HorizontalOptions="Start"
+                            Command="{Binding ToggleFavoriteCommand}"
+                            SemanticProperties.Description="Toggle favorite" />
+                    <Label Grid.Column="1" Text="{Binding CurrentProject.Name, FallbackValue='Project Details'}"
                            FontSize="20"
                            FontAttributes="Bold"
                            TextColor="#1a2744" />
-                    <Label Grid.Column="1" Text="&#xf005;"
-                           FontFamily="FontAwesomeSolid"
-                           FontSize="18"
-                           TextColor="#eab308"
-                           VerticalOptions="Center"
-                           Margin="8,0,0,0" />
                 </Grid>
                 <HorizontalStackLayout Spacing="8">
                     <Ellipse WidthRequest="8" HeightRequest="8" Fill="#22c55e" />

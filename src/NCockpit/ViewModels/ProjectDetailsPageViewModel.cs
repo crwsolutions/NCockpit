@@ -44,6 +44,9 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
     public partial List<SupportingFolder> LinkedFolders { get; set; } = [];
 
     [ObservableProperty]
+    public partial bool IsFavorite { get; set; }
+
+    [ObservableProperty]
     public partial bool IsLoading { get; set; }
 
     [ObservableProperty]
@@ -189,6 +192,14 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
         OnPropertyChanged(nameof(HasLinkedFolders));
     }
 
+    partial void OnIsFavoriteChanged(bool value)
+    {
+        if (CurrentProject is not null)
+        {
+            CurrentProject.IsFavorite = value;
+        }
+    }
+
     /// <summary>
     /// Load the project by id and its linked supporting folders.
     /// </summary>
@@ -201,6 +212,7 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
 
             var projects = await _projectService.GetProjectsAsync();
             CurrentProject = projects.FirstOrDefault(p => p.Id == projectId);
+            IsFavorite = CurrentProject?.IsFavorite ?? false;
 
             await LoadLinkedFoldersAsync();
 
@@ -355,6 +367,29 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
         catch (Exception ex)
         {
             ErrorMessage = $"Error opening folder: {ex.Message}";
+        }
+    }
+
+    /// <summary>
+    /// Toggle the favorite flag of the current project. The star next to the
+    /// title reflects the new state.
+    /// </summary>
+    [RelayCommand]
+    private async Task ToggleFavoriteAsync()
+    {
+        if (CurrentProject is null)
+        {
+            return;
+        }
+
+        try
+        {
+            ErrorMessage = null;
+            IsFavorite = await _projectService.ToggleFavoriteAsync(CurrentProject.Id);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error toggling favorite: {ex.Message}";
         }
     }
 
