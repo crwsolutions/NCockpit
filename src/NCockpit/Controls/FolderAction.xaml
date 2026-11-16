@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:cv="clr-namespace:NCockpit.Controls"
+             x:Class="NCockpit.Controls.FolderAction"
+             x:Name="This"
+             x:DataType="cv:FolderAction">
+    <Border x:Name="Border"
+            BackgroundColor="Transparent"
+            Padding="8,6"
+            StrokeThickness="0"
+            StrokeShape="RoundRectangle 6">
+        <Border.GestureRecognizers>
+            <TapGestureRecognizer Tapped="OnTapped" />
+            <PointerGestureRecognizer PointerEntered="OnPointerEntered"
+                                      PointerExited="OnPointerExited" />
+        </Border.GestureRecognizers>
+        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+            <Label x:Name="GlyphLabel"
+                   Grid.Column="0"
+                   FontSize="18"
+                   FontFamily="FontAwesomeSolid"
+                   TextColor="#FFD45D"
+                   VerticalOptions="Center" />
+            <Label Grid.Column="1"
+                   Text="{Binding Text, Source={x:Reference This}}"
+                   FontSize="12"
+                   FontAttributes="Bold"
+                   TextColor="#3b82f6"
+                   VerticalOptions="Center"
+                   LineBreakMode="TailTruncation" />
+            <Label Grid.Column="2"
+                   Text="&#xf105;"
+                   FontFamily="FontAwesomeSolid"
+                   FontSize="10"
+                   TextColor="#9ca3af"
+                   VerticalOptions="Center" />
+        </Grid>
+    </Border>
+</ContentView>

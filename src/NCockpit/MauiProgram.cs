@@ -75,6 +75,35 @@ public static class MauiProgram
 			launcher.TryOpenUrl(url);
 		};
 
+		// Let the FolderAction control open folders in Windows Explorer.
+		FolderAction.OpenFolderHandler = path =>
+		{
+#if WINDOWS
+			System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+			{
+				FileName = "explorer.exe",
+				Arguments = $"/root,\"{path}\"",
+				UseShellExecute = true
+			});
+#endif
+		};
+
+		// Let the FileAction control open files in the View File popup.
+		FileAction.OpenFileHandler = async path =>
+		{
+			// Resolve a file name to a full path via the current project.
+			var details = app.Services.GetRequiredService<ProjectDetailsPageViewModel>();
+			var fullPath = string.IsNullOrEmpty(details.CurrentProject?.FolderPath)
+				? path
+				: System.IO.Path.Combine(details.CurrentProject.FolderPath, path);
+
+			var popupService = app.Services.GetRequiredService<IPopupService>();
+			await popupService.ShowPopupAsync<ViewFilePopup>(
+				Shell.Current,
+				options: null,
+				shellParameters: new Dictionary<string, object> { ["path"] = fullPath });
+		};
+
 		return app;
 	}
 }

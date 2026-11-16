@@ -278,31 +278,6 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
     }
 
     /// <summary>
-    /// Open a project root file in the View File popup.
-    /// </summary>
-    [RelayCommand]
-    private async Task OpenFileAsync(string fileName)
-    {
-        if (CurrentProject is null)
-        {
-            return;
-        }
-
-        try
-        {
-            var fullPath = System.IO.Path.Combine(CurrentProject.FolderPath, fileName);
-            await _popupService.ShowPopupAsync<ViewFilePopup>(
-                Shell.Current,
-                options: null,
-                shellParameters: new Dictionary<string, object> { ["path"] = fullPath });
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"Error opening file: {ex.Message}";
-        }
-    }
-
-    /// <summary>
     /// Navigate back to the projects overview.
     /// </summary>
     [RelayCommand]

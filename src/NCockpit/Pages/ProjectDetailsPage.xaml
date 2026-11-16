@@ -172,29 +172,8 @@
                                                      Spacing="6">
                                     <BindableLayout.ItemTemplate>
                                         <DataTemplate x:DataType="x:String">
-                                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
-                                                <Label Grid.Column="0"
-                                                       Text="&#xf15b;"
-                                                       FontFamily="FontAwesomeSolid"
-                                                       FontSize="13"
-                                                       TextColor="#3b82f6"
-                                                       VerticalOptions="Center" />
-                                                <Label Grid.Column="1"
-                                                       Text="{Binding .}"
-                                                       FontSize="12"
-                                                       FontAttributes="Bold"
-                                                       TextColor="#1a2744"
-                                                       VerticalOptions="Center" />
-                                                <Button Grid.Column="2"
-                                                        Text="Open"
-                                                        Padding="6,4"
-                                                        CornerRadius="4"
-                                                        BackgroundColor="#6b7280"
-                                                        TextColor="White"
-                                                        FontSize="11"
-                                                        Command="{Binding Source={x:Reference Page}, Path=BindingContext.OpenFileCommand, Mode=OneTime}"
-                                                        CommandParameter="{Binding .}" />
-                                            </Grid>
+                                            <cv:FileAction Text="{Binding .}"
+                                                           Path="{Binding .}" />
                                         </DataTemplate>
                                     </BindableLayout.ItemTemplate>
                                 </VerticalStackLayout>
@@ -217,19 +196,8 @@
                                     <Label Text="Primary location"
                                            FontSize="12"
                                            TextColor="#6b7280" />
-                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
-                                        <Label Grid.Column="0"
-                                               Text="&#xf115;"
-                                               FontFamily="FontAwesomeSolid"
-                                               FontSize="14"
-                                               TextColor="#6b7280"
-                                               VerticalOptions="Center" />
-                                        <Label Grid.Column="1"
-                                               Text="{Binding CurrentProject.FolderPath}"
-                                               FontSize="12"
-                                               TextColor="#3b82f6"
-                                               LineBreakMode="TailTruncation" />
-                                    </Grid>
+                                    <cv:FolderAction Text="{Binding CurrentProject.FolderPath}"
+                                                     Path="{Binding CurrentProject.FolderPath}" />
                                 </VerticalStackLayout>
 
                                 <!-- Secondary locations -->
