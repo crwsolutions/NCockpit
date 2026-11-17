@@ -77,6 +77,14 @@ public partial class SolutionAction : ContentView
     protected override void OnHandlerChanged()
     {
         base.OnHandlerChanged();
-        IconImage.Source = ImageSource.FromFile("visual_studio_icon.png");
+
+        if (Path?.EndsWith(".sln") == true || Path?.EndsWith(".slnx") == true)
+        {
+            IconImage.Source = ImageSource.FromFile("solution_icon.png");
+        }
+        else if (Path?.EndsWith(".csproj") == true)
+        {
+            IconImage.Source = ImageSource.FromFile("csharp_icon.png");
+        }
     }
 }

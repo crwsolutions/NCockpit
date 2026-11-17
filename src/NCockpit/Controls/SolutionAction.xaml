@@ -7,7 +7,7 @@
              x:DataType="cv:SolutionAction">
     <Border x:Name="Border"
             BackgroundColor="Transparent"
-            Padding="8,6"
+            Padding="8,0,8,0"
             StrokeThickness="0"
             StrokeShape="RoundRectangle 6">
         <Border.GestureRecognizers>
@@ -15,7 +15,7 @@
             <PointerGestureRecognizer PointerEntered="OnPointerEntered"
                                       PointerExited="OnPointerExited" />
         </Border.GestureRecognizers>
-        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12" HeightRequest="32">
             <Image x:Name="IconImage"
                    Grid.Column="0"
                    WidthRequest="18"
