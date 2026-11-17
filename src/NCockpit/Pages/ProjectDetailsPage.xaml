@@ -69,7 +69,7 @@
                                 ButtonPadding="8"
                                 VerticalOptions="Center"
                                 Command="{Binding RefreshProjectCommand}"
-                                CanExecute="{Binding IsRefreshing, Converter={StaticResource InverseBoolConverter}}" />
+                                CanExecute="{Binding IsRefreshing, Converter={StaticResource InvertedBoolConverter}}" />
             </HorizontalStackLayout>
         </Grid>
 
@@ -86,7 +86,7 @@
             <cv:QuickAction Text="GitHub"
                             ImageSource="github.png"
                             Command="{Binding OpenGitHubCommand}"
-                            IsVisible="{Binding HasGitHubUrl}" />
+                            IsVisible="{Binding CurrentProject.GitRepoUrl, Converter={StaticResource IsStringNotNullOrEmptyConverter}}" />
         </HorizontalStackLayout>
 
         <!-- Tabs -->
@@ -188,7 +188,7 @@
                                        FontSize="12"
                                        TextColor="#9ca3af"
                                        Padding="0,8"
-                                       IsVisible="{Binding HasFiles, Converter={StaticResource InverseBoolConverter}}" />
+                                       IsVisible="{Binding HasFiles, Converter={StaticResource InvertedBoolConverter}}" />
                             </VerticalStackLayout>
                         </cv:SectionCard>
                     </VerticalStackLayout>
@@ -273,7 +273,7 @@
                                     <Label Text="No secondary folders linked yet."
                                            FontSize="12"
                                            TextColor="#9ca3af"
-                                           IsVisible="{Binding HasLinkedFolders, Converter={StaticResource InverseBoolConverter}}" />
+                                           IsVisible="{Binding HasLinkedFolders, Converter={StaticResource InvertedBoolConverter}}" />
                                 </VerticalStackLayout>
                             </VerticalStackLayout>
                         </cv:SectionCard>
@@ -313,7 +313,7 @@
                                            Text="No projects listed yet."
                                            FontSize="12"
                                            TextColor="#9ca3af"
-                                           IsVisible="{Binding HasSolutionProjects, Converter={StaticResource InverseBoolConverter}}" />
+                                           IsVisible="{Binding HasSolutionProjects, Converter={StaticResource InvertedBoolConverter}}" />
                                 </Grid>
                             </VerticalStackLayout>
                         </cv:SectionCard>
@@ -340,7 +340,7 @@
                                        FontSize="12"
                                        TextColor="#9ca3af"
                                        Padding="0,8"
-                                       IsVisible="{Binding HasMobileLinks, Converter={StaticResource InverseBoolConverter}}" />
+                                       IsVisible="{Binding HasMobileLinks, Converter={StaticResource InvertedBoolConverter}}" />
                             </VerticalStackLayout>
                         </cv:SectionCard>
 
@@ -371,7 +371,7 @@
                                        FontSize="12"
                                        TextColor="#9ca3af"
                                        Padding="0,8"
-                                       IsVisible="{Binding HasRelatedLinks, Converter={StaticResource InverseBoolConverter}}" />
+                                       IsVisible="{Binding HasRelatedLinks, Converter={StaticResource InvertedBoolConverter}}" />
                             </VerticalStackLayout>
                         </cv:SectionCard>
                     </VerticalStackLayout>
@@ -385,7 +385,7 @@
                              Spacing="8"
                              HorizontalOptions="Center"
                              VerticalOptions="Center"
-                             IsVisible="{Binding HasProject, Converter={StaticResource InverseBoolConverter}}">
+                             IsVisible="{Binding HasProject, Converter={StaticResource InvertedBoolConverter}}">
             <Label Text="Project not found."
                    FontSize="14"
                    TextColor="#9ca3af"

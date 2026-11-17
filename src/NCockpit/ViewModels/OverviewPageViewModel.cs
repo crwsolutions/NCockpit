@@ -46,7 +46,6 @@ public partial class OverviewPageViewModel : ObservableObject
     /// the chevron navigates to details.
     /// </summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasGitHubUrl))]
     public partial ProjectListItem? SelectedProject { get; set; }
 
     /// <summary>
@@ -78,12 +77,6 @@ public partial class OverviewPageViewModel : ObservableObject
     /// </summary>
     [ObservableProperty]
     public partial List<ProjectListItem> RecentActivity { get; set; } = [];
-
-    /// <summary>
-    /// Whether the selected project has a git repo URL configured. Used to
-    /// toggle the visibility of the GitHub quick action.
-    /// </summary>
-    public bool HasGitHubUrl => SelectedProject?.Project.GitRepoUrl is { Length: > 0 };
 
     public OverviewPageViewModel(
         IProjectService projectService,

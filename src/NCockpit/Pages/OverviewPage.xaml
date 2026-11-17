@@ -236,9 +236,12 @@
                     <cv:SectionCard Title="Quick actions">
                         <VerticalStackLayout Spacing="8">
                             <cv:QuickAction Text="Open last project" Glyph="&#xf061;" Command="{Binding OpenLastProjectCommand}" />
-                            <cv:QuickAction Text="Open in file explorer" Glyph="&#xf07b;" GlyphColor="#FFD45D" Command="{Binding OpenInExplorerCommand}" />
-                            <cv:QuickAction Text="Open in IDE" ImageSource="visual_studio_icon.png" Command="{Binding OpenInIDECommand}" />
-                            <cv:QuickAction Text="Open GitHub" ImageSource="github.png" Command="{Binding OpenGitHubCommand}" IsVisible="{Binding HasGitHubUrl}" />
+                            <cv:QuickAction Text="Open in file explorer" Glyph="&#xf07b;" GlyphColor="#FFD45D" Command="{Binding OpenInExplorerCommand}"
+                                            IsVisible="{Binding SelectedProject, Converter={StaticResource IsNotNullConverter}}" />
+                            <cv:QuickAction Text="Open in IDE" ImageSource="visual_studio_icon.png" Command="{Binding OpenInIDECommand}"
+                                            IsVisible="{Binding SelectedProject, Converter={StaticResource IsNotNullConverter}}" />
+                            <cv:QuickAction Text="Open GitHub" ImageSource="github.png" Command="{Binding OpenGitHubCommand}"
+                                            IsVisible="{Binding SelectedProject.Project.GitRepoUrl, Converter={StaticResource IsStringNotNullOrEmptyConverter}}" />
                         </VerticalStackLayout>
                     </cv:SectionCard>
 

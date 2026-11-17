@@ -39,7 +39,6 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasProject))]
-    [NotifyPropertyChangedFor(nameof(HasGitHubUrl))]
     [NotifyPropertyChangedFor(nameof(Files))]
     [NotifyPropertyChangedFor(nameof(HasFiles))]
     [NotifyPropertyChangedFor(nameof(SolutionFileName))]
@@ -77,12 +76,6 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
     /// Whether a project is currently selected and can be shown.
     /// </summary>
     public bool HasProject => CurrentProject is not null;
-
-    /// <summary>
-    /// Whether the project has a git repo URL configured. Used to toggle
-    /// the visibility of the GitHub action.
-    /// </summary>
-    public bool HasGitHubUrl => CurrentProject?.GitRepoUrl is { Length: > 0 };
 
     /// <summary>
     /// Whether any supporting folders are linked to the current project.

@@ -91,7 +91,7 @@
                                         </VerticalStackLayout>
 
                                         <VerticalStackLayout Grid.Column="0" Spacing="2"
-                                                             IsVisible="{Binding IsPrimary, Converter={StaticResource InverseBoolConverter}}">
+                                                             IsVisible="{Binding IsPrimary, Converter={StaticResource InvertedBoolConverter}}">
                                             <Label Text="Supporting folders" 
                                                    FontSize="10" 
                                                    TextColor="#999999" />
