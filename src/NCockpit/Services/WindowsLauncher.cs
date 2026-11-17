@@ -21,6 +21,12 @@ public interface IWindowsLauncher
     /// Open a URL in the default browser.
     /// </summary>
     bool TryOpenUrl(string url);
+
+    /// <summary>
+    /// Open a local folder in Visual Studio Code via the "code" command.
+    /// Returns false when VS Code is not installed or the launch fails.
+    /// </summary>
+    bool TryOpenInVsCode(string path);
 }
 
 /// <summary>
@@ -90,6 +96,33 @@ public class WindowsLauncher : IWindowsLauncher
             Process.Start(new ProcessStartInfo
             {
                 FileName = url,
+                UseShellExecute = true
+            });
+            return true;
+#else
+            return false;
+#endif
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public bool TryOpenInVsCode(string path)
+    {
+        try
+        {
+            if (!Directory.Exists(path))
+            {
+                return false;
+            }
+
+#if WINDOWS
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "code",
+                Arguments = $"\"{path}\"",
                 UseShellExecute = true
             });
             return true;

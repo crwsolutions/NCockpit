@@ -23,6 +23,10 @@ public partial class ProjectListItem : ObservableObject
             ? FormatRelativeTime(lastOpened)
             : "Never opened";
         StatusText = BuildStatus(project);
+        IsFolderType = project.Type == ProjectType.Folder;
+        IdeActionText = project.Type == ProjectType.Folder
+            ? "Open in VS Code"
+            : "Open in Visual Studio";
     }
 
     /// <summary>
@@ -57,6 +61,18 @@ public partial class ProjectListItem : ObservableObject
 
     [ObservableProperty]
     public partial string? StatusText { get; set; }
+
+    /// <summary>
+    /// Whether the project is a folder type (a repo without a solution file),
+    /// which opens in VS Code instead of Visual Studio.
+    /// </summary>
+    public bool IsFolderType { get; }
+
+    /// <summary>
+    /// Label for the "open in IDE" quick action, e.g. "Open in VS Code" for
+    /// folder type projects and "Open in Visual Studio" for solution type.
+    /// </summary>
+    public string IdeActionText { get; }
 
     /// <summary>
     /// Format a Unix timestamp as a relative time string, e.g. "Today 10:24",

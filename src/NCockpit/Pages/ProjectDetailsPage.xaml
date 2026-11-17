@@ -80,9 +80,16 @@
                             GlyphColor="#FFD45D"
                             Command="{Binding OpenLocationCommand}"
                             CommandParameter="{Binding CurrentProject.FolderPath}" />
-            <cv:QuickAction Text="Open solution"
+            <!-- Solution type: open the primary solution in Visual Studio -->
+            <cv:QuickAction Text="Open in Visual Studio"
                             ImageSource="visual_studio_icon.png"
-                            Command="{Binding OpenSolutionCommand}" />
+                            Command="{Binding OpenSolutionCommand}"
+                            IsVisible="{Binding IsFolderTypeProject, Converter={StaticResource InvertedBoolConverter}}" />
+            <!-- Folder type: open the repo folder in VS Code -->
+            <cv:QuickAction Text="Open in VS Code"
+                            ImageSource="visual_studio_code_icon.png"
+                            Command="{Binding OpenFolderCommand}"
+                            IsVisible="{Binding IsFolderTypeProject}" />
             <cv:QuickAction Text="GitHub"
                             ImageSource="github.png"
                             Command="{Binding OpenGitHubCommand}"
@@ -278,43 +285,23 @@
                             </VerticalStackLayout>
                         </cv:SectionCard>
 
-                        <cv:SectionCard Title="Solution &amp; projects">
+                        <cv:SectionCard Title="Solutions">
                             <VerticalStackLayout Spacing="12">
-                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
-                                    <Label Grid.Column="0"
-                                           Text="Solution file"
-                                           FontSize="12"
-                                           TextColor="#6b7280"
-                                           WidthRequest="100"
-                                           VerticalOptions="Center" />
-                                    <cv:QuickAction Grid.Column="1"
-                                                    Text="{Binding OpenSolutionQuickActionText}"
-                                                    ImageSource="visual_studio_icon.png"
-                                                    IconSize="20"
-                                                    Command="{Binding OpenSolutionCommand}" />
-                                </Grid>
-                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
-                                    <Label Grid.Column="0"
-                                           Text="Projects"
-                                           FontSize="12"
-                                           TextColor="#6b7280"
-                                           WidthRequest="100" />
-                                    <VerticalStackLayout Grid.Column="1"
-                                                         BindableLayout.ItemsSource="{Binding SolutionProjects}"
-                                                         Spacing="6">
-                                        <BindableLayout.ItemTemplate>
-                                            <DataTemplate x:DataType="services:SolutionProject">
-                                                <cv:FileAction Text="{Binding Name}"
-                                                               Path="{Binding ProjectPath}" />
-                                            </DataTemplate>
-                                        </BindableLayout.ItemTemplate>
-                                    </VerticalStackLayout>
-                                    <Label Grid.Column="1"
-                                           Text="No projects listed yet."
-                                           FontSize="12"
-                                           TextColor="#9ca3af"
-                                           IsVisible="{Binding HasSolutionProjects, Converter={StaticResource InvertedBoolConverter}}" />
-                                </Grid>
+                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Solutions}"
+                                                     Spacing="6">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="models:SolutionEntry">
+                                            <cv:SolutionAction Text="{Binding Name}"
+                                                               Path="{Binding Path}" />
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </VerticalStackLayout>
+
+                                <Label Text="No solutions discovered."
+                                       FontSize="12"
+                                       TextColor="#9ca3af"
+                                       Padding="0,8"
+                                       IsVisible="{Binding HasSolutions, Converter={StaticResource InvertedBoolConverter}}" />
                             </VerticalStackLayout>
                         </cv:SectionCard>
                     </VerticalStackLayout>

@@ -294,7 +294,9 @@ public partial class OverviewPageViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Open the selected project's solution in the IDE.
+    /// Open the selected project in its IDE: the primary solution in Visual
+    /// Studio for solution type projects, the repo folder in VS Code for
+    /// folder type projects.
     /// </summary>
     [RelayCommand]
     public async Task OpenInIDE()
@@ -304,7 +306,43 @@ public partial class OverviewPageViewModel : ObservableObject
             return;
         }
 
-        await OpenSolution(SelectedProject);
+        if (SelectedProject.IsFolderType)
+        {
+            await OpenInVsCode(SelectedProject);
+        }
+        else
+        {
+            await OpenSolution(SelectedProject);
+        }
+    }
+
+    /// <summary>
+    /// Open the project's folder in Visual Studio Code and record the last
+    /// opened timestamp if the launch succeeds.
+    /// </summary>
+    [RelayCommand]
+    public async Task OpenInVsCode(ProjectListItem? item)
+    {
+        if (item is null)
+        {
+            return;
+        }
+
+        try
+        {
+            if (_windowsLauncher.TryOpenInVsCode(item.Project.FolderPath))
+            {
+                await _projectService.TouchAsync(item.Project.Id);
+            }
+            else
+            {
+                ErrorMessage = $"Could not open {item.Project.FolderPath} in Visual Studio Code. Is VS Code installed?";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error opening folder: {ex.Message}";
+        }
     }
 
     /// <summary>
@@ -364,26 +402,26 @@ public partial class OverviewPageViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Open the project's solution file with its associated Windows application
-    /// and record the last opened timestamp if the launch succeeds.
+    /// Open the project's primary solution file with its associated Windows
+    /// application and record the last opened timestamp if the launch succeeds.
     /// </summary>
     [RelayCommand]
     public async Task OpenSolution(ProjectListItem? item)
     {
-        if (item is null)
+        if (item is null || item.Project.SolutionPath is not { Length: > 0 } solutionPath)
         {
             return;
         }
 
         try
         {
-            if (_windowsLauncher.TryOpenFile(item.Project.SolutionPath))
+            if (_windowsLauncher.TryOpenFile(solutionPath))
             {
                 await _projectService.TouchAsync(item.Project.Id);
             }
             else
             {
-                ErrorMessage = $"Could not open {item.Project.SolutionPath}";
+                ErrorMessage = $"Could not open {solutionPath}";
             }
         }
         catch (Exception ex)

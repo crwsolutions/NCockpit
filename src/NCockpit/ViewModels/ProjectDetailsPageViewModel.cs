@@ -8,7 +8,6 @@ using NCockpit.Models;
 using NCockpit.Popups;
 using NCockpit.Services;
 using NCockpit.ViewModels.Popups;
-using static System.Net.WebRequestMethods;
 
 namespace NCockpit.ViewModels;
 
@@ -42,10 +41,14 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
     [NotifyPropertyChangedFor(nameof(Files))]
     [NotifyPropertyChangedFor(nameof(HasFiles))]
     [NotifyPropertyChangedFor(nameof(SolutionFileName))]
+    [NotifyPropertyChangedFor(nameof(PrimarySolutionPath))]
     [NotifyPropertyChangedFor(nameof(SolutionLastWriteDisplay))]
     [NotifyPropertyChangedFor(nameof(SolutionProjects))]
     [NotifyPropertyChangedFor(nameof(HasSolutionProjects))]
-    [NotifyPropertyChangedFor(nameof(OpenSolutionQuickActionText))]
+    [NotifyPropertyChangedFor(nameof(Solutions))]
+    [NotifyPropertyChangedFor(nameof(HasSolutions))]
+    [NotifyPropertyChangedFor(nameof(OpenInIdeText))]
+    [NotifyPropertyChangedFor(nameof(IsFolderTypeProject))]
     public partial Project? CurrentProject { get; set; }
 
     [ObservableProperty]
@@ -76,6 +79,11 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
     /// Whether a project is currently selected and can be shown.
     /// </summary>
     public bool HasProject => CurrentProject is not null;
+
+    /// <summary>
+    /// Whether the current project is a folder type (opens in VS Code).
+    /// </summary>
+    public bool IsFolderTypeProject => CurrentProject?.Type == ProjectType.Folder;
 
     /// <summary>
     /// Whether any supporting folders are linked to the current project.
@@ -112,13 +120,23 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
     public bool HasFiles => Files.Count > 0;
 
     /// <summary>
-    /// File name of the solution file, e.g. "NCockpit.slnx".
+    /// File name of the primary solution file, e.g. "NCockpit.slnx".
+    /// Null for folder type projects.
     /// </summary>
     public string? SolutionFileName =>
-        CurrentProject is not null ? System.IO.Path.GetFileName(CurrentProject.SolutionPath) : null;
+        CurrentProject?.SolutionPath is { Length: > 0 } solutionPath
+            ? System.IO.Path.GetFileName(solutionPath)
+            : null;
 
     /// <summary>
-    /// Last write time of the solution file as display text, or "Unknown".
+    /// The full path of the primary solution file, or null for folder type
+    /// projects.
+    /// </summary>
+    public string? PrimarySolutionPath => CurrentProject?.SolutionPath;
+
+    /// <summary>
+    /// Last write time of the primary solution file as display text, or
+    /// "Unknown".
     /// </summary>
     public string SolutionLastWriteDisplay =>
         CurrentProject?.SolutionLastWriteUnix is { } lastWrite
@@ -126,7 +144,7 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
             : "Unknown";
 
     /// <summary>
-    /// The projects referenced by the solution file, parsed from the
+    /// The projects referenced by the primary solution file, parsed from the
     /// project's ProjectsJson. Returns an empty list when no projects were
     /// recorded.
     /// </summary>
@@ -156,11 +174,52 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
     public bool HasSolutionProjects => SolutionProjects.Count > 0;
 
     /// <summary>
-    /// Label for the solution-file quick action in the Solution &amp; projects
-    /// section.
+    /// The solutions (.sln / .slnx) discovered inside the project, parsed
+    /// from the project's SolutionsJson. Returns an empty list when no
+    /// solutions were recorded.
     /// </summary>
-    public string OpenSolutionQuickActionText =>
-        SolutionFileName is { Length: > 0 } name ? $"Open {name}" : "Open solution";
+    public List<SolutionEntry> Solutions
+    {
+        get
+        {
+            if (CurrentProject?.SolutionsJson is not { Length: > 0 } json)
+            {
+                return [];
+            }
+
+            try
+            {
+                var paths = JsonSerializer.Deserialize<List<string>>(json) ?? [];
+                return paths
+                    .Where(p => p.Length > 0)
+                    .Select(p => new SolutionEntry
+                    {
+                        Name = System.IO.Path.GetFileName(p),
+                        Path = p
+                    })
+                    .ToList();
+            }
+            catch
+            {
+                return [];
+            }
+        }
+    }
+
+    /// <summary>
+    /// Whether any solutions were discovered for the current project.
+    /// </summary>
+    public bool HasSolutions => Solutions.Count > 0;
+
+    /// <summary>
+    /// Label for the open-in-IDE quick action, matching the project type:
+    /// "Open in VS Code" for folder type, "Open in Visual Studio" for
+    /// solution type.
+    /// </summary>
+    public string OpenInIdeText =>
+        CurrentProject?.Type == ProjectType.Folder
+            ? "Open in VS Code"
+            : "Open in Visual Studio";
 
     public ProjectDetailsPageViewModel(
         IProjectService projectService,
@@ -306,11 +365,11 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
     }
 
     /// <summary>
-    /// Open the solution file with its associated Windows application and
-    /// record the last opened timestamp.
+    /// Open the project's folder in Visual Studio Code and record the last
+    /// opened timestamp if the launch succeeds. Used for folder type projects.
     /// </summary>
     [RelayCommand]
-    private async Task OpenSolutionAsync()
+    private async Task OpenFolderAsync()
     {
         if (CurrentProject is null)
         {
@@ -319,13 +378,60 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
 
         try
         {
-            if (_windowsLauncher.TryOpenFile(CurrentProject.SolutionPath))
+            ErrorMessage = null;
+
+            if (_windowsLauncher.TryOpenInVsCode(CurrentProject.FolderPath))
             {
                 await _projectService.TouchAsync(CurrentProject.Id);
             }
             else
             {
-                ErrorMessage = $"Could not open {CurrentProject.SolutionPath}";
+                ErrorMessage = $"Could not open {CurrentProject.FolderPath} in Visual Studio Code. Is VS Code installed?";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error opening folder: {ex.Message}";
+        }
+    }
+
+    /// <summary>
+    /// Open the primary solution in Visual Studio. Used for solution type
+    /// projects. Records the last opened timestamp.
+    /// </summary>
+    [RelayCommand]
+    private async Task OpenSolutionAsync()
+    {
+        if (CurrentProject?.SolutionPath is not { Length: > 0 } solutionPath)
+        {
+            return;
+        }
+
+        await OpenSolutionFileAsync(solutionPath);
+    }
+
+    /// <summary>
+    /// Open a specific solution file with its associated Windows application
+    /// and record the last opened timestamp. Used by the Solutions list on
+    /// the details page.
+    /// </summary>
+    [RelayCommand]
+    private async Task OpenSolutionFileAsync(string solutionPath)
+    {
+        if (CurrentProject is null)
+        {
+            return;
+        }
+
+        try
+        {
+            if (_windowsLauncher.TryOpenFile(solutionPath))
+            {
+                await _projectService.TouchAsync(CurrentProject.Id);
+            }
+            else
+            {
+                ErrorMessage = $"Could not open {solutionPath}";
             }
         }
         catch (Exception ex)

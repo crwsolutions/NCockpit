@@ -127,6 +127,20 @@ public static class ProjectMetadataDiscovery
     }
 
     /// <summary>
+    /// Returns the solution file paths as a JSON array, or null when the list
+    /// is empty.
+    /// </summary>
+    public static string? DiscoverSolutionsJson(List<string> solutionPaths)
+    {
+        if (solutionPaths.Count == 0)
+        {
+            return null;
+        }
+
+        return JsonSerializer.Serialize(solutionPaths);
+    }
+
+    /// <summary>
     /// True when two file names share the same base name (ignoring extension).
     /// </summary>
     private static bool SameBaseName(string a, string b)

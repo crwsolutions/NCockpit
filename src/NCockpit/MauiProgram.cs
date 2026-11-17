@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Maui.DevFlow.Agent;
 using CommunityToolkit.Maui;
 using NCockpit.Controls;
+using NCockpit.Models;
 using NCockpit.Pages;
 using NCockpit.Repositories;
 using NCockpit.Services;
@@ -87,6 +88,29 @@ public static class MauiProgram
 				UseShellExecute = true
 			});
 #endif
+		};
+
+		// Let the SolutionAction control open solutions in Visual Studio.
+		SolutionAction.OpenSolutionHandler = async path =>
+		{
+			if (string.IsNullOrEmpty(path))
+			{
+				return;
+			}
+
+			var launcher = app.Services.GetRequiredService<IWindowsLauncher>();
+			if (!launcher.TryOpenFile(path))
+			{
+				return;
+			}
+
+			// Touch the project so the recent-usage ordering is updated.
+			if (Shell.Current?.CurrentPage?.BindingContext is ProjectDetailsPageViewModel details
+				&& details.CurrentProject is { } project)
+			{
+				var projectService = app.Services.GetRequiredService<IProjectService>();
+				await projectService.TouchAsync(project.Id);
+			}
 		};
 
 		// Let the FileAction control open files in the View File popup.

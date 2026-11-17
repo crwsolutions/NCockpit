@@ -69,10 +69,20 @@ public class ProjectService : IProjectService
 
     public async Task<Project> RefreshProjectAsync(Project project)
     {
-        project.SolutionLastWriteUnix = ProjectMetadataDiscovery.GetSolutionLastWriteUnix(project.SolutionPath);
+        if (project.SolutionPath is { Length: > 0 } solutionPath)
+        {
+            project.SolutionLastWriteUnix = ProjectMetadataDiscovery.GetSolutionLastWriteUnix(solutionPath);
+            project.ProjectsJson = await ProjectMetadataDiscovery.DiscoverSolutionProjectsJsonAsync(solutionPath);
+        }
+        else
+        {
+            // Folder type: no solution file to read metadata from.
+            project.SolutionLastWriteUnix = null;
+            project.ProjectsJson = null;
+        }
+
         project.FilesJson = ProjectMetadataDiscovery.DiscoverRootFilesJson(project.FolderPath);
         project.GitRepoUrl = ProjectMetadataDiscovery.GetGitRepoUrl(project.FolderPath);
-        project.ProjectsJson = await ProjectMetadataDiscovery.DiscoverSolutionProjectsJsonAsync(project.SolutionPath);
 
         // The refresh does not change discovery state; keep the original
         // LastSeenUnix/ScanUnix so the project is not pruned by the next scan.

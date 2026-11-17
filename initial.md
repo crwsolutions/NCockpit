@@ -159,22 +159,15 @@ The application does not need to become a Git client. Git information is primari
 
 ## Solution and projects
 
-Show:
+Show the solutions (.sln / .slnx) discovered inside the project as a list.
+Each row must be clickable and open that solution using the configured/default
+associated application (Visual Studio).
 
-* solution file
-* contained projects
-* project type
-* project version
+For each solution, provide quick access to its contained projects and, where
+useful, to the project location and build output folders.
 
-The solution file must be clickable and should open using the configured/default associated application.
-
-For each project, provide quick access to:
-
-* project location
-* Debug output folder
-* Release output folder
-
-Debug and Release folders should be clickable.
+The "Solutions" list is the primary way to open individual solutions of a
+monorepo project from the details page.
 
 ## Project files
 
@@ -283,11 +276,68 @@ The exact project discovery strategy should be implemented cleanly and independe
 
 # Scanning
 
-Projects can be discovered by scanning configured folders.
+## Project definition
 
-Scanning should identify relevant project information from the filesystem.
+A **project is a folder**. There are two kinds:
 
-For example:
+1. **Repo project** (primary rule): a folder containing a `.git` folder is a
+   project root. The scan walks inside the repo for `.sln`/`.slnx` files, and
+   that determines the project **type**:
+   * one or more solution files found → **solution type**: icon = Visual
+     Studio, the open action opens the primary solution in Visual Studio.
+   * no solution files found → **folder type**: icon = Visual Studio Code,
+     the open action opens the repo folder in VS Code.
+   * The type is re-derived on every scan: adding or removing a solution file
+     in a repo flips the project type (and icon) after the next scan.
+
+2. **Legacy project** (fallback, unchanged behavior): a `.sln`/`.slnx` file
+   found **outside any repo** still becomes its own project, with the existing
+   root rules (root = solution folder; if that folder is named `src`, the
+   parent folder). These are solution type (VS icon).
+
+## Scan walk rules
+
+* The outer walk looks for both `.git` directories and solution files.
+* A solution file found **inside** a repo does **not** spawn its own project —
+  it belongs to (types) the repo project. Only orphan solution files (no repo
+  ancestor) spawn legacy projects.
+* **Outer repo wins**: once the walk enters a repo, inner `.git` folders are
+  not projects; skip their subtree entirely (no project, no solution
+  harvesting) so nested clones/submodules are not double-counted.
+* All existing resilience rules stay: skip on `UnauthorizedAccessException` / `IOException`,
+  the `SkipDirectories` prune list (`.git`, `bin`, `obj`, `node_modules`, `.vs`, …),
+  registered supporting folders are never scanned, progress + `CancellationToken`
+  + `Task.Yield` as today.
+
+## Multiple solutions in one repo (monorepo)
+
+* The overview shows **one** project entry per repo: one icon, one primary
+  open action.
+* **Primary solution** for the open action: the most recently opened solution
+  of that repo (last-used history); otherwise the shallowest path in the repo;
+  otherwise alphabetical.
+* The **Project details page** gets a "Solutions" list (styled like the
+  existing root-files list) containing every `.sln`/`.slnx` in the repo;
+  clicking a row opens that solution in Visual Studio.
+* Keep it pure: one icon, one door. Do **not** add a secondary "Open in VS
+  Code" action for solution-type projects.
+
+## Naming and identity
+
+* Repo project: name = repo folder name; stability key = repo root path.
+* Legacy project: name = solution file name; stability key = solution path
+  (as today).
+* `Project.SolutionPath` is nullable (null for folder type). `FilesJson` and
+  `GitRepoUrl` continue to be discovered at the project root; `ProjectsJson`
+  (solution project list) only for solution type.
+* **Migration**: existing DB rows keyed by a solution path that now fall
+  inside a discovered repo root must be merged into the repo project —
+  preserve `IsFavorite`, `LastUsedUnix`, and the rest of the user state —
+  instead of becoming orphans pruned by the next global scan.
+
+## Discovery metadata
+
+Scanning should identify relevant project information from the filesystem:
 
 * solution files
 * project files
@@ -302,7 +352,8 @@ For example:
 
 Scanning should be safe and resilient.
 
-A missing optional file or inaccessible folder must not make the entire scan fail.
+A missing optional file or inaccessible folder must not make the entire scan
+fail.
 
 Show useful progress/status information during a scan.
 
@@ -426,6 +477,7 @@ Provide a small abstraction for operations such as:
 * opening a file
 * opening a URL
 * opening a solution
+* opening a folder in VS Code (folder type projects)
 
 Keep Windows-specific implementation out of the ViewModels.
 
@@ -436,6 +488,7 @@ OpenFolder
 OpenSolution
 OpenFile
 OpenExternalLink
+OpenInVsCode
 ```
 
 rather than containing Windows process-launching code themselves.
