@@ -57,12 +57,17 @@ public static class SolutionFileParser
                     continue;
                 }
 
-                var name = await ReadProjectNameAsync(projectPath);
+                var metadata = await ProjectFileMetadata.ReadAsync(projectPath);
                 projects.Add(new SolutionProject
                 {
-                    Name = name,
+                    Name = metadata.Name,
                     FolderPath = Path.GetDirectoryName(projectPath)!,
-                    ProjectPath = projectPath
+                    ProjectPath = projectPath,
+                    Type = metadata.TypeLabel,
+                    Sdk = metadata.Sdk,
+                    TargetFrameworks = metadata.TargetFrameworks,
+                    Version = metadata.Version,
+                    OutputType = metadata.OutputType
                 });
             }
 
@@ -127,12 +132,17 @@ public static class SolutionFileParser
                     continue;
                 }
 
-                var name = await ReadProjectNameAsync(file);
+                var metadata = await ProjectFileMetadata.ReadAsync(file);
                 found.Add(new SolutionProject
                 {
-                    Name = name,
+                    Name = metadata.Name,
                     FolderPath = Path.GetDirectoryName(file)!,
-                    ProjectPath = file
+                    ProjectPath = file,
+                    Type = metadata.TypeLabel,
+                    Sdk = metadata.Sdk,
+                    TargetFrameworks = metadata.TargetFrameworks,
+                    Version = metadata.Version,
+                    OutputType = metadata.OutputType
                 });
             }
 
@@ -158,40 +168,6 @@ public static class SolutionFileParser
         }
 
         return found;
-    }
-
-    /// <summary>
-    /// Reads the ProjectName MSBuild property from a project file. Falls back
-    /// to the folder name when the property is absent or the file cannot be
-    /// read. A missing file simply yields the folder name; nothing throws.
-    /// </summary>
-    public static async Task<string> ReadProjectNameAsync(string projectPath)
-    {
-        try
-        {
-            if (!File.Exists(projectPath))
-            {
-                return Path.GetFileName(Path.GetDirectoryName(projectPath)!);
-            }
-
-            var content = await File.ReadAllTextAsync(projectPath);
-
-            // Take the last <ProjectName> element in the file so a later
-            // definition wins, and skip MSBuild-PropertyGroup entries.
-            var matches = Regex.Matches(
-                content,
-                @"<ProjectName>\s*([^<]+?)\s*</ProjectName>",
-                RegexOptions.IgnoreCase);
-
-            var name = matches.Count > 0 ? matches[^1].Groups[1].Value.Trim() : string.Empty;
-            return string.IsNullOrEmpty(name)
-                ? Path.GetFileName(Path.GetDirectoryName(projectPath)!)
-                : name;
-        }
-        catch
-        {
-            return Path.GetFileName(Path.GetDirectoryName(projectPath)!);
-        }
     }
 
     /// <summary>

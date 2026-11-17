@@ -213,86 +213,86 @@ public static class ProjectMetadataDiscovery
     }
 
     /// <summary>
-    /// Derives a simple type label from a project file, e.g. ".NET MAUI app",
-    /// "ASP.NET Core web app", "Console app", "Class library". Returns "Project"
-    /// when the file is missing, unreadable, or none of the known markers are
-    /// present.
+    /// Returns the newest last write time of any file under
+    /// <paramref name="folder"/>, or null when none can be read. The walk
+    /// prunes the usual noise folders (build output, restored packages, tooling
+    /// state) and is bounded: for a huge folder it reports the newest time it
+    /// reached within the bound, which is enough to tell how recently the
+    /// project was worked on.
     /// </summary>
-    public static string GetProjectTypeLabel(string projectPath)
+    public static long? GetFolderLastWriteUnix(string folder)
     {
-        try
+        var newest = (long?)null;
+        var visitedDirectories = 0;
+        var visitedFiles = 0;
+
+        var enumeration = new Stack<string>();
+        enumeration.Push(folder);
+
+        while (enumeration.Count > 0
+               && visitedDirectories < MaxVisitedDirectories
+               && visitedFiles < MaxVisitedFiles)
         {
-            if (!File.Exists(projectPath))
+            var current = enumeration.Pop();
+
+            List<string> directories;
+            try
             {
-                return "Project";
+                directories = Directory.EnumerateDirectories(current).ToList();
+            }
+            catch (UnauthorizedAccessException) { continue; }
+            catch (IOException) { continue; }
+
+            string[] files;
+            try
+            {
+                files = Directory.EnumerateFiles(current).ToArray();
+            }
+            catch (UnauthorizedAccessException) { continue; }
+            catch (IOException) { continue; }
+
+            foreach (var file in files)
+            {
+                visitedFiles++;
+                try
+                {
+                    var lastWrite = File.GetLastWriteTimeUtc(file);
+                    if (newest is null || lastWrite > DateTimeOffset.FromUnixTimeSeconds(newest.Value))
+                    {
+                        newest = (long)(lastWrite - DateTimeOffset.UnixEpoch).TotalSeconds;
+                    }
+                }
+                catch (UnauthorizedAccessException) { }
+                catch (IOException) { }
             }
 
-            var content = File.ReadAllText(projectPath);
-            var sdk = GetSdk(content);
-            var outputType = GetOutputType(content);
-            var targetFrameworkMatches = Regex.Matches(
-                content,
-                @"<TargetFramework(?:s)?\s*>\s*([^<]+?)\s*</TargetFramework(?:s)?>",
-                RegexOptions.IgnoreCase);
-
-            if (content.Contains("UseMaui", StringComparison.OrdinalIgnoreCase))
+            foreach (var directory in directories)
             {
-                return ".NET MAUI app";
-            }
+                if (SkipDirectoryNames.Contains(Path.GetFileName(directory), StringComparer.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
 
-            if (string.Equals(sdk, "Microsoft.NET.Sdk.Web", StringComparison.OrdinalIgnoreCase)
-                || content.Contains("Microsoft.AspNetCore", StringComparison.OrdinalIgnoreCase))
-            {
-                return "ASP.NET Core web app";
+                visitedDirectories++;
+                enumeration.Push(directory);
             }
-
-            if (string.Equals(outputType, "Exe", StringComparison.OrdinalIgnoreCase))
-            {
-                return "Console app";
-            }
-
-            if (targetFrameworkMatches.Any(m =>
-                    m.Groups[1].Value.Contains("android", StringComparison.OrdinalIgnoreCase)
-                    || m.Groups[1].Value.Contains("ios", StringComparison.OrdinalIgnoreCase)
-                    || m.Groups[1].Value.Contains("macos", StringComparison.OrdinalIgnoreCase)
-                    || m.Groups[1].Value.Contains("tvos", StringComparison.OrdinalIgnoreCase)
-                    || m.Groups[1].Value.Contains("maccatalyst", StringComparison.OrdinalIgnoreCase)
-                    || m.Groups[1].Value.Contains("windows", StringComparison.OrdinalIgnoreCase)))
-            {
-                return ".NET app";
-            }
-
-            if (string.Equals(outputType, "Library", StringComparison.OrdinalIgnoreCase)
-                || (outputType.Length == 0 && string.Equals(sdk, "Microsoft.NET.Sdk", StringComparison.OrdinalIgnoreCase)))
-            {
-                return "Class library";
-            }
-
-            return "Project";
         }
-        catch
-        {
-            return "Project";
-        }
+
+        return newest;
     }
 
-    private static string GetSdk(string content)
-    {
-        var match = Regex.Match(
-            content,
-            @"<Project\s+[^>]*?Sdk\s*=\s*""([^""]+)""",
-            RegexOptions.IgnoreCase);
-        return match.Success ? match.Groups[1].Value : string.Empty;
-    }
+    /// <summary>
+    /// Bounds of the last-modified walk: enough to cover a real project folder,
+    /// small enough to keep the details page responsive.
+    /// </summary>
+    private const int MaxVisitedDirectories = 3000;
+    private const int MaxVisitedFiles = 30000;
 
-    private static string GetOutputType(string content)
-    {
-        var matches = Regex.Matches(
-            content,
-            @"<OutputType>\s*([^<]+?)\s*</OutputType>",
-            RegexOptions.IgnoreCase);
-        return matches.Count > 0 ? matches[^1].Groups[1].Value : string.Empty;
-    }
+    private static readonly string[] SkipDirectoryNames =
+    [
+        ".git", "bin", "obj", "node_modules", "packages",
+        ".vs", ".idea", ".gradle", "dist", "build", "TestResults"
+    ];
 
     /// <summary>
     /// True when two file names share the same base name (ignoring extension).

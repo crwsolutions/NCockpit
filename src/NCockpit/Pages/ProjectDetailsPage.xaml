@@ -162,34 +162,70 @@
                                  project: its name, project file, folder and last
                                  modified time, plus a simple type label derived
                                  from the project file. -->
-                            <VerticalStackLayout Spacing="12"
-                                                 IsVisible="{Binding HasInfoProject}">
-                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                                    <Label Grid.Column="0" Text="Type" FontSize="12" TextColor="#6b7280" WidthRequest="100" />
-                                    <Label Grid.Column="1" Text="{Binding InfoProjectType}" FontSize="12" TextColor="#1a2744" FontAttributes="Bold" />
-                                </Grid>
-                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                                    <Label Grid.Column="0" Text="Project" FontSize="12" TextColor="#6b7280" WidthRequest="100" />
-                                    <Label Grid.Column="1" Text="{Binding InfoProjectName}" FontSize="12" TextColor="#1a2744" />
-                                </Grid>
-                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                                    <Label Grid.Column="0" Text="Project file" FontSize="12" TextColor="#6b7280" WidthRequest="100" />
-                                    <Label Grid.Column="1" Text="{Binding InfoProjectPath}" FontSize="12" TextColor="#3b82f6" LineBreakMode="TailTruncation" />
-                                </Grid>
-                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                                    <Label Grid.Column="0" Text="Folder" FontSize="12" TextColor="#6b7280" WidthRequest="100" />
-                                    <Label Grid.Column="1" Text="{Binding InfoProjectFolder}" FontSize="12" TextColor="#1a2744" LineBreakMode="TailTruncation" />
-                                </Grid>
-                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                                    <Label Grid.Column="0" Text="Last modified" FontSize="12" TextColor="#6b7280" WidthRequest="100" />
-                                    <Label Grid.Column="1" Text="{Binding InfoProjectLastModifiedDisplay}" FontSize="12" TextColor="#1a2744" />
-                                </Grid>
+                            <VerticalStackLayout>
+                                <VerticalStackLayout Spacing="12"
+                                                     IsVisible="{Binding HasInfoProject}">
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                        <Label Grid.Column="0" Text="Type" FontSize="12" TextColor="#6b7280" WidthRequest="112" />
+                                        <Label Grid.Column="1" Text="{Binding InfoProjectType}" FontSize="12" TextColor="#1a2744" FontAttributes="Bold" />
+                                    </Grid>
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                        <Label Grid.Column="0" Text="Version" FontSize="12" TextColor="#6b7280" WidthRequest="112" />
+                                        <Label Grid.Column="1" Text="{Binding InfoProjectVersion}" FontSize="12" TextColor="#1a2744" />
+                                    </Grid>
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                        <Label Grid.Column="0" Text="Target framework" FontSize="12" TextColor="#6b7280" WidthRequest="112" />
+                                        <Label Grid.Column="1" Text="{Binding InfoProjectTargetFrameworks}" FontSize="12" TextColor="#1a2744" />
+                                    </Grid>
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                        <Label Grid.Column="0" Text="SDK" FontSize="12" TextColor="#6b7280" WidthRequest="112" />
+                                        <Label Grid.Column="1" Text="{Binding InfoProjectSdk}" FontSize="12" TextColor="#1a2744" />
+                                    </Grid>
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                        <Label Grid.Column="0" Text="Project" FontSize="12" TextColor="#6b7280" WidthRequest="112" />
+                                        <Label Grid.Column="1" Text="{Binding InfoProjectName}" FontSize="12" TextColor="#1a2744" />
+                                    </Grid>
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                        <Label Grid.Column="0" Text="Project file" FontSize="12" TextColor="#6b7280" WidthRequest="112" />
+                                        <Label Grid.Column="1" Text="{Binding InfoProjectPath}" FontSize="12" TextColor="#3b82f6" LineBreakMode="TailTruncation" />
+                                    </Grid>
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                        <Label Grid.Column="0" Text="Folder" FontSize="12" TextColor="#6b7280" WidthRequest="112" />
+                                        <Label Grid.Column="1" Text="{Binding InfoProjectFolder}" FontSize="12" TextColor="#1a2744" LineBreakMode="TailTruncation" />
+                                    </Grid>
+
+                                    <BoxView HeightRequest="1" Color="#e5e7eb" HorizontalOptions="Fill" />
+
+                                    <!-- Git state of the repository holding the selected project, read live so the panel says what is actual now. -->
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12"
+                                          IsVisible="{Binding IsGitRepository}">
+                                        <Label Grid.Column="0" Text="Git branch" FontSize="12" TextColor="#6b7280" WidthRequest="112" />
+                                        <Label Grid.Column="1" Text="{Binding GitBranchDisplay}" FontSize="12" TextColor="#1a2744" FontAttributes="Bold" />
+                                    </Grid>
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12"
+                                          IsVisible="{Binding IsGitRepository}">
+                                        <Label Grid.Column="0" Text="Git status" FontSize="12" TextColor="#6b7280" WidthRequest="112" />
+                                        <Label Grid.Column="1" Text="{Binding GitStatusDisplay}" FontSize="12" TextColor="{Binding GitStatusColor}" />
+                                    </Grid>
+
+                                    <BoxView HeightRequest="1" Color="#e5e7eb" HorizontalOptions="Fill" />
+
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                        <Label Grid.Column="0" Text="Last modified" FontSize="12" TextColor="#6b7280" WidthRequest="112" />
+                                        <Label Grid.Column="1" Text="{Binding InfoProjectLastModifiedDisplay}" FontSize="12" TextColor="#1a2744" />
+                                    </Grid>
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                        <Label Grid.Column="0" Text="Last scanned" FontSize="12" TextColor="#6b7280" WidthRequest="112" />
+                                        <Label Grid.Column="1" Text="{Binding LastScannedDisplay}" FontSize="12" TextColor="#1a2744" />
+                                    </Grid>
+                                </VerticalStackLayout>
+
+                                <Label Text="No favorite project yet."
+                                       FontSize="12"
+                                       TextColor="#9ca3af"
+                                       IsVisible="{Binding HasInfoProject, Converter={StaticResource InvertedBoolConverter}}" />
                             </VerticalStackLayout>
 
-                            <Label Text="No favorite project yet."
-                                   FontSize="12"
-                                   TextColor="#9ca3af"
-                                   IsVisible="{Binding HasInfoProject, Converter={StaticResource InvertedBoolConverter}}" />
                         </cv:SectionCard>
 
                         <cv:SectionCard Title="Files">

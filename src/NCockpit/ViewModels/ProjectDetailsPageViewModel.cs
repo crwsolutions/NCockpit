@@ -4,6 +4,7 @@ using CommunityToolkit.Maui.Extensions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Maui;
+using Microsoft.Maui.Graphics;
 using NCockpit.Models;
 using NCockpit.Popups;
 using NCockpit.Services;
@@ -22,6 +23,22 @@ namespace NCockpit.ViewModels;
 public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttributable
 {
     private static readonly DateTime UnixEpoch = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+    /// <summary>
+    /// Colour of the git status row: green for a clean working tree, amber when
+    /// it carries changes, gray when the state could not be read.
+    /// </summary>
+    private static readonly Color GitCleanColor = Color.FromArgb("#16a34a");
+
+    private static readonly Color GitDirtyColor = Color.FromArgb("#b45309");
+
+    private static readonly Color GitUnknownColor = Color.FromArgb("#9ca3af");
+
+    /// <summary>
+    /// Guards the project info reads: the newest load owns the panel, so an
+    /// earlier one still reading from disk cannot overwrite it.
+    /// </summary>
+    private int _infoLoadSequence;
 
     private readonly IProjectService _projectService;
     private readonly ISupportingFolderService _supportingFolderService;
@@ -55,8 +72,6 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
     [NotifyPropertyChangedFor(nameof(InfoProjectName))]
     [NotifyPropertyChangedFor(nameof(InfoProjectPath))]
     [NotifyPropertyChangedFor(nameof(InfoProjectFolder))]
-    [NotifyPropertyChangedFor(nameof(InfoProjectLastModifiedDisplay))]
-    [NotifyPropertyChangedFor(nameof(InfoProjectType))]
     [NotifyPropertyChangedFor(nameof(HasInfoProject))]
     public partial Project? CurrentProject { get; set; }
 
@@ -203,24 +218,72 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
     public string? InfoProjectFolder => FavoriteProject?.FolderPath;
 
     /// <summary>
-    /// The favorite project's last modified time as display text, or "Unknown".
-    /// Null when there is no favorite project.
+    /// The kind of the favorite project as its project file shows it, e.g.
+    /// ".NET MAUI app", "ASP.NET Core web app", "Console app", "Class library".
+    /// Filled by <see cref="LoadProjectInfoAsync"/>.
     /// </summary>
-    public string? InfoProjectLastModifiedDisplay =>
-        FavoriteProject is { } favorite
-            ? ProjectMetadataDiscovery.GetProjectLastWriteUnix(favorite.ProjectPath) is { } lastWrite
-                ? FormatUnix(lastWrite)
-                : "Unknown"
-            : null;
+    [ObservableProperty]
+    public partial string? InfoProjectType { get; set; }
 
     /// <summary>
-    /// A simple type label derived from the favorite project's file, e.g.
-    /// ".NET MAUI app", "ASP.NET Core web app", "Console app", "Class library".
-    /// Null when there is no favorite project.
+    /// The version the favorite project sets, or "Not set" when it sets none
+    /// (the version the SDK derives from the target framework then applies).
     /// </summary>
-    public string? InfoProjectType => FavoriteProject is { } favorite
-        ? ProjectMetadataDiscovery.GetProjectTypeLabel(favorite.ProjectPath)
-        : null;
+    [ObservableProperty]
+    public partial string? InfoProjectVersion { get; set; }
+
+    /// <summary>
+    /// The target framework(s) the favorite project builds for.
+    /// </summary>
+    [ObservableProperty]
+    public partial string? InfoProjectTargetFrameworks { get; set; }
+
+    /// <summary>
+    /// The SDK the favorite project declares, e.g. "Microsoft.NET.Sdk".
+    /// </summary>
+    [ObservableProperty]
+    public partial string? InfoProjectSdk { get; set; }
+
+    /// <summary>
+    /// When the favorite project was last worked on: the newest write time of
+    /// any file in its folder.
+    /// </summary>
+    [ObservableProperty]
+    public partial string? InfoProjectLastModifiedDisplay { get; set; }
+
+    /// <summary>
+    /// Whether the current project's folder is a git repository. The git rows of
+    /// the info panel only make sense then.
+    /// </summary>
+    [ObservableProperty]
+    public partial bool IsGitRepository { get; set; }
+
+    /// <summary>
+    /// The branch the repository has checked out. Read from the repository while
+    /// the panel is shown, so it is actual rather than what a scan once stored.
+    /// </summary>
+    [ObservableProperty]
+    public partial string? GitBranchDisplay { get; set; }
+
+    /// <summary>
+    /// The working tree as very short stats: "Clean", or "2 staged, 3 modified,
+    /// 1 untracked". Null when the folder is no repository.
+    /// </summary>
+    [ObservableProperty]
+    public partial string? GitStatusDisplay { get; set; }
+
+    /// <summary>
+    /// Colour of <see cref="GitStatusDisplay"/>: green when the working tree is
+    /// clean, amber when it carries changes, gray when the state is unknown.
+    /// </summary>
+    [ObservableProperty]
+    public partial Color GitStatusColor { get; set; } = GitUnknownColor;
+
+    /// <summary>
+    /// When the scan last saw the current project.
+    /// </summary>
+    [ObservableProperty]
+    public partial string? LastScannedDisplay { get; set; }
 
     /// <summary>
     /// Whether a favorite project exists to show in the Project info panel.
@@ -426,6 +489,8 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
                 MobileLinks = links.MobileLinks;
                 RelatedLinks = links.RelatedLinks;
             }
+
+            await LoadProjectInfoAsync();
         }
         catch (Exception ex)
         {
@@ -450,6 +515,115 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
 
         LinkedFolders = await _supportingFolderService.GetLinkedToProjectAsync(CurrentProject.Id);
     }
+
+    /// <summary>
+    /// Fill the Project info panel for the current project: what the scan stored
+    /// about the selected project file (read from disk when an older scan has
+    /// none), the repository's branch and working tree (always read live, so the
+    /// panel says what is actual now, not what a scan once found), the project's
+    /// last modified time and the time the scan last saw it. Every read runs off
+    /// the UI thread and is resilient: an unreadable file or a missing git
+    /// executable shows as "Unknown" instead of failing the page.
+    /// </summary>
+    private async Task LoadProjectInfoAsync()
+    {
+        if (CurrentProject is not { } project)
+        {
+            ClearProjectInfo();
+            return;
+        }
+
+        var sequence = ++_infoLoadSequence;
+        var favorite = FavoriteProject;
+        var folderPath = project.FolderPath;
+
+        // A row discovered before the scan collected project metadata gets it
+        // read here once, so the panel is complete either way.
+        Task<ProjectFileMetadata>? metadataTask = favorite is null || HasStoredMetadata(favorite)
+            ? null
+            : ProjectFileMetadata.ReadAsync(favorite.ProjectPath);
+
+        IsGitRepository = GitInfoDiscovery.IsRepository(folderPath);
+        GitBranchDisplay = null;
+        GitStatusDisplay = IsGitRepository ? "Checking…" : null;
+        GitStatusColor = GitUnknownColor;
+        LastScannedDisplay = project.LastSeenUnix > 0
+            ? FormatRelativeTime(project.LastSeenUnix)
+            : "Never";
+
+        var branchTask = Task.Run(() => GitInfoDiscovery.GetBranch(folderPath));
+        var statusTask = GitInfoDiscovery.GetStatusAsync(folderPath);
+        var lastWriteTask = Task.Run(() => ResolveLastModifiedUnix(project, favorite));
+
+        var branch = await branchTask;
+        var status = await statusTask;
+        var lastModifiedUnix = await lastWriteTask;
+        var metadata = metadataTask is null ? null : await metadataTask;
+
+        if (sequence != _infoLoadSequence)
+        {
+            return;
+        }
+
+        GitBranchDisplay = branch ?? "Unknown";
+        GitStatusDisplay = status?.ToDisplayString() ?? (IsGitRepository ? "Unknown" : null);
+        GitStatusColor = status switch
+        {
+            null => GitUnknownColor,
+            { IsClean: true } => GitCleanColor,
+            _ => GitDirtyColor
+        };
+
+        if (favorite is not null)
+        {
+            InfoProjectType = favorite.Type ?? metadata?.TypeLabel ?? "Project";
+            InfoProjectVersion = favorite.Version ?? metadata?.Version ?? "Not set";
+            InfoProjectTargetFrameworks = favorite.TargetFrameworks ?? metadata?.TargetFrameworks ?? "Unknown";
+            InfoProjectSdk = favorite.Sdk ?? metadata?.Sdk ?? "Unknown";
+            InfoProjectLastModifiedDisplay = lastModifiedUnix is { } lastWrite
+                ? FormatRelativeTime(lastWrite)
+                : "Unknown";
+        }
+        else
+        {
+            // No selected project file: the panel is hidden, so clear what an
+            // earlier project left in it rather than showing a mix.
+            InfoProjectType = null;
+            InfoProjectVersion = null;
+            InfoProjectTargetFrameworks = null;
+            InfoProjectSdk = null;
+            InfoProjectLastModifiedDisplay = null;
+        }
+    }
+
+    private void ClearProjectInfo()
+    {
+        _infoLoadSequence++;
+        InfoProjectType = null;
+        InfoProjectVersion = null;
+        InfoProjectTargetFrameworks = null;
+        InfoProjectSdk = null;
+        InfoProjectLastModifiedDisplay = null;
+        GitBranchDisplay = null;
+        GitStatusDisplay = null;
+        GitStatusColor = GitUnknownColor;
+        IsGitRepository = false;
+        LastScannedDisplay = null;
+    }
+
+    /// <summary>
+    /// The newest write time under the selected project's folder: what "last
+    /// modified" means for a project. Without a selected project file the
+    /// project root stands in, and a stored solution timestamp is the fallback.
+    /// </summary>
+    private static long? ResolveLastModifiedUnix(Project project, SolutionProject? favorite)
+    {
+        return ProjectMetadataDiscovery.GetFolderLastWriteUnix(favorite?.FolderPath ?? project.FolderPath)
+            ?? project.SolutionLastWriteUnix;
+    }
+
+    private static bool HasStoredMetadata(SolutionProject project) =>
+        project.Type is not null && project.Sdk is not null && project.TargetFrameworks is not null;
 
     /// <summary>
     /// Open the Link Secondary Folder popup to associate an unlinked supporting
@@ -753,6 +927,7 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
             RelatedLinks = links.RelatedLinks;
 
             await LoadLinkedFoldersAsync();
+            await LoadProjectInfoAsync();
 
             LastRefreshedDisplay = $"Updated {DateTime.Now:HH:mm:ss}";
         }
@@ -806,6 +981,8 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
 
         var projects = await _projectService.GetProjectsAsync();
         CurrentProject = projects.FirstOrDefault(p => p.Id == CurrentProject.Id) ?? CurrentProject;
+
+        await LoadProjectInfoAsync();
     }
 
     private static List<string> ParseSolutionPaths(string? json)
@@ -864,4 +1041,26 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
 
     private static string FormatUnix(long unix) =>
         UnixEpoch.AddSeconds(unix).ToLocalTime().ToString("MMM d, yyyy");
+
+    /// <summary>
+    /// Format a Unix timestamp as a relative time string, e.g. "Today 10:24",
+    /// "Yesterday 16:42", or "Sep 12, 2026 14:18".
+    /// </summary>
+    private static string FormatRelativeTime(long unix)
+    {
+        var dateTime = UnixEpoch.AddSeconds(unix).ToLocalTime();
+        var now = DateTime.Now;
+
+        if (dateTime.Date == now.Date)
+        {
+            return $"Today {dateTime:HH:mm}";
+        }
+
+        if (dateTime.Date == now.Date.AddDays(-1))
+        {
+            return $"Yesterday {dateTime:HH:mm}";
+        }
+
+        return $"{dateTime:MMM d, yyyy HH:mm}";
+    }
 }

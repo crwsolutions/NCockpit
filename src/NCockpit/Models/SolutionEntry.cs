@@ -53,6 +53,37 @@ public class SolutionProject
     /// Full path to the project file (.csproj, .fsproj, .vbproj, ...).
     /// </summary>
     public required string ProjectPath { get; init; }
+
+    /// <summary>
+    /// Human-readable kind of the project as its project file shows it, e.g.
+    /// ".NET MAUI app", "ASP.NET Core web app", "Console app", "Class library".
+    /// Null when the kind could not be told (an unreadable project file, or a
+    /// row written before the scan collected it).
+    /// </summary>
+    public string? Type { get; init; }
+
+    /// <summary>
+    /// The SDK the project file declares, e.g. "Microsoft.NET.Sdk" or
+    /// "Microsoft.NET.Sdk.Web". Null when it declares none.
+    /// </summary>
+    public string? Sdk { get; init; }
+
+    /// <summary>
+    /// The target framework(s) the project builds for, joined with ", ". Null
+    /// when the project file names none (they are inherited or computed).
+    /// </summary>
+    public string? TargetFrameworks { get; init; }
+
+    /// <summary>
+    /// The version the project sets. Null when it sets none, which means the
+    /// version the SDK derives from the target framework applies.
+    /// </summary>
+    public string? Version { get; init; }
+
+    /// <summary>
+    /// "Exe" or "Library" when the project file sets OutputType; otherwise null.
+    /// </summary>
+    public string? OutputType { get; init; }
 }
 
 /// <summary>
