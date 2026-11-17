@@ -134,9 +134,15 @@ public class ScanService : IScanService
         // an earlier run and would otherwise be lower than this run's stamp).
         await _projectRepository.PruneAsync(scanUnix, folders.Select(f => f.Id));
 
-        if (folderId.HasValue)
+        // Stamp every folder this run scanned, not only an explicitly targeted
+        // one: a full scan (folderId null, started from the Overview page) must
+        // refresh the project count and the scan time the Folders page shows.
+        // The count is taken after the prune so it is the number of rows the
+        // folder owns now - the same number the page's delete confirmation uses.
+        foreach (var scannedFolder in folders)
         {
-            await UpdateFolderScanStatsAsync(folderId.Value, projectsFound, scanUnix);
+            var folderProjectCount = await _projectRepository.CountByFolderAsync(scannedFolder.Id);
+            await UpdateFolderScanStatsAsync(scannedFolder.Id, folderProjectCount, scanUnix);
         }
 
         progress?.Report(new ScanProgress
