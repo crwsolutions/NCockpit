@@ -16,14 +16,13 @@ internal static class DatabaseSchema
     /// <c>if (userVersion &lt; N)</c> step for a schema change; never rewrite an
     /// existing step.
     /// </summary>
-    private const int CurrentUserVersion = 7;
+    private const int CurrentUserVersion = 8;
 
     private const string ProjectFoldersDdl = """
         CREATE TABLE IF NOT EXISTS ProjectFolders (
             Id INTEGER PRIMARY KEY AUTOINCREMENT,
             Path TEXT NOT NULL UNIQUE,
             IsPrimary INTEGER NOT NULL DEFAULT 1,
-            IsEnabled INTEGER NOT NULL DEFAULT 1,
             ProjectCount INTEGER NOT NULL DEFAULT 0,
             LastScanUnix INTEGER,
             CreatedAt INTEGER NOT NULL
@@ -327,6 +326,16 @@ internal static class DatabaseSchema
             //    so the project link of a supporting folder cannot be used.
             RebuildTable(connection, "Projects", ProjectsDdl, ProjectsIndexDdl, ProjectColumns);
             RepairBrokenReferences(connection, "SupportingFolders", SupportingFoldersDdl, SupportingFolderColumns);
+        }
+
+        if (userVersion < 8)
+        {
+            // ProjectFolders.IsEnabled was never wired to anything: the scan decides
+            // where to look for projects through IsPrimary alone (secondary folders
+            // are never scanned), and no screen ever toggled the flag. Dropping it
+            // needs no table rebuild because no index, key or view uses the column.
+            try { Execute(connection, "ALTER TABLE ProjectFolders DROP COLUMN IsEnabled"); }
+            catch (SqliteException ex) when (ex.Message.Contains("no such column")) { }
         }
 
         Execute(connection, $"PRAGMA user_version = {CurrentUserVersion};");

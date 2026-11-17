@@ -30,7 +30,7 @@ public class ProjectFolderRepository : IProjectFolderRepository
     {
         using var connection = OpenConnection();
         const string sql = """
-            SELECT Id, Path, IsPrimary, IsEnabled, ProjectCount, LastScanUnix
+            SELECT Id, Path, IsPrimary, ProjectCount, LastScanUnix
             FROM ProjectFolders
             ORDER BY Path
             """;
@@ -41,7 +41,7 @@ public class ProjectFolderRepository : IProjectFolderRepository
     {
         using var connection = OpenConnection();
         const string sql = """
-            SELECT Id, Path, IsPrimary, IsEnabled, ProjectCount, LastScanUnix
+            SELECT Id, Path, IsPrimary, ProjectCount, LastScanUnix
             FROM ProjectFolders
             WHERE Id = @Id
             """;
@@ -56,18 +56,16 @@ public class ProjectFolderRepository : IProjectFolderRepository
         if (folder.Id == 0)
         {
             const string insertSql = """
-                INSERT INTO ProjectFolders (Path, IsPrimary, IsEnabled, ProjectCount, LastScanUnix, CreatedAt)
-                VALUES (@Path, @IsPrimary, @IsEnabled, @ProjectCount, @LastScanUnix, @CreatedAt)
+                INSERT INTO ProjectFolders (Path, IsPrimary, ProjectCount, LastScanUnix, CreatedAt)
+                VALUES (@Path, @IsPrimary, @ProjectCount, @LastScanUnix, @CreatedAt)
                 ON CONFLICT (Path) DO UPDATE SET
-                    IsPrimary = excluded.IsPrimary,
-                    IsEnabled = excluded.IsEnabled;
+                    IsPrimary = excluded.IsPrimary;
                 SELECT last_insert_rowid();
                 """;
             folder.Id = (int)(long)await connection.ExecuteScalarAsync(insertSql, new
             {
                 folder.Path,
                 IsPrimary = folder.IsPrimary ? 1 : 0,
-                IsEnabled = folder.IsEnabled ? 1 : 0,
                 folder.ProjectCount,
                 folder.LastScanUnix,
                 CreatedAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
@@ -77,7 +75,7 @@ public class ProjectFolderRepository : IProjectFolderRepository
         {
             const string updateSql = """
                 UPDATE ProjectFolders
-                SET Path = @Path, IsPrimary = @IsPrimary, IsEnabled = @IsEnabled, 
+                SET Path = @Path, IsPrimary = @IsPrimary,
                     ProjectCount = @ProjectCount, LastScanUnix = @LastScanUnix
                 WHERE Id = @Id;
                 """;
@@ -86,7 +84,6 @@ public class ProjectFolderRepository : IProjectFolderRepository
                 folder.Id,
                 folder.Path,
                 IsPrimary = folder.IsPrimary ? 1 : 0,
-                IsEnabled = folder.IsEnabled ? 1 : 0,
                 folder.ProjectCount,
                 folder.LastScanUnix
             });

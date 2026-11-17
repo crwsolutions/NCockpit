@@ -23,11 +23,6 @@ public class ProjectFolder
     public bool IsPrimary { get; set; } = true;
     
     /// <summary>
-    /// Whether this folder is currently enabled for scanning.
-    /// </summary>
-    public bool IsEnabled { get; set; } = true;
-    
-    /// <summary>
     /// Number of projects found in this folder (from last scan). Zero for
     /// secondary folders.
     /// </summary>

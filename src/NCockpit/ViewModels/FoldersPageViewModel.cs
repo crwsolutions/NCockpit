@@ -282,25 +282,6 @@ public partial class FoldersPageViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Toggle the enabled state of a folder.
-    /// </summary>
-    [RelayCommand]
-    public async Task ToggleFolderEnabled(ProjectFolder folder)
-    {
-        try
-        {
-            folder.IsEnabled = !folder.IsEnabled;
-            await _folderService.UpdateFolderAsync(folder);
-            // Refresh the list
-            await LoadFolders();
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"Error updating folder: {ex.Message}";
-        }
-    }
-
-    /// <summary>
     /// Open a folder in Windows Explorer.
     /// </summary>
     [RelayCommand]

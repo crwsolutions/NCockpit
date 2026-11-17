@@ -259,7 +259,7 @@ For every configured folder show:
 * path
 * number of projects found
 * last scan
-* enabled/disabled state
+* primary/secondary kind
 
 Provide actions to:
 
@@ -269,6 +269,11 @@ Provide actions to:
 * edit/remove folder
 
 The application should be able to scan configured folders recursively for projects.
+
+Only **primary** folders are scanned for projects (`.git`, `.sln`, `.slnx`). A
+**secondary** folder is a container of supporting folders: its first-level
+subfolders become supporting folders that can be linked to a project from the
+project details page, and the folder itself is never scanned.
 
 The exact project discovery strategy should be implemented cleanly and independently from the UI.
 

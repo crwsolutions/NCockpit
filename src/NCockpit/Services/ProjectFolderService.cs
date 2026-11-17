@@ -113,7 +113,6 @@ public class ProjectFolderService : IProjectFolderService
     {
         Path = path,
         IsPrimary = isPrimary,
-        IsEnabled = true,
         ProjectCount = 0,
         LastScanUnix = null
     };
