@@ -95,6 +95,11 @@ public class ScanService : IScanService
             var discovered = await DiscoverProjectsAsync(folder.Path, cancellationToken);
             projectsFound += discovered.Count;
 
+            // The paths written by this run are projects in their own right.
+            var discoveredPaths = discovered
+                .Select(p => p.FolderPath)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
             foreach (var project in discovered)
             {
                 project.FolderId = folder.Id;
@@ -103,19 +108,22 @@ public class ScanService : IScanService
 
                 await _projectRepository.UpsertAsync(project);
 
-                // A discovered repo project takes over any legacy rows keyed
-                // by a solution path inside the repo (previously one project
-                // per solution), preserving their user state instead of
-                // pruning them. Repo-level rows (FolderId of a folder scan of
-                // the repo root itself) are taken over as well: their folder
-                // is the repo root, not inside it.
+                // A discovered project takes over any stale row inside its own
+                // folder (previously one project per solution), preserving
+                // their user state instead of pruning them. Rows this run
+                // discovered are never taken over: they are projects of their
+                // own (for example an orphan solution in a subfolder), and
+                // taking them over would delete and recreate them on every
+                // scan - the flickering this used to cause.
                 var all = await _projectRepository.GetAllAsync();
                 var repoRoot = project.FolderPath;
                 await _projectRepository.MergeIntoAsync(
                     project.Id,
                     all
-                        .Where(p => p.Id != project.Id && p.SolutionPath is not null
-                            && (IsInside(repoRoot, p.FolderPath) || IsInside(repoRoot, p.SolutionPath)))
+                        .Where(p => p.Id != project.Id
+                            && !string.Equals(p.FolderPath, repoRoot, StringComparison.OrdinalIgnoreCase)
+                            && !discoveredPaths.Contains(p.FolderPath)
+                            && IsInside(repoRoot, p.FolderPath))
                         .Select(p => p.Id));
             }
         }
@@ -231,58 +239,117 @@ public class ScanService : IScanService
         // One project per repository, keyed by the repo root path.
         foreach (var (repoRoot, solutions) in solutionsByRepo)
         {
-            var name = GetFolderName(repoRoot);
-            var solutionsJson = ProjectMetadataDiscovery.DiscoverSolutionsJson(solutions);
-
-            long? solutionLastWriteUnix = null;
-            string? projectsJson = null;
-
-            // The type is re-derived on every scan: any solution found makes
-            // this a solution type project.
-            var isSolutionType = solutions.Count > 0;
-            var primarySolution = isSolutionType
-                ? await SelectPrimarySolutionAsync(repoRoot, solutions, cancellationToken)
-                : null;
-
-            if (primarySolution is not null)
-            {
-                solutionLastWriteUnix = ProjectMetadataDiscovery.GetSolutionLastWriteUnix(primarySolution);
-                projectsJson = await ProjectMetadataDiscovery.DiscoverSolutionProjectsJsonAsync(primarySolution);
-            }
-
-            discovered.Add(new Project
-            {
-                Name = name,
-                Type = isSolutionType ? ProjectType.Solution : ProjectType.Folder,
-                SolutionPath = primarySolution,
-                FolderPath = repoRoot,
-                SolutionLastWriteUnix = solutionLastWriteUnix,
-                FilesJson = ProjectMetadataDiscovery.DiscoverRootFilesJson(repoRoot),
-                GitRepoUrl = ProjectMetadataDiscovery.GetGitRepoUrl(repoRoot),
-                ProjectsJson = projectsJson,
-                SolutionsJson = solutionsJson
-            });
+            cancellationToken.ThrowIfCancellationRequested();
+            discovered.Add(await BuildRepoProjectAsync(repoRoot, solutions, cancellationToken));
         }
 
         // One legacy project per orphan solution, with the existing root rules.
         foreach (var solution in orphanSolutions)
         {
-            var projectRootPath = GetProjectRootPath(solution);
-            discovered.Add(new Project
-            {
-                Name = System.IO.Path.GetFileNameWithoutExtension(solution),
-                Type = ProjectType.Solution,
-                SolutionPath = solution,
-                FolderPath = projectRootPath,
-                SolutionLastWriteUnix = ProjectMetadataDiscovery.GetSolutionLastWriteUnix(solution),
-                FilesJson = ProjectMetadataDiscovery.DiscoverRootFilesJson(projectRootPath),
-                GitRepoUrl = ProjectMetadataDiscovery.GetGitRepoUrl(projectRootPath),
-                ProjectsJson = await ProjectMetadataDiscovery.DiscoverSolutionProjectsJsonAsync(solution),
-                SolutionsJson = ProjectMetadataDiscovery.DiscoverSolutionsJson([solution])
-            });
+            cancellationToken.ThrowIfCancellationRequested();
+            discovered.Add(await BuildLegacyProjectAsync(solution, cancellationToken));
         }
 
         return discovered;
+    }
+
+    /// <summary>
+    /// Builds the <see cref="Project"/> for a repository root: every solution
+    /// is parsed (not just one), the orphans are discovered, and the favorite
+    /// solution is resolved (the user's choice when it still exists, otherwise
+    /// the smart guess). The existing row is looked up once so the scan's
+    /// user state (favorite choice, last opened) is reused without extra
+    /// queries.
+    /// </summary>
+    private async Task<Project> BuildRepoProjectAsync(string repoRoot, List<string> solutions, CancellationToken cancellationToken)
+    {
+        var name = GetFolderName(repoRoot);
+        var isSolutionType = solutions.Count > 0;
+        var existing = (await _projectRepository.GetAllAsync())
+            .FirstOrDefault(p => string.Equals(p.FolderPath, repoRoot, StringComparison.OrdinalIgnoreCase));
+
+        string? solutionsJson = null;
+        string? solutionProjectsJson = null;
+        string? orphanProjectsJson = null;
+        long? solutionLastWriteUnix = null;
+        string? favoriteSolution = null;
+
+        if (isSolutionType)
+        {
+            solutionsJson = ProjectMetadataDiscovery.DiscoverSolutionsJson(solutions);
+
+            // Parse every solution, not just the favorite one. An unreadable
+            // or malformed solution file is resilient: it appears with an
+            // empty project list.
+            solutionProjectsJson = await ProjectMetadataDiscovery.DiscoverSolutionProjectsJsonAsync(
+                solutions, cancellationToken);
+            var withProjects = DeserializeSolutionProjects(solutionProjectsJson);
+
+            // Orphans: every project file in the repo that no solution references.
+            orphanProjectsJson = await ProjectMetadataDiscovery.DiscoverOrphanProjectsJsonAsync(
+                repoRoot, withProjects, _skipPaths, cancellationToken);
+
+            favoriteSolution = ResolveFavoriteSolution(
+                existing?.FavoriteSolutionPath,
+                name,
+                solutions,
+                withProjects,
+                existing?.SolutionLastUsedUnix,
+                existing?.SolutionPath);
+
+            solutionLastWriteUnix = ProjectMetadataDiscovery.GetSolutionLastWriteUnix(favoriteSolution);
+        }
+
+        return new Project
+        {
+            Name = name,
+            Type = isSolutionType ? ProjectType.Solution : ProjectType.Folder,
+            SolutionPath = favoriteSolution,
+            FolderPath = repoRoot,
+            SolutionLastWriteUnix = solutionLastWriteUnix,
+            FilesJson = ProjectMetadataDiscovery.DiscoverRootFilesJson(repoRoot),
+            GitRepoUrl = ProjectMetadataDiscovery.GetGitRepoUrl(repoRoot),
+            SolutionProjectsJson = solutionProjectsJson,
+            OrphanProjectsJson = orphanProjectsJson,
+            SolutionsJson = solutionsJson,
+            // The user's choice is persisted by the repository's upsert (it is
+            // not overwritten on a re-scan); the smart guess stands in through
+            // SolutionPath until the user picks one.
+            FavoriteSolutionPath = null,
+            FavoriteProjectPath = null
+        };
+    }
+
+    /// <summary>
+    /// Builds the legacy <see cref="Project"/> for an orphan solution file
+    /// (a solution found outside any repository), with the existing root rules.
+    /// </summary>
+    private async Task<Project> BuildLegacyProjectAsync(string solution, CancellationToken cancellationToken)
+    {
+        var projectRootPath = GetProjectRootPath(solution);
+        var solutions = new List<string> { solution };
+        var legacyJson = await ProjectMetadataDiscovery.DiscoverSolutionProjectsJsonAsync(
+            solutions, cancellationToken);
+        var withProjects = DeserializeSolutionProjects(legacyJson);
+        var name = System.IO.Path.GetFileNameWithoutExtension(solution);
+
+        var favoriteSolution = ResolveFavoriteSolution(null, name, solutions, withProjects, null, null);
+
+        return new Project
+        {
+            Name = name,
+            Type = ProjectType.Solution,
+            SolutionPath = favoriteSolution,
+            FolderPath = projectRootPath,
+            SolutionLastWriteUnix = ProjectMetadataDiscovery.GetSolutionLastWriteUnix(favoriteSolution),
+            FilesJson = ProjectMetadataDiscovery.DiscoverRootFilesJson(projectRootPath),
+            GitRepoUrl = ProjectMetadataDiscovery.GetGitRepoUrl(projectRootPath),
+            SolutionProjectsJson = legacyJson,
+            OrphanProjectsJson = null,
+            SolutionsJson = ProjectMetadataDiscovery.DiscoverSolutionsJson([solution]),
+            FavoriteSolutionPath = null,
+            FavoriteProjectPath = null
+        };
     }
 
     /// <summary>
@@ -355,33 +422,110 @@ public class ScanService : IScanService
     }
 
     /// <summary>
-    /// Chooses the primary solution of a repository: the most recently opened
-    /// one when any was opened, otherwise the shallowest path in the repo,
-    /// otherwise alphabetical.
+    /// Keeps the user's favorite solution when it still exists, otherwise
+    /// falls back to the smart guess: a solution whose name matches the repo
+    /// name first, then the most recently opened (feeds from
+    /// <see cref="Project.SolutionLastUsedUnix"/> / the last opened path), then
+    /// the solution referencing the most projects, then the most recently
+    /// modified, then the shallowest path in the repo, with alphabetical as
+    /// the final tie-break.
     /// </summary>
-    private async Task<string> SelectPrimarySolutionAsync(string repoRoot, List<string> solutions, CancellationToken cancellationToken)
+    internal static string ResolveFavoriteSolution(
+        string? userFavorite,
+        string repoName,
+        IReadOnlyList<string> solutions,
+        IReadOnlyList<SolutionWithProjects> withProjects,
+        long? lastOpenedUnix,
+        string? lastOpenedPath)
     {
-        var existing = (await _projectRepository.GetAllAsync())
-            .FirstOrDefault(p => string.Equals(p.FolderPath, repoRoot, StringComparison.OrdinalIgnoreCase));
-
-        // The most recently opened solution, if it still exists.
-        if (existing is { SolutionLastUsedUnix: not null, SolutionsJson: { Length: > 0 } })
+        if (solutions.Count == 0)
         {
-            var lastOpened = JsonSerializer
-                .Deserialize<List<string>>(existing.SolutionsJson)
-                ?.FirstOrDefault(s => File.Exists(s));
-            if (lastOpened is not null)
-            {
-                return lastOpened;
-            }
+            throw new InvalidOperationException("No solutions found.");
         }
 
-        // Otherwise the shallowest path in the repo; ties break alphabetically.
-        var primary = solutions
-            .MinBy(
-                s => (Depth(s), string.CompareOrdinal(s, string.Empty)))
-            ?? throw new InvalidOperationException("No solutions found.");
-        return primary;
+        if (!string.IsNullOrEmpty(userFavorite) && solutions.Contains(userFavorite, StringComparer.OrdinalIgnoreCase))
+        {
+            return userFavorite;
+        }
+
+        var byPath = withProjects
+            .Where(w => solutions.Contains(w.Path, StringComparer.OrdinalIgnoreCase))
+            .ToDictionary(w => w.Path, w => w.Projects, StringComparer.OrdinalIgnoreCase);
+
+        return solutions
+            .OrderByDescending(s => string.Equals(
+                System.IO.Path.GetFileNameWithoutExtension(s), repoName, StringComparison.OrdinalIgnoreCase)
+                ? 1 : 0)
+            .ThenByDescending(s => lastOpenedPath is { Length: > 0 }
+                && string.Equals(s, lastOpenedPath, StringComparison.OrdinalIgnoreCase)
+                ? 1 : 0)
+            .ThenByDescending(s => byPath.TryGetValue(s, out var projects) ? projects.Count : 0)
+            .ThenByDescending(s => ProjectMetadataDiscovery.GetSolutionLastWriteUnix(s) ?? 0)
+            .ThenBy(s => Depth(s))
+            .ThenBy(s => string.CompareOrdinal(s, string.Empty))
+            .First();
+    }
+
+    /// <summary>
+    /// Picks the favorite project of a solution: a project whose name matches
+    /// the repo name or the solution name first, then the project that looks
+    /// like an entry point (an executable output type), then alphabetical.
+    /// Returns null when the project list is empty.
+    /// </summary>
+    internal static SolutionProject? ResolveFavoriteProject(
+        string? userFavorite,
+        string repoName,
+        string? solutionName,
+        IReadOnlyList<SolutionProject> projects)
+    {
+        if (projects.Count == 0)
+        {
+            return null;
+        }
+
+        if (!string.IsNullOrEmpty(userFavorite)
+            && projects.Any(p => string.Equals(p.ProjectPath, userFavorite, StringComparison.OrdinalIgnoreCase)))
+        {
+            return projects.First(p => string.Equals(p.ProjectPath, userFavorite, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return projects
+            .OrderByDescending(p => MatchesName(p, repoName) ? 2 : 0)
+            .ThenByDescending(p => solutionName is not null && MatchesName(p, solutionName) ? 1 : 0)
+            .ThenByDescending(p => LooksLikeEntryPoint(p) ? 1 : 0)
+            .ThenBy(p => string.CompareOrdinal(p.Name, string.Empty))
+            .First();
+    }
+
+    private static bool MatchesName(SolutionProject project, string name)
+    {
+        if (string.IsNullOrEmpty(name))
+        {
+            return false;
+        }
+
+        return string.Equals(project.Name, name, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(
+                System.IO.Path.GetFileNameWithoutExtension(project.ProjectPath), name, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool LooksLikeEntryPoint(SolutionProject project)
+    {
+        try
+        {
+            if (!File.Exists(project.ProjectPath))
+            {
+                return false;
+            }
+
+            var content = File.ReadAllText(project.ProjectPath);
+            return content.Contains("<OutputType>Exe</OutputType>", StringComparison.OrdinalIgnoreCase)
+                || content.Contains("Microsoft.NET.Sdk.Web", StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     /// <summary>
@@ -434,6 +578,23 @@ public class ScanService : IScanService
         catch
         {
             return System.IO.Path.GetDirectoryName(solutionPath)!;
+        }
+    }
+
+    private static List<SolutionWithProjects> DeserializeSolutionProjects(string? json)
+    {
+        if (string.IsNullOrEmpty(json))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<SolutionWithProjects>>(json) ?? [];
+        }
+        catch
+        {
+            return [];
         }
     }
 }

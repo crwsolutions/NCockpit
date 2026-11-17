@@ -158,24 +158,38 @@
                     <!-- Left column: Project info + Files -->
                     <VerticalStackLayout Grid.Column="0" Spacing="20">
                         <cv:SectionCard Title="Project info">
-                            <VerticalStackLayout Spacing="12">
+                            <!-- The Project info panel is pointed at the favorite
+                                 project: its name, project file, folder and last
+                                 modified time, plus a simple type label derived
+                                 from the project file. -->
+                            <VerticalStackLayout Spacing="12"
+                                                 IsVisible="{Binding HasInfoProject}">
                                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
                                     <Label Grid.Column="0" Text="Type" FontSize="12" TextColor="#6b7280" WidthRequest="100" />
-                                    <Label Grid.Column="1" Text="MAUI App" FontSize="12" TextColor="#1a2744" FontAttributes="Bold" />
+                                    <Label Grid.Column="1" Text="{Binding InfoProjectType}" FontSize="12" TextColor="#1a2744" FontAttributes="Bold" />
                                 </Grid>
                                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                                    <Label Grid.Column="0" Text="Version" FontSize="12" TextColor="#6b7280" WidthRequest="100" />
-                                    <Label Grid.Column="1" Text="{Binding CurrentProject.Name}" FontSize="12" TextColor="#1a2744" />
+                                    <Label Grid.Column="0" Text="Project" FontSize="12" TextColor="#6b7280" WidthRequest="100" />
+                                    <Label Grid.Column="1" Text="{Binding InfoProjectName}" FontSize="12" TextColor="#1a2744" />
                                 </Grid>
                                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                                    <Label Grid.Column="0" Text="Solution path" FontSize="12" TextColor="#6b7280" WidthRequest="100" />
-                                    <Label Grid.Column="1" Text="{Binding CurrentProject.SolutionPath}" FontSize="12" TextColor="#3b82f6" LineBreakMode="TailTruncation" />
+                                    <Label Grid.Column="0" Text="Project file" FontSize="12" TextColor="#6b7280" WidthRequest="100" />
+                                    <Label Grid.Column="1" Text="{Binding InfoProjectPath}" FontSize="12" TextColor="#3b82f6" LineBreakMode="TailTruncation" />
+                                </Grid>
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                    <Label Grid.Column="0" Text="Folder" FontSize="12" TextColor="#6b7280" WidthRequest="100" />
+                                    <Label Grid.Column="1" Text="{Binding InfoProjectFolder}" FontSize="12" TextColor="#1a2744" LineBreakMode="TailTruncation" />
                                 </Grid>
                                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
                                     <Label Grid.Column="0" Text="Last modified" FontSize="12" TextColor="#6b7280" WidthRequest="100" />
-                                    <Label Grid.Column="1" Text="{Binding SolutionLastWriteDisplay}" FontSize="12" TextColor="#1a2744" />
+                                    <Label Grid.Column="1" Text="{Binding InfoProjectLastModifiedDisplay}" FontSize="12" TextColor="#1a2744" />
                                 </Grid>
                             </VerticalStackLayout>
+
+                            <Label Text="No favorite project yet."
+                                   FontSize="12"
+                                   TextColor="#9ca3af"
+                                   IsVisible="{Binding HasInfoProject, Converter={StaticResource InvertedBoolConverter}}" />
                         </cv:SectionCard>
 
                         <cv:SectionCard Title="Files">
@@ -285,23 +299,170 @@
                             </VerticalStackLayout>
                         </cv:SectionCard>
 
-                        <cv:SectionCard Title="Solutions">
+                        <!-- Solutions & Projects: every solution as an expandable
+                             parent with its referenced projects as children, and
+                             the orphan project files under an "Orphans" header.
+                             The star on a row sets the favorite solution (parent
+                             rows) or favorite project (child rows); exactly one
+                             of each always exists. Hidden for folder type
+                             projects (no solution files). -->
+                        <cv:SectionCard Title="Solutions &amp; Projects"
+                                        IsVisible="{Binding ShowSolutionsPanel}">
                             <VerticalStackLayout Spacing="12">
-                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Solutions}"
-                                                     Spacing="6">
+                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding SolutionsTree}"
+                                                     Spacing="4">
                                     <BindableLayout.ItemTemplate>
-                                        <DataTemplate x:DataType="models:SolutionEntry">
-                                            <cv:SolutionAction Text="{Binding Name}"
-                                                               Path="{Binding Path}" />
+                                        <DataTemplate x:DataType="models:SolutionTreeItem">
+                                            <VerticalStackLayout Spacing="2">
+                                                <!-- Solution row: chevron (expand/collapse), VS icon, name, favorite
+                                                     star. Tapping the row opens the solution in Visual Studio. -->
+                                                <Border Padding="8,6"
+                                                        StrokeThickness="0"
+                                                        StrokeShape="RoundRectangle 6">
+                                                    <Border.GestureRecognizers>
+                                                        <TapGestureRecognizer
+                                                            Command="{Binding Source={x:Reference Page}, Path=BindingContext.OpenSolutionFileCommand, Mode=OneTime}"
+                                                            CommandParameter="{Binding Path}" />
+                                                    </Border.GestureRecognizers>
+                                                    <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="8">
+                                                        <Button Grid.Column="0"
+                                                                Text="{Binding IsExpanded, Converter={StaticResource BoolToChevronGlyphConverter}}"
+                                                                FontFamily="FontAwesomeSolid"
+                                                                FontSize="10"
+                                                                TextColor="#9ca3af"
+                                                                Background="Transparent"
+                                                                Padding="4"
+                                                                VerticalOptions="Center"
+                                                                Command="{Binding Source={x:Reference Page}, Path=BindingContext.ToggleSolutionExpandCommand, Mode=OneTime}"
+                                                                CommandParameter="{Binding .}" />
+                                                        <Image Grid.Column="1"
+                                                               Source="visual_studio_icon.png"
+                                                               WidthRequest="16"
+                                                               HeightRequest="16"
+                                                               VerticalOptions="Center" />
+                                                        <Label Grid.Column="2"
+                                                               Text="{Binding Name}"
+                                                               FontSize="12"
+                                                               FontAttributes="Bold"
+                                                               TextColor="#1a2744"
+                                                               VerticalOptions="Center"
+                                                               LineBreakMode="TailTruncation" />
+                                                        <Button Grid.Column="3"
+                                                                Text="{Binding IsFavorite, Converter={StaticResource BoolToStarGlyphConverter}}"
+                                                                FontFamily="FontAwesomeSolid"
+                                                                FontSize="12"
+                                                                TextColor="{Binding IsFavorite, Converter={StaticResource BoolToFavoriteColorConverter}}"
+                                                                Background="Transparent"
+                                                                Padding="4"
+                                                                VerticalOptions="Center"
+                                                                Command="{Binding Source={x:Reference Page}, Path=BindingContext.ToggleFavoriteSolutionCommand, Mode=OneTime}"
+                                                                CommandParameter="{Binding Path}" />
+                                                    </Grid>
+                                                </Border>
+
+                                                <!-- Child projects (shown when the solution is expanded). -->
+                                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Projects}"
+                                                                     Spacing="2"
+                                                                     IsVisible="{Binding IsExpanded}"
+                                                                     Margin="28,0,0,0">
+                                                    <BindableLayout.ItemTemplate>
+                                                        <DataTemplate x:DataType="models:SolutionProjectRow">
+                                                            <Border Padding="8,6"
+                                                                    StrokeThickness="0"
+                                                                    StrokeShape="RoundRectangle 6">
+                                                                <Border.GestureRecognizers>
+                                                                    <TapGestureRecognizer
+                                                                        Command="{Binding Source={x:Reference Page}, Path=BindingContext.OpenLocationCommand, Mode=OneTime}"
+                                                                        CommandParameter="{Binding FolderPath}" />
+                                                                </Border.GestureRecognizers>
+                                                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                                                                    <Label Grid.Column="0"
+                                                                           Text="&#xf071;"
+                                                                           FontFamily="FontAwesomeSolid"
+                                                                           FontSize="10"
+                                                                           TextColor="#6b7280"
+                                                                           VerticalOptions="Center" />
+                                                                    <Label Grid.Column="1"
+                                                                           Text="{Binding Name}"
+                                                                           FontSize="12"
+                                                                           TextColor="#1a2744"
+                                                                           VerticalOptions="Center"
+                                                                           LineBreakMode="TailTruncation" />
+                                                                    <Button Grid.Column="2"
+                                                                            Text="{Binding IsFavorite, Converter={StaticResource BoolToStarGlyphConverter}}"
+                                                                            FontFamily="FontAwesomeSolid"
+                                                                            FontSize="12"
+                                                                            TextColor="{Binding IsFavorite, Converter={StaticResource BoolToFavoriteColorConverter}}"
+                                                                            Background="Transparent"
+                                                                            Padding="4"
+                                                                            VerticalOptions="Center"
+                                                                            Command="{Binding Source={x:Reference Page}, Path=BindingContext.ToggleFavoriteProjectCommand, Mode=OneTime}"
+                                                                            CommandParameter="{Binding ProjectPath}" />
+                                                                </Grid>
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </BindableLayout.ItemTemplate>
+                                                </VerticalStackLayout>
+                                            </VerticalStackLayout>
                                         </DataTemplate>
                                     </BindableLayout.ItemTemplate>
                                 </VerticalStackLayout>
 
-                                <Label Text="No solutions discovered."
+                                <!-- Orphans: project files not referenced by any solution. -->
+                                <VerticalStackLayout Spacing="4"
+                                                     IsVisible="{Binding HasOrphanProjects}">
+                                    <Label Text="Orphans"
+                                           FontSize="12"
+                                           FontAttributes="Bold"
+                                           TextColor="#6b7280"
+                                           Margin="8,8,0,0" />
+                                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding OrphanProjects}"
+                                                         Spacing="2">
+                                        <BindableLayout.ItemTemplate>
+                                            <DataTemplate x:DataType="models:SolutionProjectRow">
+                                                <Border Padding="8,6"
+                                                        StrokeThickness="0"
+                                                        StrokeShape="RoundRectangle 6">
+                                                    <Border.GestureRecognizers>
+                                                        <TapGestureRecognizer
+                                                            Command="{Binding Source={x:Reference Page}, Path=BindingContext.OpenLocationCommand, Mode=OneTime}"
+                                                            CommandParameter="{Binding FolderPath}" />
+                                                    </Border.GestureRecognizers>
+                                                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                                                        <Label Grid.Column="0"
+                                                               Text="&#xf071;"
+                                                               FontFamily="FontAwesomeSolid"
+                                                               FontSize="10"
+                                                               TextColor="#6b7280"
+                                                               VerticalOptions="Center" />
+                                                        <Label Grid.Column="1"
+                                                               Text="{Binding Name}"
+                                                               FontSize="12"
+                                                               TextColor="#1a2744"
+                                                               VerticalOptions="Center"
+                                                               LineBreakMode="TailTruncation" />
+                                                        <Button Grid.Column="2"
+                                                                Text="{Binding IsFavorite, Converter={StaticResource BoolToStarGlyphConverter}}"
+                                                                FontFamily="FontAwesomeSolid"
+                                                                FontSize="12"
+                                                                TextColor="{Binding IsFavorite, Converter={StaticResource BoolToFavoriteColorConverter}}"
+                                                                Background="Transparent"
+                                                                Padding="4"
+                                                                VerticalOptions="Center"
+                                                                Command="{Binding Source={x:Reference Page}, Path=BindingContext.ToggleFavoriteProjectCommand, Mode=OneTime}"
+                                                                CommandParameter="{Binding ProjectPath}" />
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </BindableLayout.ItemTemplate>
+                                    </VerticalStackLayout>
+                                </VerticalStackLayout>
+
+                                <Label Text="No solutions or projects discovered."
                                        FontSize="12"
                                        TextColor="#9ca3af"
                                        Padding="0,8"
-                                       IsVisible="{Binding HasSolutions, Converter={StaticResource InvertedBoolConverter}}" />
+                                       IsVisible="{Binding HasSolutionsTree, Converter={StaticResource InvertedBoolConverter}}" />
                             </VerticalStackLayout>
                         </cv:SectionCard>
                     </VerticalStackLayout>

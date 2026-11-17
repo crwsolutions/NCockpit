@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using NCockpit.Models;
 
 namespace NCockpit.Services;
 
@@ -44,6 +45,27 @@ public static class ProjectMetadataDiscovery
         try
         {
             var lastWrite = File.GetLastWriteTimeUtc(solutionPath);
+            return (long)(lastWrite - DateTimeOffset.UnixEpoch).TotalSeconds;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return null;
+        }
+        catch (IOException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Returns the project file's last write time as Unix seconds, or null if
+    /// the file cannot be accessed.
+    /// </summary>
+    public static long? GetProjectLastWriteUnix(string projectPath)
+    {
+        try
+        {
+            var lastWrite = File.GetLastWriteTimeUtc(projectPath);
             return (long)(lastWrite - DateTimeOffset.UnixEpoch).TotalSeconds;
         }
         catch (UnauthorizedAccessException)
@@ -117,13 +139,63 @@ public static class ProjectMetadataDiscovery
     }
 
     /// <summary>
-    /// Parses the solution file and returns the referenced projects as a JSON
-    /// array, or null when no projects could be resolved.
+    /// Parses every solution file and returns them together with the projects
+    /// they reference, as a JSON array of <see cref="SolutionWithProjects"/>,
+    /// or null when there are no solutions. Unreadable or malformed solution
+    /// files are resilient: they appear with an empty project list.
     /// </summary>
-    public static async Task<string?> DiscoverSolutionProjectsJsonAsync(string solutionPath)
+    public static async Task<string?> DiscoverSolutionProjectsJsonAsync(
+        List<string> solutionPaths,
+        CancellationToken cancellationToken = default)
     {
-        var projects = await SolutionFileParser.ParseSolutionAsync(solutionPath);
-        return projects.Count > 0 ? JsonSerializer.Serialize(projects) : null;
+        if (solutionPaths.Count == 0)
+        {
+            return null;
+        }
+
+        var withProjects = new List<SolutionWithProjects>();
+        foreach (var solutionPath in solutionPaths)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var projects = await SolutionFileParser.ParseSolutionAsync(solutionPath);
+            withProjects.Add(new SolutionWithProjects
+            {
+                Path = solutionPath,
+                Projects = projects
+            });
+        }
+
+        return JsonSerializer.Serialize(withProjects);
+    }
+
+    /// <summary>
+    /// Discovers every project file under <paramref name="root"/> and returns
+    /// the ones not referenced by any solution as a JSON array of
+    /// <see cref="SolutionProject"/> ("orphans"), or null when there are none.
+    /// A file counts as referenced when its full path matches the full path of
+    /// a project of any of the given solutions.
+    /// </summary>
+    public static async Task<string?> DiscoverOrphanProjectsJsonAsync(
+        string root,
+        IReadOnlyList<SolutionWithProjects> solutions,
+        IEnumerable<string>? skipPaths = null,
+        CancellationToken cancellationToken = default)
+    {
+        var all = await SolutionFileParser.DiscoverProjectFilesAsync(root, skipPaths, cancellationToken);
+        if (all.Count == 0)
+        {
+            return null;
+        }
+
+        var referenced = solutions
+            .SelectMany(s => s.Projects)
+            .Select(p => p.ProjectPath)
+            .Where(p => p.Length > 0)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var orphans = all.Where(p => !referenced.Contains(p.ProjectPath)).ToList();
+        return orphans.Count > 0 ? JsonSerializer.Serialize(orphans) : null;
     }
 
     /// <summary>
@@ -138,6 +210,88 @@ public static class ProjectMetadataDiscovery
         }
 
         return JsonSerializer.Serialize(solutionPaths);
+    }
+
+    /// <summary>
+    /// Derives a simple type label from a project file, e.g. ".NET MAUI app",
+    /// "ASP.NET Core web app", "Console app", "Class library". Returns "Project"
+    /// when the file is missing, unreadable, or none of the known markers are
+    /// present.
+    /// </summary>
+    public static string GetProjectTypeLabel(string projectPath)
+    {
+        try
+        {
+            if (!File.Exists(projectPath))
+            {
+                return "Project";
+            }
+
+            var content = File.ReadAllText(projectPath);
+            var sdk = GetSdk(content);
+            var outputType = GetOutputType(content);
+            var targetFrameworkMatches = Regex.Matches(
+                content,
+                @"<TargetFramework(?:s)?\s*>\s*([^<]+?)\s*</TargetFramework(?:s)?>",
+                RegexOptions.IgnoreCase);
+
+            if (content.Contains("UseMaui", StringComparison.OrdinalIgnoreCase))
+            {
+                return ".NET MAUI app";
+            }
+
+            if (string.Equals(sdk, "Microsoft.NET.Sdk.Web", StringComparison.OrdinalIgnoreCase)
+                || content.Contains("Microsoft.AspNetCore", StringComparison.OrdinalIgnoreCase))
+            {
+                return "ASP.NET Core web app";
+            }
+
+            if (string.Equals(outputType, "Exe", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Console app";
+            }
+
+            if (targetFrameworkMatches.Any(m =>
+                    m.Groups[1].Value.Contains("android", StringComparison.OrdinalIgnoreCase)
+                    || m.Groups[1].Value.Contains("ios", StringComparison.OrdinalIgnoreCase)
+                    || m.Groups[1].Value.Contains("macos", StringComparison.OrdinalIgnoreCase)
+                    || m.Groups[1].Value.Contains("tvos", StringComparison.OrdinalIgnoreCase)
+                    || m.Groups[1].Value.Contains("maccatalyst", StringComparison.OrdinalIgnoreCase)
+                    || m.Groups[1].Value.Contains("windows", StringComparison.OrdinalIgnoreCase)))
+            {
+                return ".NET app";
+            }
+
+            if (string.Equals(outputType, "Library", StringComparison.OrdinalIgnoreCase)
+                || (outputType.Length == 0 && string.Equals(sdk, "Microsoft.NET.Sdk", StringComparison.OrdinalIgnoreCase)))
+            {
+                return "Class library";
+            }
+
+            return "Project";
+        }
+        catch
+        {
+            return "Project";
+        }
+    }
+
+    private static string GetSdk(string content)
+    {
+        var match = Regex.Match(
+            content,
+            @"<Project\s+[^>]*?Sdk\s*=\s*""([^""]+)""",
+            RegexOptions.IgnoreCase);
+        return match.Success ? match.Groups[1].Value : string.Empty;
+    }
+
+    private static string GetOutputType(string content)
+    {
+        var matches = Regex.Matches(
+            content,
+            @"<OutputType>\s*([^<]+?)\s*</OutputType>",
+            RegexOptions.IgnoreCase);
+        return matches.Count > 0 ? matches[^1].Groups[1].Value : string.Empty;
     }
 
     /// <summary>

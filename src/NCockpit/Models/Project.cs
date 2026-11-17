@@ -39,10 +39,12 @@ public class Project
     public ProjectType Type { get; set; }
 
     /// <summary>
-    /// Full path to the solution file (.sln or .slnx), or null for folder type
-    /// (a repo with no solution file).
-    /// Used as the unique identity for merge/prune operations when not null;
-    /// folder type projects are keyed by <see cref="FolderPath"/> instead.
+    /// Full path to the favorite solution file (.sln or .slnx), or null for
+    /// folder type (a repo with no solution file). The favorite solution
+    /// replaces the previous "primary solution" concept: it is the solution
+    /// opened by every "Open in Visual Studio" entry point. The choice is the
+    /// user's when one was made and still exists; otherwise the scan's smart
+    /// guess takes over.
     /// </summary>
     public string? SolutionPath { get; set; }
 
@@ -81,8 +83,9 @@ public class Project
     public long? LastUsedUnix { get; set; }
 
     /// <summary>
-    /// Unix timestamp of the solution file's last write time, captured during
-    /// scanning and used for overview ordering. Null for folder type projects.
+    /// Unix timestamp of the favorite solution file's last write time, captured
+    /// during scanning and used for overview ordering. Null for folder type
+    /// projects.
     /// </summary>
     public long? SolutionLastWriteUnix { get; set; }
 
@@ -98,24 +101,45 @@ public class Project
     public string? GitRepoUrl { get; set; }
 
     /// <summary>
-    /// JSON array of the projects referenced by the primary solution file
-    /// (Name, FolderPath, ProjectPath), discovered during scanning. Null when no
-    /// projects could be resolved or the project has no solution file.
+    /// JSON array of <see cref="SolutionWithProjects"/> (one entry per solution
+    /// file found in the repo), each with the projects it references, discovered
+    /// during scanning. Null when no solutions were found (folder type) or no
+    /// solution could be parsed.
     /// </summary>
-    public string? ProjectsJson { get; set; }
+    public string? SolutionProjectsJson { get; set; }
+
+    /// <summary>
+    /// JSON array of the project files (.csproj, .fsproj, .vbproj) discovered
+    /// inside the repo that are not referenced by any solution file ("orphans").
+    /// Discovered during scanning. Null or empty when there are none.
+    /// </summary>
+    public string? OrphanProjectsJson { get; set; }
 
     /// <summary>
     /// JSON array of the full paths of every solution file (.sln / .slnx)
     /// discovered inside the project root, or null when none were found.
-    /// For a repo with a single solution this list contains that one solution;
-    /// the primary (first) entry is the one opened by the quick action.
+    /// For a repo with a single solution this list contains that one solution.
     /// </summary>
     public string? SolutionsJson { get; set; }
 
     /// <summary>
     /// Unix timestamp of when the last solution of this project was opened.
-    /// Used to re-derive which solution is the primary one on the next scan.
-    /// Null when no solution has been opened yet.
+    /// Feeds the smart favorite-solution guess ("most recently opened" is one of
+    /// its criteria). Null when no solution has been opened yet.
     /// </summary>
     public long? SolutionLastUsedUnix { get; set; }
+
+    /// <summary>
+    /// Full path to the user-chosen favorite solution, or null when none was
+    /// chosen yet (the smart guess stands in). Kept across scans; re-guessed
+    /// automatically when the file no longer exists.
+    /// </summary>
+    public string? FavoriteSolutionPath { get; set; }
+
+    /// <summary>
+    /// Full path to the user-chosen favorite project file, or null when none was
+    /// chosen yet (the smart guess stands in). Kept across scans; re-guessed
+    /// automatically when the file no longer exists.
+    /// </summary>
+    public string? FavoriteProjectPath { get; set; }
 }

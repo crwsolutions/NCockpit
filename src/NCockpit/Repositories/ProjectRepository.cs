@@ -16,9 +16,12 @@ public interface IProjectRepository
     Task<List<Project>> GetAllAsync();
 
     /// <summary>
-    /// Insert or update a project keyed by its folder path. Returns the row id.
-    /// The project is a folder (a repo root or a legacy solution folder);
-    /// a re-scan from a different folder re-links the row to that folder.
+    /// Insert or update a project keyed by its folder path. Returns the row id
+    /// of the inserted or updated row. The project is a folder (a repo root or
+    /// a legacy solution folder); a re-scan from a different folder re-links
+    /// the row to that folder. The user's favorite solution and favorite
+    /// project choices are preserved on update (they are not overwritten by a
+    /// re-scan).
     /// </summary>
     Task<int> UpsertAsync(Project project);
 
@@ -32,10 +35,21 @@ public interface IProjectRepository
     Task MergeIntoAsync(int targetId, IEnumerable<int> sourceIds);
 
     /// <summary>
-    /// Record that a specific solution of a project was just opened. Used to
-    /// re-derive the primary solution on the next scan.
+    /// Record that a specific solution of a project was just opened: stores the
+    /// solution's path (last opened solution) and the current time, feeding the
+    /// smart favorite-solution guess on the next scan.
     /// </summary>
-    Task TouchSolutionAsync(int id, long unix);
+    Task TouchSolutionAsync(int id, long unix, string solutionPath);
+
+    /// <summary>
+    /// Set the user's favorite solution (full path) or clear it (null).
+    /// </summary>
+    Task SetFavoriteSolutionAsync(int id, string? solutionPath);
+
+    /// <summary>
+    /// Set the user's favorite project (full path) or clear it (null).
+    /// </summary>
+    Task SetFavoriteProjectAsync(int id, string? projectPath);
 
     /// <summary>
     /// Hard-delete projects in the given folders that were not seen during the
@@ -77,7 +91,9 @@ public class ProjectRepository : IProjectRepository
         const string sql = """
             SELECT Id, Name, Type, SolutionPath, FolderPath, FolderId, LastSeenUnix, ScanUnix,
                    IsFavorite, LastUsedUnix, SolutionLastWriteUnix, FilesJson, GitRepoUrl,
-                   ProjectsJson, SolutionsJson, SolutionLastUsedUnix
+                   ProjectsJson, SolutionsJson, SolutionLastUsedUnix,
+                   SolutionProjectsJson, OrphanProjectsJson,
+                   FavoriteSolutionPath, FavoriteProjectPath
             FROM Projects
             ORDER BY LastUsedUnix IS NULL, COALESCE(LastUsedUnix, 0) DESC,
                      SolutionLastWriteUnix IS NULL, COALESCE(SolutionLastWriteUnix, 0) DESC,
@@ -93,8 +109,8 @@ public class ProjectRepository : IProjectRepository
         await connection.OpenAsync();
 
         const string sql = """
-            INSERT INTO Projects (Name, Type, SolutionPath, FolderPath, FolderId, LastSeenUnix, ScanUnix, CreatedAt, SolutionLastWriteUnix, FilesJson, GitRepoUrl, ProjectsJson, SolutionsJson, SolutionLastUsedUnix)
-            VALUES (@Name, @Type, @SolutionPath, @FolderPath, @FolderId, @LastSeenUnix, @ScanUnix, @CreatedAt, @SolutionLastWriteUnix, @FilesJson, @GitRepoUrl, @ProjectsJson, @SolutionsJson, @SolutionLastUsedUnix)
+            INSERT INTO Projects (Name, Type, SolutionPath, FolderPath, FolderId, LastSeenUnix, ScanUnix, CreatedAt, SolutionLastWriteUnix, FilesJson, GitRepoUrl, SolutionsJson, SolutionLastUsedUnix, SolutionProjectsJson, OrphanProjectsJson, FavoriteSolutionPath, FavoriteProjectPath)
+            VALUES (@Name, @Type, @SolutionPath, @FolderPath, @FolderId, @LastSeenUnix, @ScanUnix, @CreatedAt, @SolutionLastWriteUnix, @FilesJson, @GitRepoUrl, @SolutionsJson, @SolutionLastUsedUnix, @SolutionProjectsJson, @OrphanProjectsJson, @FavoriteSolutionPath, @FavoriteProjectPath)
             ON CONFLICT (FolderPath) DO UPDATE SET
                 Name = excluded.Name,
                 Type = excluded.Type,
@@ -105,9 +121,13 @@ public class ProjectRepository : IProjectRepository
                 SolutionLastWriteUnix = excluded.SolutionLastWriteUnix,
                 FilesJson = excluded.FilesJson,
                 GitRepoUrl = excluded.GitRepoUrl,
-                ProjectsJson = excluded.ProjectsJson,
                 SolutionsJson = excluded.SolutionsJson,
-                SolutionLastUsedUnix = COALESCE(excluded.SolutionLastUsedUnix, Projects.SolutionLastUsedUnix);
+                SolutionLastUsedUnix = COALESCE(excluded.SolutionLastUsedUnix, Projects.SolutionLastUsedUnix),
+                SolutionProjectsJson = excluded.SolutionProjectsJson,
+                OrphanProjectsJson = excluded.OrphanProjectsJson,
+                FavoriteSolutionPath = COALESCE(Projects.FavoriteSolutionPath, excluded.FavoriteSolutionPath),
+                FavoriteProjectPath = COALESCE(Projects.FavoriteProjectPath, excluded.FavoriteProjectPath)
+            RETURNING Id;
             """;
 
         var parameters = new
@@ -123,15 +143,18 @@ public class ProjectRepository : IProjectRepository
             project.SolutionLastWriteUnix,
             project.FilesJson,
             project.GitRepoUrl,
-            project.ProjectsJson,
             project.SolutionsJson,
-            project.SolutionLastUsedUnix
+            project.SolutionLastUsedUnix,
+            project.SolutionProjectsJson,
+            project.OrphanProjectsJson,
+            project.FavoriteSolutionPath,
+            project.FavoriteProjectPath
         };
 
-        // INSERT ... ON CONFLICT returns the row id via last_insert_rowid()
-        // for both new and updated rows.
-        var id = Convert.ToInt32(await connection.ExecuteScalarAsync(
-            $"{sql} SELECT last_insert_rowid();", parameters));
+        // The id must come from RETURNING: last_insert_rowid() is not updated
+        // when the statement takes the DO UPDATE path, so it would report the
+        // id of some earlier insert (and callers would then use a wrong row id).
+        var id = await connection.ExecuteScalarAsync<int>(sql, parameters);
 
         project.Id = id;
         return id;
@@ -170,22 +193,52 @@ public class ProjectRepository : IProjectRepository
         await connection.ExecuteAsync(deleteSql, new { Ids = ids });
     }
 
-    public async Task TouchSolutionAsync(int id, long unix)
+    public async Task TouchSolutionAsync(int id, long unix, string solutionPath)
     {
         using var connection = OpenConnection();
         await connection.OpenAsync();
 
         const string sql = """
             UPDATE Projects
-            SET SolutionLastUsedUnix = @SolutionLastUsedUnix
+            SET SolutionLastUsedUnix = @SolutionLastUsedUnix,
+                SolutionPath = @SolutionPath
             WHERE Id = @Id;
             """;
 
         await connection.ExecuteAsync(sql, new
         {
             Id = id,
-            SolutionLastUsedUnix = unix
+            SolutionLastUsedUnix = unix,
+            SolutionPath = solutionPath
         });
+    }
+
+    public async Task SetFavoriteSolutionAsync(int id, string? solutionPath)
+    {
+        using var connection = OpenConnection();
+        await connection.OpenAsync();
+
+        const string sql = """
+            UPDATE Projects
+            SET FavoriteSolutionPath = @FavoriteSolutionPath
+            WHERE Id = @Id;
+            """;
+
+        await connection.ExecuteAsync(sql, new { Id = id, FavoriteSolutionPath = solutionPath });
+    }
+
+    public async Task SetFavoriteProjectAsync(int id, string? projectPath)
+    {
+        using var connection = OpenConnection();
+        await connection.OpenAsync();
+
+        const string sql = """
+            UPDATE Projects
+            SET FavoriteProjectPath = @FavoriteProjectPath
+            WHERE Id = @Id;
+            """;
+
+        await connection.ExecuteAsync(sql, new { Id = id, FavoriteProjectPath = projectPath });
     }
 
     public async Task<int> PruneAsync(long scanUnix, IEnumerable<int> folderIds)

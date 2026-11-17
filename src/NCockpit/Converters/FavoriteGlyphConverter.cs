@@ -39,6 +39,24 @@ public class BoolToFavoriteColorConverter : IValueConverter
 }
 
 /// <summary>
+/// Converts a boolean expand flag to the FontAwesome6 solid chevron glyph:
+/// pointing down when expanded, right when collapsed.
+/// </summary>
+public class BoolToChevronGlyphConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        // \uf107 = caret-down (expanded), \uf105 = caret-right (collapsed).
+        return value is true ? "\uf107" : "\uf105";
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+/// <summary>
 /// Shows the empty-state block only when a count is zero.
 /// </summary>
 public class IntToEmptyVisibilityConverter : IValueConverter
