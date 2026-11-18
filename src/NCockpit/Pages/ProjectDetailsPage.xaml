@@ -10,7 +10,7 @@
              Title="Project Details"
              BackgroundColor="#f5f8fc">
 
-    <Grid x:Name="Page" RowDefinitions="Auto,Auto,Auto,*" Padding="0">
+    <Grid x:Name="Page" RowDefinitions="Auto,Auto,auto,*" Padding="0">
         <!-- Header -->
         <Grid Grid.Row="0" Background="#f5f8fc"
               
@@ -140,7 +140,8 @@
         </Border>
 
         <!-- Content -->
-        <ScrollView Grid.Row="2">
+        <Border Grid.Row="3">
+            <ScrollView>
             <VerticalStackLayout Padding="24" Spacing="20" 
                                  IsVisible="{Binding HasProject}">
 
@@ -540,7 +541,7 @@
 
             </VerticalStackLayout>
         </ScrollView>
-
+        </Border>
         <!-- No project selected -->
         <VerticalStackLayout Grid.Row="3"
                              Spacing="8"
