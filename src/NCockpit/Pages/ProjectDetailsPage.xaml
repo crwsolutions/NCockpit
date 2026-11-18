@@ -140,7 +140,7 @@
         </Border>
 
         <!-- Content -->
-        <Border Grid.Row="3">
+        <Border Grid.Row="3" StrokeThickness="0">
             <ScrollView>
             <VerticalStackLayout Padding="24" Spacing="20" 
                                  IsVisible="{Binding HasProject}">

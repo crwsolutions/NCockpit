@@ -5,6 +5,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:NCockpit"
     xmlns:pages="clr-namespace:NCockpit.Pages"
+    x:Name="shell"
+    x:DataType="local:AppShell"
     Title="NCockpit"
     Shell.FlyoutBehavior="Locked"
     NavBarIsVisible="False"
@@ -56,5 +58,20 @@
         Title="About"
         ContentTemplate="{DataTemplate pages:AboutPage}"
         Route="about" />
+
+    <!-- Collapsed/expanded chevron at the bottom of the flyout -->
+    <Shell.FlyoutFooter>
+        <Grid BackgroundColor="#1a2744">
+            <Label x:Name="Expander" Text="&#xf191;" FontFamily="FontAwesomeSolid"
+                   FontSize="20" Margin="12"
+                   TextColor="White"
+                   HorizontalOptions="End"
+                   VerticalOptions="Center">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="TapGestureRecognizer_Tapped" />
+                </Label.GestureRecognizers>
+            </Label>
+        </Grid>
+    </Shell.FlyoutFooter>
 
 </Shell>

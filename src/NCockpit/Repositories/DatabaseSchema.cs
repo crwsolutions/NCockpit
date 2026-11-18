@@ -16,7 +16,7 @@ internal static class DatabaseSchema
     /// <c>if (userVersion &lt; N)</c> step for a schema change; never rewrite an
     /// existing step.
     /// </summary>
-    private const int CurrentUserVersion = 8;
+    private const int CurrentUserVersion = 9;
 
     private const string ProjectFoldersDdl = """
         CREATE TABLE IF NOT EXISTS ProjectFolders (
@@ -36,6 +36,13 @@ internal static class DatabaseSchema
             FolderId INTEGER NOT NULL REFERENCES ProjectFolders(Id) ON DELETE CASCADE,
             ProjectId INTEGER REFERENCES Projects(Id) ON DELETE SET NULL,
             CreatedAt INTEGER NOT NULL
+        );
+        """;
+
+    private const string AppSettingsDdl = """
+        CREATE TABLE IF NOT EXISTS AppSettings (
+            Key TEXT PRIMARY KEY,
+            Value TEXT
         );
         """;
 
@@ -99,6 +106,7 @@ internal static class DatabaseSchema
 
         Execute(connection, ProjectFoldersDdl);
         Execute(connection, SupportingFoldersDdl);
+        Execute(connection, AppSettingsDdl);
         Execute(connection, ProjectsDdl);
         Execute(connection, ProjectsIndexDdl);
 
@@ -336,6 +344,13 @@ internal static class DatabaseSchema
             // needs no table rebuild because no index, key or view uses the column.
             try { Execute(connection, "ALTER TABLE ProjectFolders DROP COLUMN IsEnabled"); }
             catch (SqliteException ex) when (ex.Message.Contains("no such column")) { }
+        }
+
+        if (userVersion < 9)
+        {
+            // Key/value table for small per-device preferences, created at the top
+            // for fresh databases and recreated here for existing ones.
+            Execute(connection, AppSettingsDdl);
         }
 
         Execute(connection, $"PRAGMA user_version = {CurrentUserVersion};");

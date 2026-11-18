@@ -40,6 +40,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<IProjectFolderRepository, ProjectFolderRepository>();
 		builder.Services.AddSingleton<IProjectRepository, ProjectRepository>();
 		builder.Services.AddSingleton<ISupportingFolderRepository, SupportingFolderRepository>();
+		builder.Services.AddSingleton<IAppSettingsRepository, AppSettingsRepository>();
 		// Register services
 		builder.Services.AddSingleton<IProjectFolderService, ProjectFolderService>();
 		builder.Services.AddSingleton<IProjectService, ProjectService>();
