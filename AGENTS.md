@@ -1,7 +1,7 @@
 # Agent Guidelines for NCockpit
 
 ## Project Overview
-NCockpit (Projects Cockpit) is a **.NET 10 MAUI desktop application** — a personal cockpit for quickly finding projects and navigating to their files, folders, solutions, and online services. It is explicitly **not** a project-management tool: no tasks, deadlines, kanban, or status workflows.
+NCockpit (Projects Cockpit) is a **.NET 11 MAUI desktop application** — a personal cockpit for quickly finding projects and navigating to their files, folders, solutions, and online services. It is explicitly **not** a project-management tool: no tasks, deadlines, kanban, or status workflows.
 
 The app is primarily Windows. **Do not** introduce WPF, WinUI, or any other UI framework; keep all UI in MAUI XAML. It is built as a single MAUI project using standard MVVM Toolkit patterns, with SQLite + Dapper for persistence.
 
@@ -13,7 +13,7 @@ The app is primarily Windows. **Do not** introduce WPF, WinUI, or any other UI f
 ```bash
 dotnet build                          # Build the solution
 dotnet build -c Release               # Build in Release mode
-dotnet build --framework net10.0-windows10.0.19041.0   # Target the Windows TFM explicitly
+dotnet build --framework net11.0-windows10.0.19041.0   # Target the Windows TFM explicitly
 ```
 
 > **Note:** If `dotnet build` fails with `MSB3027`/`MSB3021` "Could not copy ... NCockpit.exe ... being used by another process", the app is currently running. Close NCockpit (or kill the `NCockpit` process) and rebuild. This is not a code error.
@@ -38,7 +38,7 @@ dotnet build --framework net10.0-windows10.0.19041.0   # Target the Windows TFM 
 6. Before outputting XAML, ensure it is consistent with .NET MAUI capabilities and the compiled-binding requirements above.
 
 ### .NET and Language Version
-- Target .NET 10 exclusively (`net10.0`, with `net10.0-windows10.0.19041.0` on Windows).
+- Target .NET 11 exclusively (`net11.0`, with `net11.0-windows10.0.19041.0` on Windows).
 - Use modern C# features (primary constructors, records, collection expressions, target-typed `new`).
 - Nullable reference types are enabled (`<Nullable>enable</Nullable>`).
 
