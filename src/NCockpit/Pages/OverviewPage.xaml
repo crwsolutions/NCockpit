@@ -117,13 +117,13 @@
                                         Command="{Binding ToggleFavoritesFilterCommand, Mode=OneTime}" />
                             </Grid>
 
-                            <CollectionView x:Name="ProjectListView"
+                            <CollectionView x:Name="ProjectListView" ItemSizingStrategy="MeasureFirstItem"
                                             ItemsSource="{Binding Projects}"
                                             SelectionMode="None"
                                             Margin="0,0,0,0">
                                 <CollectionView.ItemTemplate>
                                     <DataTemplate x:DataType="viewmodels:ProjectListItem">
-                                        <cv:HoverBorder Padding="16" 
+                                        <cv:HoverBorder Padding="16" HeightRequest="80"
                                                 Margin="0,0,0,0"
                                                 Background="{Binding IsSelected, Converter={StaticResource SelectedToBackgroundColorConverter}}"
                                                 StrokeThickness="0">
