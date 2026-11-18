@@ -139,105 +139,115 @@
             </HorizontalStackLayout>
         </Border>
 
-        <!-- Content -->
-        <Border Grid.Row="3" StrokeThickness="0">
-            <ScrollView>
-            <VerticalStackLayout Padding="24" Spacing="20" 
-                                 IsVisible="{Binding HasProject}">
+        <!-- Content: the page itself no longer scrolls; the long panels of the
+             layout fill their column's remaining space and scroll in place.
+             The grid is named so the DataTemplates below can reach the page's
+             binding context (the view-model) through it. -->
+        <Grid x:Name="ContentGrid"
+              Grid.Row="3"
+              ColumnDefinitions="*,*,300"
+              ColumnSpacing="20"
+              Padding="24,20"
+              IsVisible="{Binding HasProject}">
 
-                <!-- Error / loading -->
-                <Label Text="{Binding ErrorMessage}"
+            <!-- Error / loading -->
+            <Grid Grid.ColumnSpan="3" ColumnDefinitions="*,*"
+                  IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}">
+                <Label Grid.Column="0" Text="{Binding ErrorMessage}"
                        FontSize="13"
                        TextColor="#d32f2f" />
-
-                <ActivityIndicator IsRunning="{Binding IsLoading}"
+                <ActivityIndicator Grid.Column="1"
+                                   IsRunning="{Binding IsLoading}"
                                    Color="#0d7377"
+                                   HorizontalOptions="End"
+                                   VerticalOptions="Center"
                                    IsVisible="{Binding IsLoading}" />
+            </Grid>
 
-                <!-- Three-column layout: main + sidebar -->
-                <Grid ColumnDefinitions="*,*,300" ColumnSpacing="20">
-                    <!-- Left column: Project info + Files -->
-                    <VerticalStackLayout Grid.Column="0" Spacing="20">
-                        <cv:SectionCard Title="Project info">
-                            <!-- The Project info panel is pointed at the favorite
+            <!-- Left column: Project info + Files -->
+            <Grid RowDefinitions="Auto,*" RowSpacing="20">
+                <cv:SectionCard  Title="Project info">
+                    <!-- The Project info panel is pointed at the favorite
                                  project: its name, project file, folder and last
                                  modified time, plus a simple type label derived
                                  from the project file. -->
-                            <VerticalStackLayout>
-                                <VerticalStackLayout Spacing="12"
+                    <VerticalStackLayout>
+                        <VerticalStackLayout Spacing="12"
                                                      IsVisible="{Binding HasInfoProject}">
-                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                                        <Label Grid.Column="0" Text="Type" FontSize="12" TextColor="#6b7280" WidthRequest="112" />
-                                        <Label Grid.Column="1" Text="{Binding InfoProjectType}" FontSize="12" TextColor="#1a2744" FontAttributes="Bold" />
-                                    </Grid>
-                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                                        <Label Grid.Column="0" Text="Version" FontSize="12" TextColor="#6b7280" WidthRequest="112" />
-                                        <Label Grid.Column="1" Text="{Binding InfoProjectVersion}" FontSize="12" TextColor="#1a2744" />
-                                    </Grid>
-                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                                        <Label Grid.Column="0" Text="Target framework" FontSize="12" TextColor="#6b7280" WidthRequest="112" />
-                                        <Label Grid.Column="1" Text="{Binding InfoProjectTargetFrameworks}" FontSize="12" TextColor="#1a2744" />
-                                    </Grid>
-                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                                        <Label Grid.Column="0" Text="SDK" FontSize="12" TextColor="#6b7280" WidthRequest="112" />
-                                        <Label Grid.Column="1" Text="{Binding InfoProjectSdk}" FontSize="12" TextColor="#1a2744" />
-                                    </Grid>
-                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                                        <Label Grid.Column="0" Text="Project" FontSize="12" TextColor="#6b7280" WidthRequest="112" />
-                                        <Label Grid.Column="1" Text="{Binding InfoProjectName}" FontSize="12" TextColor="#1a2744" />
-                                    </Grid>
-                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                                        <Label Grid.Column="0" Text="Project file" FontSize="12" TextColor="#6b7280" WidthRequest="112" />
-                                        <Label Grid.Column="1" Text="{Binding InfoProjectPath}" FontSize="12" TextColor="#3b82f6" LineBreakMode="TailTruncation" />
-                                    </Grid>
-                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                                        <Label Grid.Column="0" Text="Folder" FontSize="12" TextColor="#6b7280" WidthRequest="112" />
-                                        <Label Grid.Column="1" Text="{Binding InfoProjectFolder}" FontSize="12" TextColor="#1a2744" LineBreakMode="TailTruncation" />
-                                    </Grid>
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                <Label Grid.Column="0" Text="Type" FontSize="12" TextColor="#6b7280" WidthRequest="112" />
+                                <Label Grid.Column="1" Text="{Binding InfoProjectType}" FontSize="12" TextColor="#1a2744" FontAttributes="Bold" />
+                            </Grid>
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                <Label Grid.Column="0" Text="Version" FontSize="12" TextColor="#6b7280" WidthRequest="112" />
+                                <Label Grid.Column="1" Text="{Binding InfoProjectVersion}" FontSize="12" TextColor="#1a2744" />
+                            </Grid>
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                <Label Grid.Column="0" Text="Target framework" FontSize="12" TextColor="#6b7280" WidthRequest="112" />
+                                <Label Grid.Column="1" Text="{Binding InfoProjectTargetFrameworks}" FontSize="12" TextColor="#1a2744" />
+                            </Grid>
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                <Label Grid.Column="0" Text="SDK" FontSize="12" TextColor="#6b7280" WidthRequest="112" />
+                                <Label Grid.Column="1" Text="{Binding InfoProjectSdk}" FontSize="12" TextColor="#1a2744" />
+                            </Grid>
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                <Label Grid.Column="0" Text="Project" FontSize="12" TextColor="#6b7280" WidthRequest="112" />
+                                <Label Grid.Column="1" Text="{Binding InfoProjectName}" FontSize="12" TextColor="#1a2744" />
+                            </Grid>
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                <Label Grid.Column="0" Text="Project file" FontSize="12" TextColor="#6b7280" WidthRequest="112" />
+                                <Label Grid.Column="1" Text="{Binding InfoProjectPath}" FontSize="12" TextColor="#3b82f6" LineBreakMode="TailTruncation" />
+                            </Grid>
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                <Label Grid.Column="0" Text="Folder" FontSize="12" TextColor="#6b7280" WidthRequest="112" />
+                                <Label Grid.Column="1" Text="{Binding InfoProjectFolder}" FontSize="12" TextColor="#1a2744" LineBreakMode="TailTruncation" />
+                            </Grid>
 
-                                    <BoxView HeightRequest="1" Color="#e5e7eb" HorizontalOptions="Fill" />
+                            <BoxView HeightRequest="1" Color="#e5e7eb" HorizontalOptions="Fill" />
 
-                                    <!-- Git state of the repository holding the selected project, read live so the panel says what is actual now. -->
-                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12"
+                            <!-- Git state of the repository holding the selected project, read live so the panel says what is actual now. -->
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12"
                                           IsVisible="{Binding IsGitRepository}">
-                                        <Label Grid.Column="0" Text="Git branch" FontSize="12" TextColor="#6b7280" WidthRequest="112" />
-                                        <Label Grid.Column="1" Text="{Binding GitBranchDisplay}" FontSize="12" TextColor="#1a2744" FontAttributes="Bold" />
-                                    </Grid>
-                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12"
+                                <Label Grid.Column="0" Text="Git branch" FontSize="12" TextColor="#6b7280" WidthRequest="112" />
+                                <Label Grid.Column="1" Text="{Binding GitBranchDisplay}" FontSize="12" TextColor="#1a2744" FontAttributes="Bold" />
+                            </Grid>
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12"
                                           IsVisible="{Binding IsGitRepository}">
-                                        <Label Grid.Column="0" Text="Git status" FontSize="12" TextColor="#6b7280" WidthRequest="112" />
-                                        <Label Grid.Column="1" Text="{Binding GitStatusDisplay}" FontSize="12" TextColor="{Binding GitStatusColor}" />
-                                    </Grid>
+                                <Label Grid.Column="0" Text="Git status" FontSize="12" TextColor="#6b7280" WidthRequest="112" />
+                                <Label Grid.Column="1" Text="{Binding GitStatusDisplay}" FontSize="12" TextColor="{Binding GitStatusColor}" />
+                            </Grid>
 
-                                    <BoxView HeightRequest="1" Color="#e5e7eb" HorizontalOptions="Fill" />
+                            <BoxView HeightRequest="1" Color="#e5e7eb" HorizontalOptions="Fill" />
 
-                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                                        <Label Grid.Column="0" Text="Last modified" FontSize="12" TextColor="#6b7280" WidthRequest="112" />
-                                        <Label Grid.Column="1" Text="{Binding InfoProjectLastModifiedDisplay}" FontSize="12" TextColor="#1a2744" />
-                                    </Grid>
-                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                                        <Label Grid.Column="0" Text="Last scanned" FontSize="12" TextColor="#6b7280" WidthRequest="112" />
-                                        <Label Grid.Column="1" Text="{Binding LastScannedDisplay}" FontSize="12" TextColor="#1a2744" />
-                                    </Grid>
-                                </VerticalStackLayout>
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                <Label Grid.Column="0" Text="Last modified" FontSize="12" TextColor="#6b7280" WidthRequest="112" />
+                                <Label Grid.Column="1" Text="{Binding InfoProjectLastModifiedDisplay}" FontSize="12" TextColor="#1a2744" />
+                            </Grid>
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                <Label Grid.Column="0" Text="Last scanned" FontSize="12" TextColor="#6b7280" WidthRequest="112" />
+                                <Label Grid.Column="1" Text="{Binding LastScannedDisplay}" FontSize="12" TextColor="#1a2744" />
+                            </Grid>
+                        </VerticalStackLayout>
 
-                                <Label Text="No favorite project yet."
+                        <Label Text="No favorite project yet."
                                        FontSize="12"
                                        TextColor="#9ca3af"
                                        IsVisible="{Binding HasInfoProject, Converter={StaticResource InvertedBoolConverter}}" />
-                            </VerticalStackLayout>
+                    </VerticalStackLayout>
 
-                        </cv:SectionCard>
+                </cv:SectionCard>
 
-                        <cv:SectionCard Title="Files">
-                            <VerticalStackLayout Spacing="8">
+                <!-- Files: the list is unbounded, so it fills the column's
+                     remaining space and scrolls in place when it overflows. -->
+                <Grid Grid.Row="1">
+                    <cv:SectionCard Title="Files">
+                        <ScrollView>
+                            <VerticalStackLayout Spacing="8" Padding="0,8,0,0">
                                 <!-- File list -->
-                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Files}"
-                                                     Spacing="6">
+                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Files}" Spacing="6">
                                     <BindableLayout.ItemTemplate>
                                         <DataTemplate x:DataType="x:String">
-                                            <cv:FileAction Text="{Binding .}"
-                                                           Path="{Binding .}" />
+                                            <cv:FileAction Text="{Binding .}" Path="{Binding .}" />
                                         </DataTemplate>
                                     </BindableLayout.ItemTemplate>
                                 </VerticalStackLayout>
@@ -248,30 +258,33 @@
                                        Padding="0,8"
                                        IsVisible="{Binding HasFiles, Converter={StaticResource InvertedBoolConverter}}" />
                             </VerticalStackLayout>
-                        </cv:SectionCard>
-                    </VerticalStackLayout>
+                        </ScrollView>
+                    </cv:SectionCard>
+                </Grid>
+            </Grid>
 
-                    <!-- Middle column: Locations + Solution -->
-                    <VerticalStackLayout Grid.Column="1" Spacing="20">
-                        <cv:SectionCard Title="Project locations">
-                            <VerticalStackLayout Spacing="16">
-                                <!-- Primary location -->
-                                <VerticalStackLayout Spacing="4">
-                                    <Label Text="Primary location"
+            <!-- Middle column: Project locations + Solutions & Projects -->
+            <Grid Grid.Column="1"
+                  RowDefinitions="Auto,*" RowSpacing="20">
+                <cv:SectionCard Grid.Row="0" Title="Project locations">
+                    <VerticalStackLayout Spacing="16">
+                        <!-- Primary location -->
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Primary location"
                                            FontSize="12"
                                            TextColor="#6b7280" />
-                                    <cv:FolderAction Text="{Binding CurrentProject.FolderPath}"
+                            <cv:FolderAction Text="{Binding CurrentProject.FolderPath}"
                                                      Path="{Binding CurrentProject.FolderPath}" />
-                                </VerticalStackLayout>
+                        </VerticalStackLayout>
 
-                                <!-- Secondary locations -->
-                                <VerticalStackLayout Spacing="8">
-                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                                        <Label Grid.Column="0"
+                        <!-- Secondary locations -->
+                        <VerticalStackLayout Spacing="8">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <Label Grid.Column="0"
                                                Text="Secondary locations"
                                                FontSize="12"
                                                TextColor="#6b7280" />
-                                        <Button Grid.Column="1"
+                                <Button Grid.Column="1"
                                                 Text="+ Link"
                                                 Padding="8,4"
                                                 CornerRadius="4"
@@ -279,72 +292,76 @@
                                                 TextColor="White"
                                                 FontSize="11"
                                                 Command="{Binding LinkSecondaryFolderCommand}" />
-                                    </Grid>
+                            </Grid>
 
-                                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding LinkedFolders}"
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding LinkedFolders}"
                                                          Spacing="8"
                                                          IsVisible="{Binding HasLinkedFolders}">
-                                        <BindableLayout.ItemTemplate>
-                                            <DataTemplate x:DataType="models:SupportingFolder">
-                                                <Border Padding="10"
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="models:SupportingFolder">
+                                        <Border Padding="10"
                                                         BackgroundColor="#f5f8fc"
                                                         Stroke="#e5e7eb"
                                                         StrokeThickness="1"
                                                         StrokeShape="RoundRectangle 6">
-                                                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
-                                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
-                                                            <Label Text="{Binding FolderName}"
+                                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                                <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                                    <Label Text="{Binding FolderName}"
                                                                    FontSize="12"
                                                                    FontAttributes="Bold"
                                                                    TextColor="#1a2744" />
-                                                            <Label Text="{Binding Path}"
+                                                    <Label Text="{Binding Path}"
                                                                    FontSize="11"
                                                                    TextColor="#6b7280"
                                                                    LineBreakMode="TailTruncation" />
-                                                        </VerticalStackLayout>
+                                                </VerticalStackLayout>
 
-                                                        <Button Grid.Column="1"
+                                                <Button Grid.Column="1"
                                                                 Text="Open"
                                                                 Padding="6,4"
                                                                 CornerRadius="4"
                                                                 BackgroundColor="#6b7280"
                                                                 TextColor="White"
                                                                 FontSize="11"
-                                                                Command="{Binding Source={x:Reference Page}, Path=BindingContext.OpenLocationCommand, Mode=OneTime}"
+                                                                Command="{Binding Source={x:Reference ContentGrid}, Path=BindingContext.OpenLocationCommand, Mode=OneTime}"
                                                                 CommandParameter="{Binding Path}" />
 
-                                                        <Button Grid.Column="2"
+                                                <Button Grid.Column="2"
                                                                 Text="Remove"
                                                                 Padding="6,4"
                                                                 CornerRadius="4"
                                                                 BackgroundColor="#d32f2f"
                                                                 TextColor="White"
                                                                 FontSize="11"
-                                                                Command="{Binding Source={x:Reference Page}, Path=BindingContext.UnlinkSecondaryFolderCommand, Mode=OneTime}"
+                                                                Command="{Binding Source={x:Reference ContentGrid}, Path=BindingContext.UnlinkSecondaryFolderCommand, Mode=OneTime}"
                                                                 CommandParameter="{Binding .}" />
-                                                    </Grid>
-                                                </Border>
-                                            </DataTemplate>
-                                        </BindableLayout.ItemTemplate>
-                                    </VerticalStackLayout>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
 
-                                    <Label Text="No secondary folders linked yet."
+                            <Label Text="No secondary folders linked yet."
                                            FontSize="12"
                                            TextColor="#9ca3af"
                                            IsVisible="{Binding HasLinkedFolders, Converter={StaticResource InvertedBoolConverter}}" />
-                                </VerticalStackLayout>
-                            </VerticalStackLayout>
-                        </cv:SectionCard>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </cv:SectionCard>
 
-                        <!-- Solutions & Projects: every solution as an expandable
-                             parent with its referenced projects as children, and
-                             the orphan project files under an "Orphans" header.
-                             The star on a row sets the favorite solution (parent
-                             rows) or favorite project (child rows); exactly one
-                             of each always exists. Hidden for folder type
-                             projects (no solution files). -->
-                        <cv:SectionCard Title="Solutions &amp; Projects"
-                                        IsVisible="{Binding ShowSolutionsPanel}">
+                <!-- Solutions & Projects: every solution as an expandable
+                     parent with its referenced projects as children, and
+                     the orphan project files under an "Orphans" header.
+                     The star on a row sets the favorite solution (parent
+                     rows) or favorite project (child rows); exactly one
+                     of each always exists. Hidden for folder type
+                     projects (no solution files). The tree is unbounded,
+                     so it fills the column's remaining space and scrolls
+                     in place when it overflows. -->
+                <Grid Grid.Row="1">
+                    <cv:SectionCard Title="Solutions &amp; Projects"
+                                IsVisible="{Binding ShowSolutionsPanel}">
+                        <ScrollView>
                             <VerticalStackLayout>
                                 <VerticalStackLayout BindableLayout.ItemsSource="{Binding SolutionsTree}">
                                     <BindableLayout.ItemTemplate>
@@ -357,7 +374,7 @@
                                                         StrokeShape="RoundRectangle 6">
                                                     <Border.GestureRecognizers>
                                                         <TapGestureRecognizer
-                                                            Command="{Binding Source={x:Reference Page}, Path=BindingContext.OpenSolutionFileCommand, Mode=OneTime}"
+                                                            Command="{Binding Source={x:Reference ContentGrid}, Path=BindingContext.OpenSolutionFileCommand, Mode=OneTime}"
                                                             CommandParameter="{Binding Path}" />
                                                     </Border.GestureRecognizers>
                                                     <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
@@ -368,7 +385,7 @@
                                                                 Background="Transparent"
                                                                 Padding="4"
                                                                 VerticalOptions="Center"
-                                                                Command="{Binding Source={x:Reference Page}, Path=BindingContext.ToggleSolutionExpandCommand, Mode=OneTime}"
+                                                                Command="{Binding Source={x:Reference ContentGrid}, Path=BindingContext.ToggleSolutionExpandCommand, Mode=OneTime}"
                                                                 CommandParameter="{Binding .}" />
                                                         <cv:SolutionAction Grid.Column="1" Text="{Binding Name}" Path="{Binding Path}" />
 
@@ -380,7 +397,7 @@
                                                                 Background="Transparent"
                                                                 Padding="4"
                                                                 VerticalOptions="Center"
-                                                                Command="{Binding Source={x:Reference Page}, Path=BindingContext.ToggleFavoriteSolutionCommand, Mode=OneTime}"
+                                                                Command="{Binding Source={x:Reference ContentGrid}, Path=BindingContext.ToggleFavoriteSolutionCommand, Mode=OneTime}"
                                                                 CommandParameter="{Binding Path}" />
                                                     </Grid>
                                                 </Border>
@@ -411,7 +428,7 @@
                                                                         Background="Transparent"
                                                                         Padding="4" HeightRequest="28"
                                                                         VerticalOptions="Center"
-                                                                        Command="{Binding Source={x:Reference Page}, Path=BindingContext.ToggleFavoriteProjectCommand, Mode=OneTime}"
+                                                                        Command="{Binding Source={x:Reference ContentGrid}, Path=BindingContext.ToggleFavoriteProjectCommand, Mode=OneTime}"
                                                                         CommandParameter="{Binding ProjectPath}" />
                                                             </Grid>
                                                         </DataTemplate>
@@ -439,7 +456,7 @@
                                                         StrokeShape="RoundRectangle 6">
                                                     <Border.GestureRecognizers>
                                                         <TapGestureRecognizer
-                                                            Command="{Binding Source={x:Reference Page}, Path=BindingContext.OpenLocationCommand, Mode=OneTime}"
+                                                            Command="{Binding Source={x:Reference ContentGrid}, Path=BindingContext.OpenLocationCommand, Mode=OneTime}"
                                                             CommandParameter="{Binding FolderPath}" />
                                                     </Border.GestureRecognizers>
                                                     <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
@@ -463,7 +480,7 @@
                                                                 Background="Transparent"
                                                                 Padding="4"
                                                                 VerticalOptions="Center"
-                                                                Command="{Binding Source={x:Reference Page}, Path=BindingContext.ToggleFavoriteProjectCommand, Mode=OneTime}"
+                                                                Command="{Binding Source={x:Reference ContentGrid}, Path=BindingContext.ToggleFavoriteProjectCommand, Mode=OneTime}"
                                                                 CommandParameter="{Binding ProjectPath}" />
                                                     </Grid>
                                                 </Border>
@@ -478,13 +495,21 @@
                                        Padding="0,8"
                                        IsVisible="{Binding HasSolutionsTree, Converter={StaticResource InvertedBoolConverter}}" />
                             </VerticalStackLayout>
-                        </cv:SectionCard>
-                    </VerticalStackLayout>
+                        </ScrollView>
+                    </cv:SectionCard>
+                </Grid>
+            </Grid>
 
-                    <!-- Right sidebar: Mobile + Related -->
-                    <VerticalStackLayout Grid.Column="2" Spacing="20">
-                        <cv:SectionCard Title="Mobile">
-                            <VerticalStackLayout Spacing="8">
+            <!-- Right sidebar: Mobile + Related projects + Related links -->
+            <Grid Grid.Column="2"
+                  RowDefinitions="2*,Auto,*" RowSpacing="20">
+                <!-- Mobile: the links are unbounded, so the panel fills the
+                     column's remaining space and scrolls in place when it
+                     overflows. -->
+                <Grid Grid.Row="0">
+                    <cv:SectionCard Title="Mobile">
+                        <ScrollView>
+                            <VerticalStackLayout Spacing="8" Padding="0,8,0,0">
                                 <!-- Mobile links grouped by platform -->
                                 <VerticalStackLayout BindableLayout.ItemsSource="{Binding MobileLinks}"
                                                      Spacing="8"
@@ -499,60 +524,67 @@
                                 </VerticalStackLayout>
 
                                 <Label Text="No mobile links found in README."
-                                       FontSize="12"
-                                       TextColor="#9ca3af"
-                                       Padding="0,8"
-                                       IsVisible="{Binding HasMobileLinks, Converter={StaticResource InvertedBoolConverter}}" />
+                           FontSize="12"
+                           TextColor="#9ca3af"
+                           Padding="0,8"
+                           IsVisible="{Binding HasMobileLinks, Converter={StaticResource InvertedBoolConverter}}" />
                             </VerticalStackLayout>
-                        </cv:SectionCard>
+                        </ScrollView>
+                    </cv:SectionCard>
+                </Grid>
 
-                        <cv:SectionCard Title="Related projects">
-                            <VerticalStackLayout Spacing="8">
-                                <Label Text="No related projects yet."
-                                       FontSize="12"
-                                       TextColor="#9ca3af"
-                                       Padding="0,8" />
-                            </VerticalStackLayout>
-                        </cv:SectionCard>
+                <!-- Related projects: a short list, so it sizes to its content. -->
+                <cv:SectionCard Grid.Row="1" Title="Related projects">
+                    <VerticalStackLayout Spacing="8" Padding="0,8,0,0">
+                        <Label Text="No related projects yet."
+                               FontSize="12"
+                               TextColor="#9ca3af"
+                               Padding="0,8" />
+                    </VerticalStackLayout>
+                </cv:SectionCard>
 
-                        <cv:SectionCard Title="Related links">
-                            <VerticalStackLayout Spacing="8">
+                <!-- Related links: the list is unbounded, so the panel fills the
+                     column's remaining space and scrolls in place when it
+                     overflows. -->
+                <Grid Grid.Row="2">
+                    <cv:SectionCard Title="Related links">
+                        <ScrollView>
+                            <VerticalStackLayout Spacing="8" Padding="0,8,0,0">
                                 <VerticalStackLayout BindableLayout.ItemsSource="{Binding RelatedLinks}"
-                                                     Spacing="8"
-                                                     IsVisible="{Binding HasRelatedLinks}">
+                                             Spacing="8"
+                                             IsVisible="{Binding HasRelatedLinks}">
                                     <BindableLayout.ItemTemplate>
                                         <DataTemplate x:DataType="services:ReadmeLink">
                                             <cv:LinkAction Text="{Binding Text}"
-                                                           Platform="Other"
-                                                           Url="{Binding Url}" />
+                                                   Platform="Other"
+                                                   Url="{Binding Url}" />
                                         </DataTemplate>
                                     </BindableLayout.ItemTemplate>
                                 </VerticalStackLayout>
 
                                 <Label Text="No related links found in README."
-                                       FontSize="12"
-                                       TextColor="#9ca3af"
-                                       Padding="0,8"
-                                       IsVisible="{Binding HasRelatedLinks, Converter={StaticResource InvertedBoolConverter}}" />
+                               FontSize="12"
+                               TextColor="#9ca3af"
+                               Padding="0,8"
+                               IsVisible="{Binding HasRelatedLinks, Converter={StaticResource InvertedBoolConverter}}" />
                             </VerticalStackLayout>
-                        </cv:SectionCard>
-                    </VerticalStackLayout>
+                        </ScrollView>
+                    </cv:SectionCard>
                 </Grid>
+            </Grid>
 
+            <!-- No project selected -->
+            <VerticalStackLayout Grid.Row="2"
+                                 Spacing="8"
+                                 HorizontalOptions="Center"
+                                 VerticalOptions="Center"
+                                 IsVisible="{Binding HasProject, Converter={StaticResource InvertedBoolConverter}}">
+                <Label Text="Project not found."
+                       FontSize="14"
+                       TextColor="#9ca3af"
+                       HorizontalOptions="Center" />
             </VerticalStackLayout>
-        </ScrollView>
-        </Border>
-        <!-- No project selected -->
-        <VerticalStackLayout Grid.Row="3"
-                             Spacing="8"
-                             HorizontalOptions="Center"
-                             VerticalOptions="Center"
-                             IsVisible="{Binding HasProject, Converter={StaticResource InvertedBoolConverter}}">
-            <Label Text="Project not found."
-                   FontSize="14"
-                   TextColor="#9ca3af"
-                   HorizontalOptions="Center" />
-        </VerticalStackLayout>
+        </Grid>
     </Grid>
 
 </ContentPage>
