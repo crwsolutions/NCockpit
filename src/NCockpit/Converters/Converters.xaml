@@ -11,14 +11,15 @@
     <converters:BoolToColorConverter x:Key="BoolToColorConverter" />
     <converters:InverseBoolToColorConverter x:Key="InverseBoolToColorConverter" />
     <converters:StringToColorConverter x:Key="StringToColorConverter" />
-    <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
     <converters:BoolToStarGlyphConverter x:Key="BoolToStarGlyphConverter" />
     <converters:BoolToFavoriteColorConverter x:Key="BoolToFavoriteColorConverter" />
     <converters:BoolToChevronGlyphConverter x:Key="BoolToChevronGlyphConverter" />
     <converters:IntToEmptyVisibilityConverter x:Key="IntToEmptyVisibilityConverter" />
     <converters:ProjectIconColorConverter x:Key="ProjectIconColorConverter" />
     <converters:SelectedToBackgroundColorConverter x:Key="SelectedToBackgroundColorConverter" />
+    <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
     <toolkit:IsNotNullConverter x:Key="IsNotNullConverter" />
+    <toolkit:IsNullConverter x:Key="IsNullConverter" />
     <toolkit:IsStringNotNullOrEmptyConverter x:Key="IsStringNotNullOrEmptyConverter" />
 
 </ResourceDictionary>

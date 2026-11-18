@@ -2,24 +2,36 @@ using CommunityToolkit.Maui.Extensions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Maui;
+using NCockpit.Services;
 
 namespace NCockpit.ViewModels.Popups;
 
 /// <summary>
-/// ViewModel for the View File popup. Displays the contents of a text file in a
-/// read-only editor. The popup receives the full file path and file name via
-/// shell parameters.
+/// ViewModel for the View File popup. Shows the file as an HTML document built by
+/// <see cref="IFilePreviewService"/>: Markdown is rendered, other text files are
+/// shown verbatim. The popup receives the full file path and file name via shell
+/// parameters.
 /// </summary>
 public partial class ViewFilePopupViewModel : ObservableObject, IQueryAttributable
 {
+    private readonly IFilePreviewService _filePreviewService;
+
     [ObservableProperty]
     public partial string FileName { get; set; } = string.Empty;
 
+    /// <summary>
+    /// The HTML document the web view displays.
+    /// </summary>
     [ObservableProperty]
-    public partial string Content { get; set; } = string.Empty;
+    public partial string Html { get; set; } = string.Empty;
 
     [ObservableProperty]
     public partial string? ErrorMessage { get; set; }
+
+    public ViewFilePopupViewModel(IFilePreviewService filePreviewService)
+    {
+        _filePreviewService = filePreviewService;
+    }
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
@@ -31,18 +43,19 @@ public partial class ViewFilePopupViewModel : ObservableObject, IQueryAttributab
     }
 
     /// <summary>
-    /// Load the file contents from the provided path.
+    /// Build the HTML document for the given file path.
     /// </summary>
     private async Task LoadFileAsync(string path)
     {
         try
         {
-            Content = await File.ReadAllTextAsync(path);
+            ErrorMessage = null;
+            Html = await _filePreviewService.BuildHtmlDocumentAsync(path);
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Error reading file: {ex.Message}";
-            Content = string.Empty;
+            ErrorMessage = $"Error viewing file: {ex.Message}";
+            Html = string.Empty;
         }
     }
 

@@ -48,6 +48,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<IPageService, PageService>();
 		builder.Services.AddSingleton<IWindowsLauncher, WindowsLauncher>();
 		builder.Services.AddSingleton<IReadmeLinkParserService, ReadmeLinkParserService>();
+		builder.Services.AddSingleton<IFilePreviewService, FilePreviewService>();
 		// Register ViewModels
 		builder.Services.AddSingleton<FoldersPageViewModel>();
 		builder.Services.AddSingleton<OverviewPageViewModel>();

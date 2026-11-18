@@ -4,8 +4,9 @@ using NCockpit.ViewModels.Popups;
 namespace NCockpit.Popups;
 
 /// <summary>
-/// View file popup. Displays the contents of a text file in a read-only editor.
-/// All interaction is driven by <see cref="ViewFilePopupViewModel"/>.
+/// View file popup. Shows a file as an HTML document: Markdown is rendered,
+/// other text files are shown verbatim. All interaction is driven by
+/// <see cref="ViewFilePopupViewModel"/>.
 /// </summary>
 public partial class ViewFilePopup : Popup
 {

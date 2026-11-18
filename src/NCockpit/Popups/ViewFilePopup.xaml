@@ -8,8 +8,8 @@
                Padding="0"
                BackgroundColor="White"
                CanBeDismissedByTappingOutsideOfPopup="True"
-               Width="800"
-               Height="600">
+               WidthRequest="900"
+               HeightRequest="800">
 
     <Grid RowDefinitions="Auto,*">
         <!-- Header -->
@@ -36,13 +36,22 @@
         </Grid>
 
         <!-- Content -->
-        <Border Grid.Row="1" Padding="20">
-            <Editor Text="{Binding Content}"
-                    BackgroundColor="White"
-                    FontFamily="Consolas"
-                    FontSize="13"
-                    TextColor="#1a2744"
-                    IsReadOnly="True" />
+        <Border Grid.Row="1">
+            <Grid>
+                <!-- Error message -->
+                <Label Text="{Binding ErrorMessage}"
+                       FontSize="13"
+                       TextColor="#d32f2f"
+                       IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNullConverter}}" />
+
+                <!-- File content -->
+                <WebView Background="White"
+                         IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNullConverter}}">
+                    <WebView.Source>
+                        <HtmlWebViewSource Html="{Binding Html}" />
+                    </WebView.Source>
+                </WebView>
+            </Grid>
         </Border>
     </Grid>
 
