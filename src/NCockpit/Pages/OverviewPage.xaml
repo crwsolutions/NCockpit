@@ -123,15 +123,15 @@
                                             Margin="0,0,0,0">
                                 <CollectionView.ItemTemplate>
                                     <DataTemplate x:DataType="viewmodels:ProjectListItem">
-                                        <Border Padding="16"
+                                        <cv:HoverBorder Padding="16" 
                                                 Margin="0,0,0,0"
                                                 Background="{Binding IsSelected, Converter={StaticResource SelectedToBackgroundColorConverter}}"
                                                 StrokeThickness="0">
-                                            <Border.GestureRecognizers>
+                                            <cv:HoverBorder.GestureRecognizers>
                                                 <TapGestureRecognizer
                                                     Command="{Binding Source={x:Reference Page}, Path=BindingContext.SelectProjectCommand, Mode=OneTime}"
                                                     CommandParameter="{Binding .}" />
-                                            </Border.GestureRecognizers>
+                                            </cv:HoverBorder.GestureRecognizers>
                                             <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto,Auto" ColumnSpacing="12">
                                                 <!-- Favorite star -->
                                                 <Button Grid.Column="0"
@@ -224,7 +224,7 @@
                                                                 Command="{Binding Source={x:Reference Page}, Path=BindingContext.OpenProjectDetailsCommand, Mode=OneTime}"
                                                                 CommandParameter="{Binding .}" />
                                             </Grid>
-                                        </Border>
+                                        </cv:HoverBorder>
                                     </DataTemplate>
                                 </CollectionView.ItemTemplate>
                             </CollectionView>
