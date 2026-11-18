@@ -79,174 +79,172 @@
         </Grid>
 
         <!-- Content -->
-        <Grid Grid.Row="2" RowDefinitions="*" Padding="0,0,0,24"
+        <Grid Grid.Row="2" RowDefinitions="*" Padding="24,0,0,24"
               ColumnDefinitions="*,300"
               ColumnSpacing="16">
             <!-- Main content -->
-            <ScrollView>
-                <VerticalStackLayout Padding="24,0,0,24" Spacing="16">
 
-                    <!-- Error Message -->
-                    <Label Text="{Binding ErrorMessage}"
-                           FontSize="13"
-                           TextColor="#d32f2f"
-                           IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}" />
+            <!-- Error Message -->
+            <Label Text="{Binding ErrorMessage}"
+                        FontSize="13"
+                        TextColor="#d32f2f"
+                        IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}" />
 
-                    <!-- Loading Indicator -->
-                    <ActivityIndicator IsRunning="{Binding IsLoading}"
-                                        Color="#0d7377"
-                                        IsVisible="{Binding IsLoading}" />
+            <!-- Loading Indicator -->
+            <ActivityIndicator IsRunning="{Binding IsLoading}"
+                                    Color="#0d7377"
+                                    IsVisible="{Binding IsLoading}" />
 
-                    <!-- Projects Section -->
-                    <Border BackgroundColor="White" StrokeShape="RoundRectangle 8" StrokeThickness="0" Padding="16,0,16,16"
-                            Stroke="#e0e0e0">
-                        <VerticalStackLayout>
-                            <Grid Padding="16,16,16,0" ColumnDefinitions="*,Auto" ColumnSpacing="12">
-                                <Label Grid.Column="0"
-                                       Text="Projects"
-                                       FontSize="16"
-                                       FontAttributes="Bold"
-                                       TextColor="#1a2744" />
-                                <Button Grid.Column="1"
-                                        Text="&#xf005; Favorites"
-                                        FontFamily="FontAwesomeSolid"
-                                        FontSize="12"
-                                        TextColor="#3b82f6"
-                                        Background="Transparent"
-                                        VerticalOptions="Center"
-                                        Command="{Binding ToggleFavoritesFilterCommand, Mode=OneTime}" />
-                            </Grid>
+            <!-- Projects Section -->
+            <Border BackgroundColor="White" StrokeShape="RoundRectangle 8" StrokeThickness="0" Padding="16,0,16,16"
+                        Stroke="#e0e0e0">
+                <ScrollView>
+                    <VerticalStackLayout>
+                        <Grid Padding="16,16,16,0" ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                            <Label Grid.Column="0"
+                                    Text="Projects"
+                                    FontSize="16"
+                                    FontAttributes="Bold"
+                                    TextColor="#1a2744" />
+                            <Button Grid.Column="1"
+                                    Text="&#xf005; Favorites"
+                                    FontFamily="FontAwesomeSolid"
+                                    FontSize="12"
+                                    TextColor="#3b82f6"
+                                    Background="Transparent"
+                                    VerticalOptions="Center"
+                                    Command="{Binding ToggleFavoritesFilterCommand, Mode=OneTime}" />
+                        </Grid>
 
-                            <CollectionView x:Name="ProjectListView" ItemSizingStrategy="MeasureFirstItem"
-                                            ItemsSource="{Binding Projects}"
-                                            SelectionMode="None"
-                                            Margin="0,0,0,0">
-                                <CollectionView.ItemTemplate>
-                                    <DataTemplate x:DataType="viewmodels:ProjectListItem">
-                                        <cv:HoverBorder Padding="16" HeightRequest="80"
-                                                Margin="0,0,0,0"
-                                                Background="{Binding IsSelected, Converter={StaticResource SelectedToBackgroundColorConverter}}"
-                                                StrokeThickness="0">
-                                            <cv:HoverBorder.GestureRecognizers>
-                                                <TapGestureRecognizer
-                                                    Command="{Binding Source={x:Reference Page}, Path=BindingContext.SelectProjectCommand, Mode=OneTime}"
+                        <CollectionView x:Name="ProjectListView" ItemSizingStrategy="MeasureFirstItem"
+                                        ItemsSource="{Binding Projects}"
+                                        SelectionMode="None"
+                                        Margin="0,0,0,0">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate x:DataType="viewmodels:ProjectListItem">
+                                    <cv:HoverBorder Padding="16" HeightRequest="80"
+                                            Margin="0,0,0,0"
+                                            Background="{Binding IsSelected, Converter={StaticResource SelectedToBackgroundColorConverter}}"
+                                            StrokeThickness="0">
+                                        <cv:HoverBorder.GestureRecognizers>
+                                            <TapGestureRecognizer
+                                                Command="{Binding Source={x:Reference Page}, Path=BindingContext.SelectProjectCommand, Mode=OneTime}"
+                                                CommandParameter="{Binding .}" />
+                                        </cv:HoverBorder.GestureRecognizers>
+                                        <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto,Auto" ColumnSpacing="12">
+                                            <!-- Favorite star -->
+                                            <Button Grid.Column="0"
+                                                    Text="{Binding IsFavorite, Converter={StaticResource BoolToStarGlyphConverter}}"
+                                                    FontFamily="FontAwesomeSolid"
+                                                    FontSize="14"
+                                                    TextColor="{Binding IsFavorite, Converter={StaticResource BoolToFavoriteColorConverter}}"
+                                                    Background="Transparent"
+                                                    Padding="4"
+                                                    VerticalOptions="Center"
+                                                    Command="{Binding Source={x:Reference Page}, Path=BindingContext.ToggleFavoriteCommand, Mode=OneTime}"
                                                     CommandParameter="{Binding .}" />
-                                            </cv:HoverBorder.GestureRecognizers>
-                                            <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto,Auto" ColumnSpacing="12">
-                                                <!-- Favorite star -->
-                                                <Button Grid.Column="0"
-                                                        Text="{Binding IsFavorite, Converter={StaticResource BoolToStarGlyphConverter}}"
-                                                        FontFamily="FontAwesomeSolid"
-                                                        FontSize="14"
-                                                        TextColor="{Binding IsFavorite, Converter={StaticResource BoolToFavoriteColorConverter}}"
-                                                        Background="Transparent"
-                                                        Padding="4"
-                                                        VerticalOptions="Center"
-                                                        Command="{Binding Source={x:Reference Page}, Path=BindingContext.ToggleFavoriteCommand, Mode=OneTime}"
-                                                        CommandParameter="{Binding .}" />
 
-                                                <!-- Icon box -->
-                                                <Border Grid.Column="1"
-                                                        WidthRequest="36"
-                                                        HeightRequest="36"
-                                                        Padding="6"
-                                                        Background="{Binding Name, Converter={StaticResource ProjectIconColorConverter}}"
-                                                        StrokeShape="RoundRectangle 8">
-                                                    <Label Text="{Binding Initial}"
-                                                           FontSize="16"
-                                                           FontAttributes="Bold"
-                                                           TextColor="White"
-                                                           HorizontalOptions="Center"
-                                                           VerticalOptions="Center" />
-                                                </Border>
+                                            <!-- Icon box -->
+                                            <Border Grid.Column="1"
+                                                    WidthRequest="36"
+                                                    HeightRequest="36"
+                                                    Padding="6"
+                                                    Background="{Binding Name, Converter={StaticResource ProjectIconColorConverter}}"
+                                                    StrokeShape="RoundRectangle 8">
+                                                <Label Text="{Binding Initial}"
+                                                        FontSize="16"
+                                                        FontAttributes="Bold"
+                                                        TextColor="White"
+                                                        HorizontalOptions="Center"
+                                                        VerticalOptions="Center" />
+                                            </Border>
 
-                                                <!-- Name + path -->
-                                                <VerticalStackLayout Grid.Column="2" Spacing="2">
-                                                    <Label Text="{Binding Name}"
-                                                           FontSize="15"
-                                                           FontAttributes="Bold"
-                                                           TextColor="#1a2744" />
-                                                    <Label Text="{Binding FolderPath}"
-                                                           FontSize="12"
-                                                           TextColor="#666666"
-                                                           LineBreakMode="TailTruncation" />
-                                                </VerticalStackLayout>
+                                            <!-- Name + path -->
+                                            <VerticalStackLayout Grid.Column="2" Spacing="2">
+                                                <Label Text="{Binding Name}"
+                                                        FontSize="15"
+                                                        FontAttributes="Bold"
+                                                        TextColor="#1a2744" />
+                                                <Label Text="{Binding FolderPath}"
+                                                        FontSize="12"
+                                                        TextColor="#666666"
+                                                        LineBreakMode="TailTruncation" />
+                                            </VerticalStackLayout>
 
-                                                <!-- Status + time -->
-                                                <VerticalStackLayout Grid.Column="3"
-                                                                     Spacing="2"
-                                                                     HorizontalOptions="End"
-                                                                     VerticalOptions="Center">
-                                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
-                                                        <Ellipse Grid.Column="0"
-                                                                 WidthRequest="8"
-                                                                 HeightRequest="8"
-                                                                 Fill="#10b981"
-                                                                 VerticalOptions="Center" />
-                                                        <Label Grid.Column="1"
-                                                               Text="{Binding StatusText}"
-                                                               FontSize="12"
-                                                               TextColor="#666666" />
-                                                    </Grid>
-                                                    <Label Text="{Binding LastOpenedDisplay}"
-                                                           FontSize="11"
-                                                           TextColor="#999999"
-                                                           HorizontalOptions="End" />
-                                                </VerticalStackLayout>
+                                            <!-- Status + time -->
+                                            <VerticalStackLayout Grid.Column="3"
+                                                                    Spacing="2"
+                                                                    HorizontalOptions="End"
+                                                                    VerticalOptions="Center">
+                                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
+                                                    <Ellipse Grid.Column="0"
+                                                                WidthRequest="8"
+                                                                HeightRequest="8"
+                                                                Fill="#10b981"
+                                                                VerticalOptions="Center" />
+                                                    <Label Grid.Column="1"
+                                                            Text="{Binding StatusText}"
+                                                            FontSize="12"
+                                                            TextColor="#666666" />
+                                                </Grid>
+                                                <Label Text="{Binding LastOpenedDisplay}"
+                                                        FontSize="11"
+                                                        TextColor="#999999"
+                                                        HorizontalOptions="End" />
+                                            </VerticalStackLayout>
 
-                                                <!-- Solution type: open the primary solution in Visual Studio -->
-                                                <cv:GlyphButton Grid.Column="4"
-                                                                ImageSource="visual_studio_icon.png"
-                                                                IconSize="20"
-                                                                ButtonPadding="8"
-                                                                VerticalOptions="Center"
-                                                                IsVisible="{Binding IsFolderType, Converter={StaticResource InvertedBoolConverter}}"
-                                                                Command="{Binding Source={x:Reference Page}, Path=BindingContext.OpenInIDECommand, Mode=OneTime}"
-                                                                CommandParameter="{Binding .}" />
+                                            <!-- Solution type: open the primary solution in Visual Studio -->
+                                            <cv:GlyphButton Grid.Column="4"
+                                                            ImageSource="visual_studio_icon.png"
+                                                            IconSize="20"
+                                                            ButtonPadding="8"
+                                                            VerticalOptions="Center"
+                                                            IsVisible="{Binding IsFolderType, Converter={StaticResource InvertedBoolConverter}}"
+                                                            Command="{Binding Source={x:Reference Page}, Path=BindingContext.OpenInIDECommand, Mode=OneTime}"
+                                                            CommandParameter="{Binding .}" />
 
-                                                <!-- Folder type: open the repo folder in VS Code -->
-                                                <cv:GlyphButton Grid.Column="4"
-                                                                ImageSource="visual_studio_code_icon.png"
-                                                                IconSize="20"
-                                                                ButtonPadding="8"
-                                                                VerticalOptions="Center"
-                                                                IsVisible="{Binding IsFolderType}"
-                                                                Command="{Binding Source={x:Reference Page}, Path=BindingContext.OpenInIDECommand, Mode=OneTime}"
-                                                                CommandParameter="{Binding .}" />
+                                            <!-- Folder type: open the repo folder in VS Code -->
+                                            <cv:GlyphButton Grid.Column="4"
+                                                            ImageSource="visual_studio_code_icon.png"
+                                                            IconSize="20"
+                                                            ButtonPadding="8"
+                                                            VerticalOptions="Center"
+                                                            IsVisible="{Binding IsFolderType}"
+                                                            Command="{Binding Source={x:Reference Page}, Path=BindingContext.OpenInIDECommand, Mode=OneTime}"
+                                                            CommandParameter="{Binding .}" />
 
-                                                <!-- Chevron -->
-                                                <cv:GlyphButton Grid.Column="5"
-                                                                Glyph="&#xf105;"
-                                                                GlyphColor="#999999"
-                                                                IconSize="18"
-                                                                ButtonPadding="8"
-                                                                VerticalOptions="Center"
-                                                                Command="{Binding Source={x:Reference Page}, Path=BindingContext.OpenProjectDetailsCommand, Mode=OneTime}"
-                                                                CommandParameter="{Binding .}" />
-                                            </Grid>
-                                        </cv:HoverBorder>
-                                    </DataTemplate>
-                                </CollectionView.ItemTemplate>
-                            </CollectionView>
+                                            <!-- Chevron -->
+                                            <cv:GlyphButton Grid.Column="5"
+                                                            Glyph="&#xf105;"
+                                                            GlyphColor="#999999"
+                                                            IconSize="18"
+                                                            ButtonPadding="8"
+                                                            VerticalOptions="Center"
+                                                            Command="{Binding Source={x:Reference Page}, Path=BindingContext.OpenProjectDetailsCommand, Mode=OneTime}"
+                                                            CommandParameter="{Binding .}" />
+                                        </Grid>
+                                    </cv:HoverBorder>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
 
-                            <!-- Empty state -->
-                            <VerticalStackLayout Padding="16"
-                                                 Spacing="8"
-                                                 IsVisible="{Binding Projects.Count, Converter={StaticResource IntToEmptyVisibilityConverter}}">
-                                <Label Text="No projects found yet."
-                                       FontSize="14"
-                                       TextColor="#999999"
-                                       HorizontalOptions="Center" />
-                                <Label Text="Add a folder and scan to discover your projects."
-                                       FontSize="12"
-                                       TextColor="#999999"
-                                       HorizontalOptions="Center" />
-                            </VerticalStackLayout>
+                        <!-- Empty state -->
+                        <VerticalStackLayout Padding="16"
+                                                Spacing="8"
+                                                IsVisible="{Binding Projects.Count, Converter={StaticResource IntToEmptyVisibilityConverter}}">
+                            <Label Text="No projects found yet."
+                                    FontSize="14"
+                                    TextColor="#999999"
+                                    HorizontalOptions="Center" />
+                            <Label Text="Add a folder and scan to discover your projects."
+                                    FontSize="12"
+                                    TextColor="#999999"
+                                    HorizontalOptions="Center" />
                         </VerticalStackLayout>
-                    </Border>
+                    </VerticalStackLayout>
+                </ScrollView>
+            </Border>
 
-                </VerticalStackLayout>
-            </ScrollView>
 
             <!-- Right sidebar -->
             <ScrollView Grid.Column="1">
@@ -276,34 +274,34 @@
                     <cv:SectionCard Title="Recent activity">
                         <CollectionView ItemsSource="{Binding RecentActivity}"
                                             SelectionMode="None">
-                                <CollectionView.ItemTemplate>
-                                    <DataTemplate x:DataType="viewmodels:ProjectListItem">
-                                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
-                                            <Border Grid.Column="0"
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate x:DataType="viewmodels:ProjectListItem">
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                                        <Border Grid.Column="0"
                                                     WidthRequest="24"
                                                     HeightRequest="24"
                                                     Padding="4"
                                                     Background="{Binding Name, Converter={StaticResource ProjectIconColorConverter}}"
                                                     StrokeShape="RoundRectangle 6">
-                                                <Label Text="{Binding Initial}"
+                                            <Label Text="{Binding Initial}"
                                                        FontSize="10"
                                                        FontAttributes="Bold"
                                                        TextColor="White"
                                                        HorizontalOptions="Center"
                                                        VerticalOptions="Center" />
-                                            </Border>
-                                            <VerticalStackLayout Grid.Column="1" Spacing="1">
-                                                <Label Text="{Binding Name}"
+                                        </Border>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="1">
+                                            <Label Text="{Binding Name}"
                                                        FontSize="13"
                                                        TextColor="#1a2744" />
-                                                <Label Text="{Binding LastOpenedDisplay}"
+                                            <Label Text="{Binding LastOpenedDisplay}"
                                                        FontSize="11"
                                                        TextColor="#999999" />
-                                            </VerticalStackLayout>
-                                        </Grid>
-                                    </DataTemplate>
-                                </CollectionView.ItemTemplate>
-                            </CollectionView>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
                     </cv:SectionCard>
 
                 </VerticalStackLayout>
