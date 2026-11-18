@@ -75,6 +75,11 @@ public static class MauiProgram
 		// Let the LinkAction control open URLs in the default browser.
 		LinkAction.OpenUrlHandler = url =>
 		{
+			if (string.IsNullOrWhiteSpace(url))
+			{
+				return;
+			}
+
 			var launcher = app.Services.GetRequiredService<IWindowsLauncher>();
 			launcher.TryOpenUrl(url);
 		};
@@ -118,11 +123,22 @@ public static class MauiProgram
 		// Let the FileAction control open files in the View File popup.
 		FileAction.OpenFileHandler = async path =>
 		{
+			if (string.IsNullOrEmpty(path))
+			{
+				return;
+			}
+
+			var shell = Shell.Current;
+			if (shell is null)
+			{
+				return;
+			}
+
 			// Resolve a file name to a full path via the project shown on the
 			// currently visible details page. The view-model is transient, so it
 			// must be taken from the page, not created here.
 			string? folderPath = null;
-			if (Shell.Current?.CurrentPage?.BindingContext is ProjectDetailsPageViewModel details)
+			if (shell.CurrentPage?.BindingContext is ProjectDetailsPageViewModel details)
 			{
 				folderPath = details.CurrentProject?.FolderPath;
 			}
@@ -133,7 +149,7 @@ public static class MauiProgram
 
 			var popupService = app.Services.GetRequiredService<IPopupService>();
 			await popupService.ShowPopupAsync<ViewFilePopup>(
-				Shell.Current,
+				shell,
 				options: null,
 				shellParameters: new Dictionary<string, object> { ["path"] = fullPath });
 		};

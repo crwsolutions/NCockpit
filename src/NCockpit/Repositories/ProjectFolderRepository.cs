@@ -62,14 +62,18 @@ public class ProjectFolderRepository : IProjectFolderRepository
                     IsPrimary = excluded.IsPrimary;
                 SELECT last_insert_rowid();
                 """;
-            folder.Id = (int)(long)await connection.ExecuteScalarAsync(insertSql, new
-            {
-                folder.Path,
-                IsPrimary = folder.IsPrimary ? 1 : 0,
-                folder.ProjectCount,
-                folder.LastScanUnix,
-                CreatedAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
-            });
+            var result = await connection.ExecuteScalarAsync(
+                insertSql,
+                new
+                {
+                    folder.Path,
+                    IsPrimary = folder.IsPrimary ? 1 : 0,
+                    folder.ProjectCount,
+                    folder.LastScanUnix,
+                    CreatedAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                })
+                ?? throw new InvalidOperationException("Inserting a project folder did not return a row id.");
+            folder.Id = (int)(long)result;
         }
         else
         {

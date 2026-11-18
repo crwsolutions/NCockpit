@@ -122,13 +122,9 @@ public class ReadmeLinkParserService : IReadmeLinkParserService
                 return new ReadmeLinks();
             }
 
-            if (cache)
+            if (cache && Cache.TryGetValue(readmePath, out var cached))
             {
-                var cached = Cache.GetOrAdd(readmePath, _ => null);
-                if (cached is not null)
-                {
-                    return cached;
-                }
+                return cached;
             }
 
             var content = await File.ReadAllTextAsync(readmePath);
