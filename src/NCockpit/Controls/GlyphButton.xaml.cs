@@ -4,6 +4,11 @@ using Microsoft.Maui.Controls;
 
 namespace NCockpit.Controls;
 
+/// <summary>
+/// Compact icon button used for inline navigation actions. The icon is either a
+/// FontAwesome glyph (<see cref="Glyph"/>) or an image (<see cref="ImageSource"/>),
+/// whichever is set; the glyph wins when both are present.
+/// </summary>
 public partial class GlyphButton : ContentView
 {
     private static readonly Color HoverColor = Color.Parse("#f5f5f5");
@@ -35,8 +40,19 @@ public partial class GlyphButton : ContentView
         set => SetValue(GlyphColorProperty, value);
     }
 
+    public static readonly BindableProperty ImageSourceProperty = BindableProperty.Create(
+        nameof(ImageSource), typeof(ImageSource), typeof(GlyphButton), null,
+        propertyChanged: OnImageSourceChanged);
+
+    public ImageSource ImageSource
+    {
+        get => (ImageSource)GetValue(ImageSourceProperty);
+        set => SetValue(ImageSourceProperty, value);
+    }
+
     public static readonly BindableProperty IconSizeProperty = BindableProperty.Create(
-        nameof(IconSize), typeof(double), typeof(GlyphButton), 14.0);
+        nameof(IconSize), typeof(double), typeof(GlyphButton), 14.0,
+        propertyChanged: OnIconSizeChanged);
 
     public double IconSize
     {
@@ -91,6 +107,18 @@ public partial class GlyphButton : ContentView
         control.ApplyCanExecuteState();
     }
 
+    private static void OnImageSourceChanged(BindableObject sender, object oldValue, object newValue)
+    {
+        var control = (GlyphButton)sender;
+        control.UpdateIconVisibility();
+    }
+
+    private static void OnIconSizeChanged(BindableObject sender, object oldValue, object newValue)
+    {
+        var control = (GlyphButton)sender;
+        control.ApplyIconSize();
+    }
+
     private static void OnCommandChanged(BindableObject sender, object oldValue, object newValue)
     {
         var control = (GlyphButton)sender;
@@ -109,7 +137,7 @@ public partial class GlyphButton : ContentView
 
     /// <summary>
     /// Reads CanExecute from the bound command (if it implements
-    /// <c>ICommand.CanExecute</c>) and updates the glyph color accordingly.
+    /// <c>ICommand.CanExecute</c>) and updates the icon state accordingly.
     /// </summary>
     private void UpdateCanExecuteFromCommand()
     {
@@ -118,6 +146,37 @@ public partial class GlyphButton : ContentView
             CanExecute = Command.CanExecute(CommandParameter);
         }
         ApplyCanExecuteState();
+    }
+
+    /// <summary>
+    /// Chooses between the glyph and the image icon, like <see cref="QuickAction"/>.
+    /// </summary>
+    private void UpdateIconVisibility()
+    {
+        if (!string.IsNullOrEmpty(Glyph))
+        {
+            GlyphLabel.Text = Glyph;
+            GlyphLabel.IsVisible = true;
+            ImageIcon.IsVisible = false;
+        }
+        else if (ImageSource is not null)
+        {
+            ImageIcon.Source = ImageSource;
+            ImageIcon.IsVisible = true;
+            GlyphLabel.IsVisible = false;
+        }
+        else
+        {
+            GlyphLabel.IsVisible = false;
+            ImageIcon.IsVisible = false;
+        }
+    }
+
+    private void ApplyIconSize()
+    {
+        GlyphLabel.FontSize = IconSize;
+        ImageIcon.WidthRequest = IconSize;
+        ImageIcon.HeightRequest = IconSize;
     }
 
     /// <summary>
@@ -137,10 +196,10 @@ public partial class GlyphButton : ContentView
     protected override void OnHandlerChanged()
     {
         base.OnHandlerChanged();
-        GlyphLabel.Text = Glyph;
-        GlyphLabel.TextColor = GlyphColor;
-        GlyphLabel.FontSize = IconSize;
+        UpdateIconVisibility();
+        ApplyIconSize();
         Border.Padding = new Thickness(ButtonPadding);
+        GlyphLabel.TextColor = GlyphColor;
         UpdateCanExecuteFromCommand();
 
         // Subscribe to PropertyChanged so that CanExecute changes raised by

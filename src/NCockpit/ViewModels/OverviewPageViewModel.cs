@@ -294,25 +294,27 @@ public partial class OverviewPageViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Open the selected project in its IDE: the primary solution in Visual
-    /// Studio for solution type projects, the repo folder in VS Code for
-    /// folder type projects.
+    /// Open a project in its IDE: the primary solution in Visual Studio for
+    /// solution type projects, the repo folder in VS Code for folder type
+    /// projects. Used by both the quick actions (no parameter, so the selected
+    /// project) and the per-row shortcuts in the project list.
     /// </summary>
     [RelayCommand]
-    public async Task OpenInIDE()
+    public async Task OpenInIDE(ProjectListItem? item)
     {
-        if (SelectedProject is null)
+        item ??= SelectedProject;
+        if (item is null)
         {
             return;
         }
 
-        if (SelectedProject.IsFolderType)
+        if (item.IsFolderType)
         {
-            await OpenInVsCode(SelectedProject);
+            await OpenInVsCode(item);
         }
         else
         {
-            await OpenSolution(SelectedProject);
+            await OpenSolution(item);
         }
     }
 

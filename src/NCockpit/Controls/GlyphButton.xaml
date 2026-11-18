@@ -15,11 +15,17 @@
                                   CommandParameter="{Binding CommandParameter, Source={x:Reference This}}" />
             <PointerGestureRecognizer PointerEntered="OnPointerEntered" PointerExited="OnPointerExited" />
         </Border.GestureRecognizers>
-        <Label x:Name="GlyphLabel"
-               FontFamily="FontAwesomeSolid"
-               FontSize="14"
-               TextColor="#3b82f6"
-               HorizontalOptions="Center"
-               VerticalOptions="Center" />
+        <Grid>
+            <Label x:Name="GlyphLabel"
+                   FontFamily="FontAwesomeSolid"
+                   FontSize="14"
+                   TextColor="#3b82f6"
+                   HorizontalOptions="Center"
+                   VerticalOptions="Center" />
+            <Image x:Name="ImageIcon"
+                   HorizontalOptions="Center"
+                   VerticalOptions="Center"
+                   IsVisible="False" />
+        </Grid>
     </Border>
 </ContentView>

@@ -132,7 +132,7 @@
                                                     Command="{Binding Source={x:Reference Page}, Path=BindingContext.SelectProjectCommand, Mode=OneTime}"
                                                     CommandParameter="{Binding .}" />
                                             </Border.GestureRecognizers>
-                                            <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto" ColumnSpacing="12">
+                                            <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto,Auto" ColumnSpacing="12">
                                                 <!-- Favorite star -->
                                                 <Button Grid.Column="0"
                                                         Text="{Binding IsFavorite, Converter={StaticResource BoolToStarGlyphConverter}}"
@@ -194,8 +194,28 @@
                                                            HorizontalOptions="End" />
                                                 </VerticalStackLayout>
 
-                                                <!-- Chevron -->
+                                                <!-- Solution type: open the primary solution in Visual Studio -->
                                                 <cv:GlyphButton Grid.Column="4"
+                                                                ImageSource="visual_studio_icon.png"
+                                                                IconSize="20"
+                                                                ButtonPadding="8"
+                                                                VerticalOptions="Center"
+                                                                IsVisible="{Binding IsFolderType, Converter={StaticResource InvertedBoolConverter}}"
+                                                                Command="{Binding Source={x:Reference Page}, Path=BindingContext.OpenInIDECommand, Mode=OneTime}"
+                                                                CommandParameter="{Binding .}" />
+
+                                                <!-- Folder type: open the repo folder in VS Code -->
+                                                <cv:GlyphButton Grid.Column="4"
+                                                                ImageSource="visual_studio_code_icon.png"
+                                                                IconSize="20"
+                                                                ButtonPadding="8"
+                                                                VerticalOptions="Center"
+                                                                IsVisible="{Binding IsFolderType}"
+                                                                Command="{Binding Source={x:Reference Page}, Path=BindingContext.OpenInIDECommand, Mode=OneTime}"
+                                                                CommandParameter="{Binding .}" />
+
+                                                <!-- Chevron -->
+                                                <cv:GlyphButton Grid.Column="5"
                                                                 Glyph="&#xf105;"
                                                                 GlyphColor="#999999"
                                                                 IconSize="18"
