@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<!--<TargetFrameworks Condition="!$([MSBuild]::IsOSPlatform('linux'))">$(TargetFrameworks);net11.0-maccatalyst</TargetFrameworks>-->
@@ -28,6 +28,10 @@
 
 		<!-- Display name -->
 		<ApplicationTitle>NCockpit</ApplicationTitle>
+
+		<!-- Assembly metadata, surfaced on the About page -->
+		<AssemblyTitle>Projects Cockpit</AssemblyTitle>
+		<AssemblyVersion>1.0.0</AssemblyVersion>
 
 		<!-- App Identifier -->
 		<ApplicationId>nl.crwsolutions.ncockpit</ApplicationId>
