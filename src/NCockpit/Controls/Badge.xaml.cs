@@ -4,7 +4,7 @@ namespace NCockpit.Controls;
 /// A compact pill: a rounded background with a short label, used to mark a
 /// single attribute of a row (a project's type or its target frameworks).
 /// </summary>
-public partial class Badge : ContentView
+public partial class Badge : Border
 {
     public Badge()
     {
@@ -21,30 +21,6 @@ public partial class Badge : ContentView
     {
         get => (string)GetValue(TextProperty);
         set => SetValue(TextProperty, value);
-    }
-
-    /// <summary>
-    /// The pill's outline.
-    /// </summary>
-    public static readonly BindableProperty BadgeBackgroundProperty = BindableProperty.Create(
-        nameof(BadgeBackground), typeof(Color), typeof(Badge), Color.Parse("#e2e8f0"));
-
-    public Color BadgeBackground
-    {
-        get => (Color)GetValue(BadgeBackgroundProperty);
-        set => SetValue(BadgeBackgroundProperty, value);
-    }
-
-    /// <summary>
-    /// The pill's outline.
-    /// </summary>
-    public static readonly BindableProperty StrokeColorProperty = BindableProperty.Create(
-        nameof(StrokeColor), typeof(Color), typeof(Badge), Color.Parse("#e2e8f0"));
-
-    public Color StrokeColor
-    {
-        get => (Color)GetValue(StrokeColorProperty);
-        set => SetValue(StrokeColorProperty, value);
     }
 
     /// <summary>

@@ -171,12 +171,12 @@
                                                         LineBreakMode="TailTruncation" />
                                                 <HorizontalStackLayout Spacing="6">
                                                     <cv:Badge Text="{Binding TypeInfo}" IsVisible="{Binding TypeInfo, Converter={StaticResource StringToVisibilityConverter}}"
-                                                              BadgeBackground="#eff6ff"
-                                                              StrokeColor="#bfdbfe"
+                                                              Background="#eff6ff"
+                                                              Stroke="#bfdbfe"
                                                               TextColor="#1d4ed8" />
                                                     <cv:Badge Text="{Binding FrameworksInfo}" IsVisible="{Binding FrameworksInfo, Converter={StaticResource StringToVisibilityConverter}}"
-                                                              BadgeBackground="#f0fdf4"
-                                                              StrokeColor="#bbf7d0"
+                                                              Background="#f0fdf4"
+                                                              Stroke="#bbf7d0"
                                                               TextColor="#15803d" />
                                                 </HorizontalStackLayout>
                                             </VerticalStackLayout>
