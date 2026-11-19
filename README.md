@@ -2,6 +2,13 @@
 
 A minimalist navigation hub for .NET developers. It centralizes project links, IDE shortcuts, and external URLs into a single structured dashboard. Your daily starting point.
 
+![screenshot overview](art/screenshots/screenshot_overview.png)
+
+Project details:
+
+![screenshot details](art/screenshots/screenshot_details.png)
+
+
 ## Stack
 
 A .NET 11 .NET MAUI desktop application for Windows (`net11.0-windows10.0.19041.0`), with SQLite and Dapper for persistence, CommunityToolkit.Maui for popups, and NTokenizers for the Markdown file preview.
