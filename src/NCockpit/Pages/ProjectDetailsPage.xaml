@@ -361,7 +361,7 @@
                                                 <!-- Child projects (shown when the solution is expanded). -->
                                                 <VerticalStackLayout BindableLayout.ItemsSource="{Binding Projects}"
                                                                      IsVisible="{Binding IsExpanded}"
-                                                                     Margin="100,0,8,0">
+                                                                     Margin="70,0,8,0">
                                                     <BindableLayout.ItemTemplate>
                                                         <DataTemplate x:DataType="models:SolutionProjectRow">
                                                             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8" HeightRequest="28">
