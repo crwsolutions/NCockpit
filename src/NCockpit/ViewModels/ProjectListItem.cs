@@ -1,6 +1,7 @@
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using NCockpit.Models;
+using NCockpit.Services;
 
 namespace NCockpit.ViewModels;
 
@@ -29,6 +30,7 @@ public partial class ProjectListItem : ObservableObject
             ? "Open in VS Code"
             : "Open in Visual Studio";
         _favoriteProjectFile = ResolveFavoriteProject(project);
+        Badges = BuildBadges(_favoriteProjectFile);
     }
 
     /// <summary>
@@ -84,19 +86,54 @@ public partial class ProjectListItem : ObservableObject
     private SolutionProject? _favoriteProjectFile;
 
     /// <summary>
-    /// The type of the favorite project file (".NET MAUI app", "ASP.NET Core
-    /// web app", ...), for the type badge of the project row. Null for folder
-    /// type projects or when the metadata could not be read.
+    /// The badges of the favorite project file (its type and its target
+    /// frameworks), each already coloured for its label, for the project row.
+    /// Empty for folder type projects or when the metadata could not be read,
+    /// so the row renders nothing in the badges slot instead of reserving space.
     /// </summary>
-    public string? TypeInfo => _favoriteProjectFile?.Type;
+    [ObservableProperty]
+    public partial List<ProjectBadge> Badges { get; set; } = [];
+
+    private static List<ProjectBadge> BuildBadges(SolutionProject? favorite)
+    {
+        var badges = new List<ProjectBadge>();
+
+        if (favorite?.Type is { Length: > 0 } type)
+        {
+            var colors = BadgeColorsFor(type);
+            badges.Add(new ProjectBadge(type, colors.Background, colors.Stroke, colors.TextColor));
+        }
+
+        if (favorite?.TargetFrameworks is { Length: > 0 } frameworks)
+        {
+            badges.Add(new ProjectBadge(frameworks, Color.FromArgb("#f0fdf4"), Color.FromArgb("#bbf7d0"), Color.FromArgb("#15803d")));
+        }
+
+        return badges;
+    }
 
     /// <summary>
-    /// The target frameworks of the favorite project file (e.g.
-    /// "net11.0-windows10.0.19041.0"), for the target-framework badge of the
-    /// project row. Null for folder type projects or when the metadata could
-    /// not be read.
+    /// The badge colours for a type label as <see cref="ProjectFileMetadata"/>
+    /// writes it. The MAUI labels read purple, the web labels read blue and
+    /// the console label reads gray; what is left stays green or gets a
+    /// dedicated hue, so the type is recognisable at a glance.
     /// </summary>
-    public string? FrameworksInfo => _favoriteProjectFile?.TargetFrameworks;
+    private static BadgeColors BadgeColorsFor(string typeLabel)
+    {
+        var (background, stroke, textColor) = typeLabel switch
+        {
+            ".NET MAUI app" or ".NET MAUI class library" => ("#f3e8ff", "#d8b4fe", "#7e22ce"),
+            "Console app" => ("#f1f5f9", "#e2e8f0", "#475569"),
+            "ASP.NET Core web app" or "Blazor WebAssembly app" => ("#eff6ff", "#bfdbfe", "#1d4ed8"),
+            "Worker service" => ("#fff7ed", "#fed7aa", "#c2410c"),
+            "Test project" => ("#fef2f2", "#fecaca", "#b91c1c"),
+            _ => ("#f0fdf4", "#bbf7d0", "#15803d")
+        };
+
+        return new BadgeColors(Color.FromArgb(background), Color.FromArgb(stroke), Color.FromArgb(textColor));
+    }
+
+    private record struct BadgeColors(Color Background, Color Stroke, Color TextColor);
 
     /// <summary>
     /// The favorite project of a solution type project: the user's choice when

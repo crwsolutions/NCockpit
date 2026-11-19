@@ -4,6 +4,7 @@
              xmlns:local="clr-namespace:NCockpit"
              xmlns:cv="clr-namespace:NCockpit.Controls"
              xmlns:viewmodels="clr-namespace:NCockpit.ViewModels"
+             xmlns:models="clr-namespace:NCockpit.Models"
              x:Class="NCockpit.Pages.OverviewPage"
              x:DataType="viewmodels:OverviewPageViewModel"
              Title="Overview"
@@ -169,15 +170,17 @@
                                                         FontSize="12"
                                                         TextColor="#666666"
                                                         LineBreakMode="TailTruncation" />
-                                                <HorizontalStackLayout Spacing="6">
-                                                    <cv:Badge Text="{Binding TypeInfo}" IsVisible="{Binding TypeInfo, Converter={StaticResource StringToVisibilityConverter}}"
-                                                              Background="#eff6ff"
-                                                              Stroke="#bfdbfe"
-                                                              TextColor="#1d4ed8" />
-                                                    <cv:Badge Text="{Binding FrameworksInfo}" IsVisible="{Binding FrameworksInfo, Converter={StaticResource StringToVisibilityConverter}}"
-                                                              Background="#f0fdf4"
-                                                              Stroke="#bbf7d0"
-                                                              TextColor="#15803d" />
+                                                <!-- An empty collection renders nothing, so a project without
+                                                     badges does not reserve the space of a badges row. -->
+                                                <HorizontalStackLayout Spacing="6" BindableLayout.ItemsSource="{Binding Badges}">
+                                                    <BindableLayout.ItemTemplate>
+                                                        <DataTemplate x:DataType="models:ProjectBadge">
+                                                            <cv:Badge Text="{Binding Text}"
+                                                                      Background="{Binding Background}"
+                                                                      Stroke="{Binding Stroke}"
+                                                                      TextColor="{Binding TextColor}" />
+                                                        </DataTemplate>
+                                                    </BindableLayout.ItemTemplate>
                                                 </HorizontalStackLayout>
                                             </VerticalStackLayout>
 
