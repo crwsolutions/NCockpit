@@ -274,29 +274,30 @@
                                            FontSize="12"
                                            TextColor="#6b7280" />
                             <cv:FolderAction Text="{Binding CurrentProject.FolderPath}"
-                                                     Path="{Binding CurrentProject.FolderPath}" />
+                                             Path="{Binding CurrentProject.FolderPath}" />
                         </VerticalStackLayout>
 
                         <!-- Secondary locations -->
                         <VerticalStackLayout Spacing="8">
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                                <Label Grid.Column="0"
-                                               Text="Secondary locations"
-                                               FontSize="12"
-                                               TextColor="#6b7280" />
+                                <Label VerticalOptions="Center" 
+                                       Text="Secondary locations"
+                                       FontSize="12"
+                                       TextColor="#6b7280" />
                                 <Button Grid.Column="1"
-                                                Text="+ Link"
-                                                Padding="8,4"
-                                                CornerRadius="4"
-                                                BackgroundColor="#3b82f6"
-                                                TextColor="White"
-                                                FontSize="11"
-                                                Command="{Binding LinkSecondaryFolderCommand}" />
+                                        Text="+"
+                                        FontFamily="FontAwesomeSolid"
+                                        Padding="6,4"
+                                        CornerRadius="4"
+                                        BackgroundColor="#3b82f6"
+                                        TextColor="White"
+                                        FontSize="18"
+                                        Command="{Binding LinkSecondaryFolderCommand}" />
                             </Grid>
 
                             <VerticalStackLayout BindableLayout.ItemsSource="{Binding LinkedFolders}"
-                                                         Spacing="8"
-                                                         IsVisible="{Binding HasLinkedFolders}">
+                                                 Spacing="8"
+                                                 IsVisible="{Binding HasLinkedFolders}">
                                 <BindableLayout.ItemTemplate>
                                     <DataTemplate x:DataType="models:SupportingFolder">
                                         <Border Padding="10"
@@ -304,37 +305,19 @@
                                                         Stroke="#e5e7eb"
                                                         StrokeThickness="1"
                                                         StrokeShape="RoundRectangle 6">
-                                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
-                                                <VerticalStackLayout Grid.Column="0" Spacing="2">
-                                                    <Label Text="{Binding FolderName}"
-                                                                   FontSize="12"
-                                                                   FontAttributes="Bold"
-                                                                   TextColor="#1a2744" />
-                                                    <Label Text="{Binding Path}"
-                                                                   FontSize="11"
-                                                                   TextColor="#6b7280"
-                                                                   LineBreakMode="TailTruncation" />
-                                                </VerticalStackLayout>
+                                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                                <cv:FolderAction Text="{Binding FolderName}" Path="{Binding Path}" />
 
                                                 <Button Grid.Column="1"
-                                                                Text="Open"
-                                                                Padding="6,4"
-                                                                CornerRadius="4"
-                                                                BackgroundColor="#6b7280"
-                                                                TextColor="White"
-                                                                FontSize="11"
-                                                                Command="{Binding Source={x:Reference ContentGrid}, Path=BindingContext.OpenLocationCommand, Mode=OneTime}"
-                                                                CommandParameter="{Binding Path}" />
-
-                                                <Button Grid.Column="2"
-                                                                Text="Remove"
-                                                                Padding="6,4"
-                                                                CornerRadius="4"
-                                                                BackgroundColor="#d32f2f"
-                                                                TextColor="White"
-                                                                FontSize="11"
-                                                                Command="{Binding Source={x:Reference ContentGrid}, Path=BindingContext.UnlinkSecondaryFolderCommand, Mode=OneTime}"
-                                                                CommandParameter="{Binding .}" />
+                                                        Text="&#xf2ed;"
+                                                        Padding="6,4"
+                                                        CornerRadius="4"
+                                                        FontFamily="FontAwesomeSolid"
+                                                        BackgroundColor="#d32f2f"
+                                                        TextColor="White"
+                                                        FontSize="18"
+                                                        Command="{Binding Source={x:Reference ContentGrid}, Path=BindingContext.UnlinkSecondaryFolderCommand, Mode=OneTime}"
+                                                        CommandParameter="{Binding .}" />
                                             </Grid>
                                         </Border>
                                     </DataTemplate>
