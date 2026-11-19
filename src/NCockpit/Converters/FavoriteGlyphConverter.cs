@@ -22,14 +22,21 @@ public class BoolToStarGlyphConverter : IValueConverter
 }
 
 /// <summary>
-/// Colors a favorite star: amber when favorited, a faint gray otherwise so the
-/// state change is clearly visible on the light page background.
+/// Colors a favorite star: amber when favorited, a muted gray otherwise so the
+/// state change is clearly visible on the light page background. Both colors come
+/// from the app palette (IconAmber, TextMuted) so the star stays in sync with the
+/// SummaryCard favorites icon.
 /// </summary>
 public class BoolToFavoriteColorConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        return value is true ? Color.FromArgb("#f5a623") : Color.FromArgb("#d9d9d9");
+        return value is true ? GetResourceColor("IconAmber") : GetResourceColor("TextMuted");
+    }
+
+    private static Color GetResourceColor(string key)
+    {
+        return App.Current?.Resources?[key] is Color color ? color : Colors.Gray;
     }
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

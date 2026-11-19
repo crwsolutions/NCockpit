@@ -1,25 +1,22 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:NCockpit.ViewModels"
              x:Class="NCockpit.Pages.AboutPage"
              x:DataType="vm:AboutPageViewModel"
              Title="About"
-             BackgroundColor="#f5f5f5">
+             BackgroundColor="{StaticResource Surface}">
 
     <Grid RowDefinitions="Auto,*" Padding="0">
         <!-- Header -->
         <Grid Grid.Row="0" 
-              BackgroundColor="#1a2744" 
+              BackgroundColor="{StaticResource Navy}" 
               Padding="24,16">
             <VerticalStackLayout Spacing="8">
-                <Label Text="About Projects Cockpit" 
-                       FontSize="24" 
-                       FontAttributes="Bold" 
-                       TextColor="White" />
-                <Label Text="Your personal project launcher and cockpit" 
-                       FontSize="14" 
-                       TextColor="#b0b8c8" />
+                <Label Text="About Projects Cockpit"
+                       Style="{StaticResource PageHeader}" />
+                <Label Text="Your personal project launcher and cockpit"
+                       Style="{StaticResource HeaderSubtitle}" />
             </VerticalStackLayout>
         </Grid>
 
@@ -30,27 +27,25 @@
                 <!-- App Info -->
                 <VerticalStackLayout Spacing="12">
                     <Label Text="Application" 
-                           FontSize="16" 
-                           FontAttributes="Bold" 
-                           TextColor="#1a2744" />
+                           Style="{StaticResource SectionTitle}" />
                     
                     <Border Padding="16" 
                             BackgroundColor="White"
-                            Stroke="#e0e0e0"
+                            Stroke="{StaticResource Border}"
                             StrokeThickness="1"
                             StrokeShape="RoundRectangle 8">
                         <VerticalStackLayout Spacing="12">
                             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                                <Label Grid.Column="0" Text="Name:" FontSize="12" TextColor="#666666" WidthRequest="100" />
-                                <Label Grid.Column="1" Text="{Binding Name}" FontSize="12" TextColor="#1a2744" FontAttributes="Bold" />
+                                <Label Grid.Column="0" Text="Name:" Style="{StaticResource FieldLabel}" WidthRequest="100" />
+                                <Label Grid.Column="1" Text="{Binding Name}" Style="{StaticResource DetailValueBold}" />
                             </Grid>
                             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                                <Label Grid.Column="0" Text="Version:" FontSize="12" TextColor="#666666" WidthRequest="100" />
-                                <Label Grid.Column="1" Text="{Binding Version}" FontSize="12" TextColor="#1a2744" />
+                                <Label Grid.Column="0" Text="Version:" Style="{StaticResource FieldLabel}" WidthRequest="100" />
+                                <Label Grid.Column="1" Text="{Binding Version}" Style="{StaticResource DetailValue}" />
                             </Grid>
                             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                                <Label Grid.Column="0" Text="Framework:" FontSize="12" TextColor="#666666" WidthRequest="100" />
-                                <Label Grid.Column="1" Text="{Binding Framework}" FontSize="12" TextColor="#1a2744" />
+                                <Label Grid.Column="0" Text="Framework:" Style="{StaticResource FieldLabel}" WidthRequest="100" />
+                                <Label Grid.Column="1" Text="{Binding Framework}" Style="{StaticResource DetailValue}" />
                             </Grid>
                         </VerticalStackLayout>
                     </Border>
@@ -59,18 +54,15 @@
                 <!-- Description -->
                 <VerticalStackLayout Spacing="12">
                     <Label Text="Description" 
-                           FontSize="16" 
-                           FontAttributes="Bold" 
-                           TextColor="#1a2744" />
+                           Style="{StaticResource SectionTitle}" />
                     
                     <Border Padding="16" 
                             BackgroundColor="White"
-                            Stroke="#e0e0e0"
+                            Stroke="{StaticResource Border}"
                             StrokeThickness="1"
                             StrokeShape="RoundRectangle 8">
                         <Label Text="A personal cockpit for quickly finding projects, seeing their important information at a glance, and navigating to associated files, folders, tools and online services." 
-                               FontSize="12" 
-                               TextColor="#666666" 
+                               Style="{StaticResource MetaLabel}"
                                LineBreakMode="WordWrap" />
                     </Border>
                 </VerticalStackLayout>

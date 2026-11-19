@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:NCockpit"
              xmlns:cv="clr-namespace:NCockpit.Controls"
              xmlns:viewmodels="clr-namespace:NCockpit.ViewModels"
@@ -8,12 +8,12 @@
              x:Class="NCockpit.Pages.OverviewPage"
              x:DataType="viewmodels:OverviewPageViewModel"
              Title="Overview"
-             BackgroundColor="#f0f4f8">
+             BackgroundColor="{StaticResource SurfaceAlt}">
 
     <Grid x:Name="Page" RowDefinitions="Auto,Auto,*" Padding="0">
         <!-- Header -->
         <Grid Grid.Row="0"
-              BackgroundColor="#f0f4f8"
+              BackgroundColor="{StaticResource SurfaceAlt}"
               Padding="24,16"
               ColumnDefinitions="*,Auto,Auto"
               ColumnSpacing="16">
@@ -21,10 +21,9 @@
                 <Label Text="{Binding Greeting}"
                        FontSize="24"
                        FontAttributes="Bold"
-                       TextColor="#1a2744" />
+                       TextColor="{StaticResource Navy}" />
                 <Label Text="Here's an overview of your projects."
-                       FontSize="14"
-                       TextColor="#666666" />
+                       Style="{StaticResource MetaLabel}" />
             </VerticalStackLayout>
 
             <!-- Search box -->
@@ -33,18 +32,13 @@
                    Text="{Binding SearchQuery, Mode=TwoWay}"
                    Placeholder="Search projects..."
                    FontSize="13"
-                   TextColor="#1a2744"
-                   PlaceholderColor="#999999"
                    BackgroundColor="White"
                    VerticalOptions="Center" />
 
             <!-- Rescan button -->
             <Button Grid.Column="2"
                     Text="Rescan all"
-                    FontSize="13"
-                    FontAttributes="Bold"
-                    TextColor="White"
-                    BackgroundColor="#3b82f6"
+                    Style="{StaticResource PrimaryButton}"
                     VerticalOptions="Center"
                     Command="{Binding RescanAllCommand, Mode=OneTime}" />
         </Grid>
@@ -57,24 +51,24 @@
             <!-- Total Projects -->
             <cv:SummaryCard Grid.Column="0"
                             IconGlyph="&#xf114;"
-                            IconColor="#3b82f6"
-                            IconBackgroundColor="#e3f2fd"
+                            IconColor="{StaticResource IconBlue}"
+                            IconBackgroundColor="{StaticResource IconBlueBg}"
                             CountValue="{Binding TotalProjects}"
                             CountLabel="Total projects" />
 
             <!-- Recently Used -->
             <cv:SummaryCard Grid.Column="1"
                             IconGlyph="&#xf017;"
-                            IconColor="#3b82f6"
-                            IconBackgroundColor="#e3f2fd"
+                            IconColor="{StaticResource IconBlue}"
+                            IconBackgroundColor="{StaticResource IconBlueBg}"
                             CountValue="{Binding RecentlyUsedCount}"
                             CountLabel="Recently used" />
 
             <!-- Favorites -->
             <cv:SummaryCard Grid.Column="2"
                             IconGlyph="&#xf005;"
-                            IconColor="#f5a623"
-                            IconBackgroundColor="#fff3e0"
+                            IconColor="{StaticResource IconAmber}"
+                            IconBackgroundColor="{StaticResource IconAmberBg}"
                             CountValue="{Binding FavoriteCount}"
                             CountLabel="Favorites" />
         </Grid>
@@ -87,32 +81,25 @@
 
             <!-- Error Message -->
             <Label Text="{Binding ErrorMessage}"
-                        FontSize="13"
-                        TextColor="#d32f2f"
+                        Style="{StaticResource ErrorLabel}"
                         IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}" />
 
             <!-- Loading Indicator -->
             <ActivityIndicator IsRunning="{Binding IsLoading}"
-                                    Color="#0d7377"
                                     IsVisible="{Binding IsLoading}" />
 
             <!-- Projects Section -->
             <Border BackgroundColor="White" StrokeShape="RoundRectangle 8" StrokeThickness="0" Padding="16,0,16,16"
-                        Stroke="#e0e0e0">
+                        Stroke="{StaticResource Border}">
                 <ScrollView>
                     <VerticalStackLayout>
                         <Grid Padding="16,16,16,0" ColumnDefinitions="*,Auto" ColumnSpacing="12">
                             <Label Grid.Column="0"
                                     Text="Projects"
-                                    FontSize="16"
-                                    FontAttributes="Bold"
-                                    TextColor="#1a2744" />
+                                    Style="{StaticResource SectionTitle}" />
                             <Button Grid.Column="1"
                                     Text="&#xf005; Favorites"
-                                    FontFamily="FontAwesomeSolid"
-                                    FontSize="12"
-                                    TextColor="#3b82f6"
-                                    Background="Transparent"
+                                    Style="{StaticResource TextButton}"
                                     VerticalOptions="Center"
                                     Command="{Binding ToggleFavoritesFilterCommand, Mode=OneTime}" />
                         </Grid>
@@ -136,11 +123,10 @@
                                             <!-- Favorite star -->
                                             <Button Grid.Column="0"
                                                     Text="{Binding IsFavorite, Converter={StaticResource BoolToStarGlyphConverter}}"
-                                                    FontFamily="FontAwesomeSolid"
+                                                    Style="{StaticResource IconButton}"
                                                     FontSize="14"
-                                                    TextColor="{Binding IsFavorite, Converter={StaticResource BoolToFavoriteColorConverter}}"
-                                                    Background="Transparent"
                                                     Padding="4"
+                                                    TextColor="{Binding IsFavorite, Converter={StaticResource BoolToFavoriteColorConverter}}"
                                                     VerticalOptions="Center"
                                                     Command="{Binding Source={x:Reference Page}, Path=BindingContext.ToggleFavoriteCommand, Mode=OneTime}"
                                                     CommandParameter="{Binding .}" />
@@ -165,10 +151,9 @@
                                                 <Label Text="{Binding Name}"
                                                         FontSize="15"
                                                         FontAttributes="Bold"
-                                                        TextColor="#1a2744" />
+                                                        TextColor="{StaticResource Navy}" />
                                                 <Label Text="{Binding FolderPath}"
-                                                        FontSize="12"
-                                                        TextColor="#666666"
+                                                        Style="{StaticResource MetaLabel}"
                                                         LineBreakMode="TailTruncation" />
                                                 <!-- An empty collection renders nothing, so a project without
                                                      badges does not reserve the space of a badges row. -->
@@ -193,16 +178,15 @@
                                                     <Ellipse Grid.Column="0"
                                                                 WidthRequest="8"
                                                                 HeightRequest="8"
-                                                                Fill="#10b981"
+                                                                Fill="{StaticResource SuccessGreen}"
                                                                 VerticalOptions="Center" />
                                                     <Label Grid.Column="1"
                                                             Text="{Binding StatusText}"
-                                                            FontSize="12"
-                                                            TextColor="#666666" />
+                                                            Style="{StaticResource MetaLabel}" />
                                                 </Grid>
                                                 <Label Text="{Binding LastOpenedDisplay}"
+                                                        Style="{StaticResource HintLabel}"
                                                         FontSize="11"
-                                                        TextColor="#999999"
                                                         HorizontalOptions="End" />
                                             </VerticalStackLayout>
 
@@ -229,7 +213,7 @@
                                             <!-- Chevron -->
                                             <cv:GlyphButton Grid.Column="5"
                                                             Glyph="&#xf105;"
-                                                            GlyphColor="#999999"
+                                                            GlyphColor="{StaticResource TextMuted}"
                                                             IconSize="18"
                                                             ButtonPadding="8"
                                                             VerticalOptions="Center"
@@ -246,12 +230,11 @@
                                                 Spacing="8"
                                                 IsVisible="{Binding Projects.Count, Converter={StaticResource IntToEmptyVisibilityConverter}}">
                             <Label Text="No projects found yet."
+                                    Style="{StaticResource HintLabel}"
                                     FontSize="14"
-                                    TextColor="#999999"
                                     HorizontalOptions="Center" />
                             <Label Text="Add a folder and scan to discover your projects."
-                                    FontSize="12"
-                                    TextColor="#999999"
+                                    Style="{StaticResource HintLabel}"
                                     HorizontalOptions="Center" />
                         </VerticalStackLayout>
                     </VerticalStackLayout>
@@ -270,7 +253,7 @@
                             <!-- Project-dependent quick actions (only when a project is selected) -->
                             <VerticalStackLayout Spacing="8"
                                                  IsVisible="{Binding SelectedProject, Converter={StaticResource IsNotNullConverter}}">
-                                <cv:QuickAction Text="Open in file explorer" Glyph="&#xf07b;" GlyphColor="#FFD45D" Command="{Binding OpenInExplorerCommand}" />
+                                <cv:QuickAction Text="Open in file explorer" Glyph="&#xf07b;" GlyphColor="{StaticResource Warning}" Command="{Binding OpenInExplorerCommand}" />
                                 <!-- Solution type: open the primary solution in Visual Studio -->
                                 <cv:QuickAction Text="Open in Visual Studio" ImageSource="visual_studio_icon.png" Command="{Binding OpenInIDECommand}"
                                                 IsVisible="{Binding SelectedProject.IsFolderType, Converter={StaticResource InvertedBoolConverter}}" />
@@ -306,10 +289,10 @@
                                         <VerticalStackLayout Grid.Column="1" Spacing="1">
                                             <Label Text="{Binding Name}"
                                                        FontSize="13"
-                                                       TextColor="#1a2744" />
+                                                       TextColor="{StaticResource Navy}" />
                                             <Label Text="{Binding LastOpenedDisplay}"
-                                                       FontSize="11"
-                                                       TextColor="#999999" />
+                                                       Style="{StaticResource HintLabel}"
+                                                       FontSize="11" />
                                         </VerticalStackLayout>
                                     </Grid>
                                 </DataTemplate>

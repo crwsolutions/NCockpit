@@ -20,20 +20,20 @@
                    Grid.Column="0"
                    FontFamily="FontAwesomeSolid"
                    FontSize="18"
-                   TextColor="#3b82f6"
+                   TextColor="{StaticResource AccentBlue}"
                    VerticalOptions="Center" />
             <Label Grid.Column="1"
+                   Style="{StaticResource LinkLabel}"
                    Text="{Binding Text, Source={x:Reference This}}"
-                   FontSize="12"
                    FontAttributes="Bold"
-                   TextColor="#1a2744"
+                   TextColor="{StaticResource Navy}"
                    VerticalOptions="Center"
                    LineBreakMode="TailTruncation" />
             <Label Grid.Column="2"
                    Text="&#xf105;"
                    FontFamily="FontAwesomeSolid"
                    FontSize="12"
-                   TextColor="#9ca3af"
+                   TextColor="{StaticResource TextMuted}"
                    VerticalOptions="Center" />
         </Grid>
     </Border>

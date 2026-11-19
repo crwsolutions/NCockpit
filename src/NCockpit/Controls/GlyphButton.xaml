@@ -19,7 +19,7 @@
             <Label x:Name="GlyphLabel"
                    FontFamily="FontAwesomeSolid"
                    FontSize="14"
-                   TextColor="#3b82f6"
+                   TextColor="{StaticResource AccentBlue}"
                    HorizontalOptions="Center"
                    VerticalOptions="Center" />
             <Image x:Name="ImageIcon"

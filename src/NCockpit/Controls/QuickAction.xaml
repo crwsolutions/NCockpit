@@ -19,7 +19,7 @@
         <HorizontalStackLayout Spacing="10">
             <Label x:Name="GlyphLabel"
                    FontFamily="FontAwesomeSolid"
-                   TextColor="#3b82f6"
+                   TextColor="{StaticResource AccentBlue}"
                    VerticalOptions="Center"
                    IsVisible="False" />
             <Image x:Name="ImageIcon"
@@ -27,7 +27,7 @@
                    IsVisible="False" />
             <Label Text="{Binding Text, Source={x:Reference This}}"
                    FontSize="14"
-                   TextColor="#1a2744"
+                   TextColor="{StaticResource Navy}"
                    VerticalOptions="Center" />
         </HorizontalStackLayout>
     </Border>

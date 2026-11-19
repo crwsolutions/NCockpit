@@ -13,10 +13,8 @@
                     StrokeShape="RoundRectangle 8">
                 <Grid RowDefinitions="Auto,*" RowSpacing="12">
                     <Label Grid.Row="0"
-                           Text="{Binding Title, Source={RelativeSource TemplatedParent}}"
-                           FontSize="16"
-                           FontAttributes="Bold"
-                           TextColor="#1a2744" />
+                           Style="{StaticResource SectionTitle}"
+                           Text="{Binding Title, Source={RelativeSource TemplatedParent}}" />
                     <ContentPresenter Grid.Row="1" />
                 </Grid>
             </Border>

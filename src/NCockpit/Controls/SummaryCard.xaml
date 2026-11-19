@@ -28,10 +28,9 @@
                 <Label Text="{Binding CountValue, Source={x:Reference This}}"
                        FontSize="24"
                        FontAttributes="Bold"
-                       TextColor="#1a2744" />
+                       TextColor="{StaticResource Navy}" />
                 <Label Text="{Binding CountLabel, Source={x:Reference This}}"
-                       FontSize="12"
-                       TextColor="#666666" />
+                       Style="{StaticResource MetaLabel}" />
             </VerticalStackLayout>
         </Grid>
     </Border>
