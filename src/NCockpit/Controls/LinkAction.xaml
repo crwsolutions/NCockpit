@@ -22,9 +22,8 @@
                    HeightRequest="18"
                    VerticalOptions="Center" />
             <Label Grid.Column="1"
+                   Style="{StaticResource DetailValue}"
                    Text="{Binding Text, Source={x:Reference This}}"
-                   FontSize="12"
-                   TextColor="#1a2744"
                    VerticalOptions="Center"
                    LineBreakMode="TailTruncation" />
             <Label x:Name="Chevron"
@@ -32,7 +31,7 @@
                    Text="&#xf105;"
                    FontFamily="FontAwesomeSolid"
                    FontSize="12"
-                   TextColor="#9ca3af"
+                   TextColor="{StaticResource TextMuted}"
                    VerticalOptions="Center" />
         </Grid>
     </Border>
