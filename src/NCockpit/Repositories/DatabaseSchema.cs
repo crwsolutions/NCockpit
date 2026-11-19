@@ -16,7 +16,7 @@ internal static class DatabaseSchema
     /// <c>if (userVersion &lt; N)</c> step for a schema change; never rewrite an
     /// existing step.
     /// </summary>
-    private const int CurrentUserVersion = 9;
+    private const int CurrentUserVersion = 10;
 
     private const string ProjectFoldersDdl = """
         CREATE TABLE IF NOT EXISTS ProjectFolders (
@@ -43,6 +43,15 @@ internal static class DatabaseSchema
         CREATE TABLE IF NOT EXISTS AppSettings (
             Key TEXT PRIMARY KEY,
             Value TEXT
+        );
+        """;
+
+    private const string RelatedProjectsDdl = """
+        CREATE TABLE IF NOT EXISTS RelatedProjects (
+            ProjectId INTEGER NOT NULL REFERENCES Projects(Id) ON DELETE CASCADE,
+            RelatedProjectId INTEGER NOT NULL REFERENCES Projects(Id) ON DELETE CASCADE,
+            CreatedAt INTEGER NOT NULL,
+            PRIMARY KEY (ProjectId, RelatedProjectId)
         );
         """;
 
@@ -109,6 +118,7 @@ internal static class DatabaseSchema
         Execute(connection, AppSettingsDdl);
         Execute(connection, ProjectsDdl);
         Execute(connection, ProjectsIndexDdl);
+        Execute(connection, RelatedProjectsDdl);
 
         if (isNewDatabase)
         {
@@ -351,6 +361,15 @@ internal static class DatabaseSchema
             // Key/value table for small per-device preferences, created at the top
             // for fresh databases and recreated here for existing ones.
             Execute(connection, AppSettingsDdl);
+        }
+
+        if (userVersion < 10)
+        {
+            // Related projects: a manually configured relationship between two
+            // projects (the "Related projects" panel of the details page),
+            // created at the top for fresh databases and recreated here for
+            // existing ones.
+            Execute(connection, RelatedProjectsDdl);
         }
 
         Execute(connection, $"PRAGMA user_version = {CurrentUserVersion};");

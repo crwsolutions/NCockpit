@@ -3,6 +3,27 @@ using CommunityToolkit.Mvvm.ComponentModel;
 namespace NCockpit.Models;
 
 /// <summary>
+/// A row of the "Related projects" panel of the project details page: the
+/// related project itself plus a pre-computed first letter for its colored
+/// icon box (mirroring the overview list rows).
+/// </summary>
+public class RelatedProject
+{
+    /// <summary>
+    /// The related project.
+    /// </summary>
+    public required Project Project { get; init; }
+
+    /// <summary>
+    /// First letter of the project name, used for the colored icon box.
+    /// </summary>
+    public string Initial { get; init; } = "?";
+
+    public string Name => Project.Name;
+    public string FolderPath => Project.FolderPath;
+}
+
+/// <summary>
 /// A single solution file of a project, shown as an expandable parent in the
 /// "Solutions &amp; Projects" panel of the project details page.
 /// </summary>

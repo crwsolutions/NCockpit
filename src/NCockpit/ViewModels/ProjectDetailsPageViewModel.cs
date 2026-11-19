@@ -42,6 +42,7 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
 
     private readonly IProjectService _projectService;
     private readonly ISupportingFolderService _supportingFolderService;
+    private readonly IRelatedProjectService _relatedProjectService;
     private readonly IPopupService _popupService;
     private readonly IWindowsLauncher _windowsLauncher;
     private readonly IReadmeLinkParserService _readmeLinkParser;
@@ -79,6 +80,10 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
     public partial List<SupportingFolder> LinkedFolders { get; set; } = [];
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasRelatedProjects))]
+    public partial List<RelatedProject> RelatedProjects { get; set; } = [];
+
+    [ObservableProperty]
     public partial bool IsFavorite { get; set; }
 
     [ObservableProperty]
@@ -107,6 +112,11 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
     public partial List<SolutionProjectRow> OrphanProjects { get; set; } = [];
 
     public bool HasLinks => Links.Count > 0;
+
+    /// <summary>
+    /// Whether any related projects are linked to the current project.
+    /// </summary>
+    public bool HasRelatedProjects => RelatedProjects.Count > 0;
 
     /// <summary>
     /// Whether a project is currently selected and can be shown.
@@ -319,12 +329,14 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
     public ProjectDetailsPageViewModel(
         IProjectService projectService,
         ISupportingFolderService supportingFolderService,
+        IRelatedProjectService relatedProjectService,
         IPopupService popupService,
         IWindowsLauncher windowsLauncher,
         IReadmeLinkParserService readmeLinkParser)
     {
         _projectService = projectService;
         _supportingFolderService = supportingFolderService;
+        _relatedProjectService = relatedProjectService;
         _popupService = popupService;
         _windowsLauncher = windowsLauncher;
         _readmeLinkParser = readmeLinkParser;
@@ -476,6 +488,7 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
             LastRefreshedDisplay = null;
 
             await LoadLinkedFoldersAsync();
+            await LoadRelatedProjectsAsync();
 
             if (CurrentProject is not null)
             {
@@ -507,6 +520,27 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
         }
 
         LinkedFolders = await _supportingFolderService.GetLinkedToProjectAsync(CurrentProject.Id);
+    }
+
+    /// <summary>
+    /// Load the projects related to the current project.
+    /// </summary>
+    private async Task LoadRelatedProjectsAsync()
+    {
+        if (CurrentProject is null)
+        {
+            RelatedProjects = [];
+            return;
+        }
+
+        var projects = await _relatedProjectService.GetRelatedAsync(CurrentProject.Id);
+        RelatedProjects = projects
+            .Select(p => new RelatedProject
+            {
+                Project = p,
+                Initial = p.Name is { Length: > 0 } name ? name[0].ToString() : "?"
+            })
+            .ToList();
     }
 
     /// <summary>
@@ -668,6 +702,87 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
         catch (Exception ex)
         {
             ErrorMessage = $"Error unlinking folder: {ex.Message}";
+        }
+    }
+
+    /// <summary>
+    /// Open the Add Related Project popup to link another project (from a
+    /// primary folder) to the current project.
+    /// </summary>
+    [RelayCommand]
+    private async Task AddRelatedProjectAsync()
+    {
+        if (CurrentProject is null)
+        {
+            return;
+        }
+
+        try
+        {
+            ErrorMessage = null;
+
+            var result = await _popupService.ShowPopupAsync<AddRelatedProjectPopup, AddRelatedProjectResult>(
+                Shell.Current,
+                shellParameters: new Dictionary<string, object> { ["projectId"] = CurrentProject.Id });
+
+            if (result is not null && !result.WasDismissedByTappingOutsideOfPopup && result.Result is not null)
+            {
+                if (result.Result.Linked)
+                {
+                    await LoadRelatedProjectsAsync();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error linking project: {ex.Message}";
+        }
+    }
+
+    /// <summary>
+    /// Remove the link between a related project and the current project. No
+    /// confirmation by design, the link is gone in one tap. The relationship
+    /// is symmetric, so it disappears from both panels.
+    /// </summary>
+    [RelayCommand]
+    private async Task UnlinkRelatedProjectAsync(RelatedProject relatedProject)
+    {
+        if (CurrentProject is null || relatedProject is null)
+        {
+            return;
+        }
+
+        try
+        {
+            ErrorMessage = null;
+            await _relatedProjectService.UnlinkAsync(CurrentProject.Id, relatedProject.Project.Id);
+            await LoadRelatedProjectsAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error unlinking related project: {ex.Message}";
+        }
+    }
+
+    /// <summary>
+    /// Navigate to the related project's details page (initial.md: related
+    /// links navigate directly to the other project's details page).
+    /// </summary>
+    [RelayCommand]
+    private async Task NavigateToRelatedProjectAsync(RelatedProject relatedProject)
+    {
+        if (relatedProject is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await Shell.Current.GoToAsync($"projectdetails?id={relatedProject.Project.Id}");
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error opening project: {ex.Message}";
         }
     }
 
@@ -919,6 +1034,7 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
             Links = [.. links.MobileLinks, .. links.RelatedLinks];
 
             await LoadLinkedFoldersAsync();
+            await LoadRelatedProjectsAsync();
             await LoadProjectInfoAsync();
 
             LastRefreshedDisplay = $"Updated {DateTime.Now:HH:mm:ss}";

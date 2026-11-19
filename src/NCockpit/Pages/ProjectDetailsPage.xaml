@@ -245,9 +245,12 @@
                 </Grid>
             </Grid>
 
-            <!-- Middle column: Secondary locations + Solutions & Projects -->
+            <!-- Middle column: Secondary locations + Related projects +
+                 Solutions & Projects. The solutions panel is the long one, so
+                 it fills the column's remaining space and scrolls in place;
+                 the two panels above it size to their content. -->
             <Grid Grid.Column="1"
-                  RowDefinitions="Auto,*" RowSpacing="20">
+                  RowDefinitions="Auto,Auto,*" RowSpacing="20">
                 <cv:SectionCard Grid.Row="0" Title="Secondary locations">
                     <cv:SectionCard.TitleActions>
                         <Button Style="{StaticResource PlusButton}"
@@ -290,6 +293,78 @@
                     </VerticalStackLayout>
                 </cv:SectionCard>
 
+                <!-- Related projects: a short list, so it sizes to its
+                     content. -->
+                <cv:SectionCard Grid.Row="1" Title="Related projects">
+                    <cv:SectionCard.TitleActions>
+                        <Button Style="{StaticResource PlusButton}"
+                                Text="+"
+                                Command="{Binding AddRelatedProjectCommand}" />
+                    </cv:SectionCard.TitleActions>
+                    <VerticalStackLayout Spacing="8" Padding="0,8,0,0">
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding RelatedProjects}"
+                                             Spacing="8"
+                                             IsVisible="{Binding HasRelatedProjects}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="models:RelatedProject">
+                                    <Border Padding="10"
+                                            BackgroundColor="{StaticResource SurfaceAlt}"
+                                            Stroke="{StaticResource Border}"
+                                            StrokeThickness="1"
+                                            StrokeShape="RoundRectangle 6">
+                                        <Grid.GestureRecognizers>
+                                            <TapGestureRecognizer
+                                                Command="{Binding Source={x:Reference ContentGrid}, Path=BindingContext.NavigateToRelatedProjectCommand, Mode=OneTime}"
+                                                CommandParameter="{Binding .}" />
+                                        </Grid.GestureRecognizers>
+                                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                                            <Border WidthRequest="24"
+                                                    HeightRequest="24"
+                                                    Padding="4"
+                                                    Background="{Binding Name, Converter={StaticResource ProjectIconColorConverter}}"
+                                                    StrokeShape="RoundRectangle 6"
+                                                    VerticalOptions="Center">
+                                                <Label Text="{Binding Initial}"
+                                                       FontSize="10"
+                                                       FontAttributes="Bold"
+                                                       TextColor="White"
+                                                       HorizontalOptions="Center"
+                                                       VerticalOptions="Center" />
+                                            </Border>
+                                            <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                                <Label Text="{Binding Name}"
+                                                       FontSize="13"
+                                                       FontAttributes="Bold"
+                                                       TextColor="{StaticResource Navy}"
+                                                       LineBreakMode="TailTruncation" />
+                                                <Label Text="{Binding FolderPath}"
+                                                       Style="{StaticResource HintLabel}"
+                                                       FontSize="11"
+                                                       LineBreakMode="TailTruncation" />
+                                            </VerticalStackLayout>
+
+                                            <Button Grid.Column="2"
+                                                    Style="{StaticResource SmallButton}"
+                                                    FontFamily="FontAwesomeSolid"
+                                                    BackgroundColor="{StaticResource Error}"
+                                                    FontSize="14"
+                                                    Padding="8,4"
+                                                    Text="&#xf2ed;"
+                                                    Command="{Binding Source={x:Reference ContentGrid}, Path=BindingContext.UnlinkRelatedProjectCommand, Mode=OneTime}"
+                                                    CommandParameter="{Binding .}" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+
+                        <Label Text="No related projects yet."
+                               Style="{StaticResource HintLabel}"
+                               Padding="0,8"
+                               IsVisible="{Binding HasRelatedProjects, Converter={StaticResource InvertedBoolConverter}}" />
+                    </VerticalStackLayout>
+                </cv:SectionCard>
+
                 <!-- Solutions & Projects: every solution as an expandable
                      parent with its referenced projects as children, and
                      the orphan project files under an "Orphans" header.
@@ -299,7 +374,7 @@
                      projects (no solution files). The tree is unbounded,
                      so it fills the column's remaining space and scrolls
                      in place when it overflows. -->
-                <Grid Grid.Row="1">
+                <Grid Grid.Row="2">
                     <cv:SectionCard Title="Solutions &amp; Projects"
                                 IsVisible="{Binding ShowSolutionsPanel}">
                         <ScrollView>
@@ -433,44 +508,31 @@
                 </Grid>
             </Grid>
 
-            <!-- Right sidebar: Links + Related projects. The links panel fills
-                 the column's remaining space and scrolls in place when it
-                 overflows; the related projects panel is short, so it sizes to
-                 its content. -->
-            <Grid Grid.Column="2"
-                  RowDefinitions="*,Auto" RowSpacing="20">
-                <Grid Grid.Row="0">
-                    <cv:SectionCard Title="Links">
-                        <ScrollView>
-                            <VerticalStackLayout Spacing="8" Padding="0,8,0,0">
-                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Links}"
-                                                     Spacing="8"
-                                                     IsVisible="{Binding HasLinks}">
-                                    <BindableLayout.ItemTemplate>
-                                        <DataTemplate x:DataType="services:ReadmeLink">
-                                            <cv:LinkAction Text="{Binding Text}"
-                                                           Platform="{Binding Platform}"
-                                                           Url="{Binding Url}" />
-                                        </DataTemplate>
-                                    </BindableLayout.ItemTemplate>
-                                </VerticalStackLayout>
-
-                                <Label Text="No links found in README."
-                                        Style="{StaticResource HintLabel}"
-                                        Padding="0,8"
-                                        IsVisible="{Binding HasLinks, Converter={StaticResource InvertedBoolConverter}}" />
+            <!-- Right sidebar: Links. The panel is unbounded, so it fills the
+                 column's remaining space and scrolls in place when it
+                 overflows. -->
+            <Grid Grid.Column="2">
+                <cv:SectionCard Title="Links">
+                    <ScrollView>
+                        <VerticalStackLayout Spacing="8" Padding="0,8,0,0">
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Links}"
+                                                 Spacing="8"
+                                                 IsVisible="{Binding HasLinks}">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="services:ReadmeLink">
+                                        <cv:LinkAction Text="{Binding Text}"
+                                                       Platform="{Binding Platform}"
+                                                       Url="{Binding Url}" />
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
                             </VerticalStackLayout>
-                        </ScrollView>
-                    </cv:SectionCard>
-                </Grid>
 
-                <!-- Related projects: a short list, so it sizes to its content. -->
-                <cv:SectionCard Grid.Row="1" Title="Related projects">
-                    <VerticalStackLayout Spacing="8" Padding="0,8,0,0">
-                        <Label Text="No related projects yet."
-                               Style="{StaticResource HintLabel}"
-                               Padding="0,8" />
-                    </VerticalStackLayout>
+                            <Label Text="No links found in README."
+                                    Style="{StaticResource HintLabel}"
+                                    Padding="0,8"
+                                    IsVisible="{Binding HasLinks, Converter={StaticResource InvertedBoolConverter}}" />
+                        </VerticalStackLayout>
+                    </ScrollView>
                 </cv:SectionCard>
             </Grid>
 

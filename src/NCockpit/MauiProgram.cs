@@ -40,11 +40,13 @@ public static class MauiProgram
 		builder.Services.AddSingleton<IProjectFolderRepository, ProjectFolderRepository>();
 		builder.Services.AddSingleton<IProjectRepository, ProjectRepository>();
 		builder.Services.AddSingleton<ISupportingFolderRepository, SupportingFolderRepository>();
+		builder.Services.AddSingleton<IRelatedProjectRepository, RelatedProjectRepository>();
 		builder.Services.AddSingleton<IAppSettingsRepository, AppSettingsRepository>();
 		// Register services
 		builder.Services.AddSingleton<IProjectFolderService, ProjectFolderService>();
 		builder.Services.AddSingleton<IProjectService, ProjectService>();
 		builder.Services.AddSingleton<ISupportingFolderService, SupportingFolderService>();
+		builder.Services.AddSingleton<IRelatedProjectService, RelatedProjectService>();
 		builder.Services.AddSingleton<IScanService, ScanService>();
 		builder.Services.AddSingleton<IPageService, PageService>();
 		builder.Services.AddSingleton<IWindowsLauncher, WindowsLauncher>();
@@ -63,6 +65,8 @@ public static class MauiProgram
 		builder.Services.AddTransientPopup<ScanPopup, ScanPopupViewModel>();
 		builder.Services.AddTransient<LinkSecondaryPopupViewModel>();
 		builder.Services.AddTransientPopup<LinkSecondaryPopup, LinkSecondaryPopupViewModel>();
+		builder.Services.AddTransient<AddRelatedProjectPopupViewModel>();
+		builder.Services.AddTransientPopup<AddRelatedProjectPopup, AddRelatedProjectPopupViewModel>();
 		builder.Services.AddTransient<ViewFilePopupViewModel>();
 		builder.Services.AddTransientPopup<ViewFilePopup, ViewFilePopupViewModel>();
 

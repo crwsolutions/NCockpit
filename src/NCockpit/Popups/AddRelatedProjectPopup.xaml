@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<toolkit:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+               xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+               xmlns:models="clr-namespace:NCockpit.Models"
+               xmlns:vm="clr-namespace:NCockpit.ViewModels.Popups"
+               x:Class="NCockpit.Popups.AddRelatedProjectPopup"
+               x:DataType="vm:AddRelatedProjectPopupViewModel"
+               x:TypeArguments="vm:AddRelatedProjectResult"
+               Padding="0"
+               BackgroundColor="White"
+               CanBeDismissedByTappingOutsideOfPopup="False">
+
+    <Grid x:Name="PopupRoot" WidthRequest="440" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+
+        <!-- Header -->
+        <Grid Grid.Row="0"
+              BackgroundColor="{StaticResource Navy}"
+              Padding="20,16"
+              ColumnDefinitions="*,Auto">
+            <Label Grid.Column="0"
+                   Text="Add Related Project"
+                   Style="{StaticResource PopupHeader}"
+                   VerticalOptions="Center" />
+
+            <Button Grid.Column="1"
+                    Text="✕"
+                    Style="{StaticResource IconButton}"
+                    WidthRequest="40"
+                    HeightRequest="40"
+                    CornerRadius="0"
+                    TextColor="{StaticResource HeaderMuted}"
+                    Command="{Binding CancelCommand}"
+                    VerticalOptions="Center" />
+        </Grid>
+
+        <!-- Search -->
+        <Grid Grid.Row="1" Padding="20,16,20,8">
+            <Entry Text="{Binding SearchQuery}"
+                   Placeholder="Search by project name..."
+                   FontSize="13"
+                   BackgroundColor="White" />
+        </Grid>
+
+        <!-- Error Message -->
+        <Label Grid.Row="2"
+               Text="{Binding ErrorMessage}"
+               Style="{StaticResource ErrorLabel}"
+               FontSize="11"
+               Padding="20,0,20,4"
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}"
+               LineBreakMode="WordWrap" />
+
+        <!-- Project list -->
+        <Grid Grid.Row="3" Margin="20,0,20,12">
+            <CollectionView ItemsSource="{Binding AvailableProjects}"
+                            SelectionMode="None"
+                            HeightRequest="320">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:Project">
+                        <Border Margin="0,0,0,8"
+                                Stroke="{StaticResource Border}"
+                                StrokeThickness="1"
+                                StrokeShape="RoundRectangle 6"
+                                BackgroundColor="White"
+                                Padding="12">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={x:Reference PopupRoot}, Path=BindingContext.SelectProjectCommand, Mode=OneTime}"
+                                    CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="{Binding Name}"
+                                       FontSize="13"
+                                       FontAttributes="Bold"
+                                       TextColor="{StaticResource Navy}" />
+                                <Label Text="{Binding FolderPath}"
+                                       Style="{StaticResource HintLabel}"
+                                       FontSize="11"
+                                       LineBreakMode="TailTruncation" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Empty state -->
+            <VerticalStackLayout Spacing="6"
+                                 HorizontalOptions="Center"
+                                 VerticalOptions="Center"
+                                 IsVisible="{Binding AvailableProjects.Count, Converter={StaticResource IntToEmptyVisibilityConverter}}">
+                <Label Text="No other projects found."
+                       Style="{StaticResource HintLabel}"
+                       FontSize="13"
+                       HorizontalOptions="Center" />
+                <Label Text="Add and scan a primary folder first."
+                       Style="{StaticResource HintLabel}"
+                       HorizontalOptions="Center" />
+            </VerticalStackLayout>
+        </Grid>
+
+        <!-- Footer -->
+        <Grid Grid.Row="4"
+              BackgroundColor="{StaticResource Surface}"
+              Padding="20">
+            <Button Text="Cancel"
+                    Style="{StaticResource SecondaryButton}"
+                    FontSize="12"
+                    Command="{Binding CancelCommand}" />
+        </Grid>
+    </Grid>
+
+</toolkit:Popup>
