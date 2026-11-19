@@ -88,12 +88,8 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
     public partial string? ErrorMessage { get; set; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasMobileLinks))]
-    public partial List<ReadmeLink> MobileLinks { get; set; } = [];
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasRelatedLinks))]
-    public partial List<ReadmeLink> RelatedLinks { get; set; } = [];
+    [NotifyPropertyChangedFor(nameof(HasLinks))]
+    public partial List<ReadmeLink> Links { get; set; } = [];
 
     /// <summary>
     /// The "Solutions &amp; Projects" tree: every solution as an expandable
@@ -110,9 +106,7 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
     [ObservableProperty]
     public partial List<SolutionProjectRow> OrphanProjects { get; set; } = [];
 
-    public bool HasMobileLinks => MobileLinks.Count > 0;
-
-    public bool HasRelatedLinks => RelatedLinks.Count > 0;
+    public bool HasLinks => Links.Count > 0;
 
     /// <summary>
     /// Whether a project is currently selected and can be shown.
@@ -486,8 +480,7 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
             if (CurrentProject is not null)
             {
                 var links = await _readmeLinkParser.ParseLinksAsync(CurrentProject.FolderPath);
-                MobileLinks = links.MobileLinks;
-                RelatedLinks = links.RelatedLinks;
+                Links = [.. links.MobileLinks, .. links.RelatedLinks];
             }
 
             await LoadProjectInfoAsync();
@@ -923,8 +916,7 @@ public partial class ProjectDetailsPageViewModel : ObservableObject, IQueryAttri
             CurrentProject = refreshed;
 
             var links = await _readmeLinkParser.ParseLinksAsync(refreshed.FolderPath, cache: false);
-            MobileLinks = links.MobileLinks;
-            RelatedLinks = links.RelatedLinks;
+            Links = [.. links.MobileLinks, .. links.RelatedLinks];
 
             await LoadLinkedFoldersAsync();
             await LoadProjectInfoAsync();

@@ -113,10 +113,7 @@
                        Style="{StaticResource TabInactive}"
                        Padding="8,14"
                        VerticalOptions="Fill" />
-                <Label Text="Mobile"
-                       Style="{StaticResource TabInactive}"
-                       Padding="8,14"
-                       VerticalOptions="Fill" />
+
                 <Label Text="Files"
                        Style="{StaticResource TabInactive}"
                        Padding="8,14"
@@ -451,20 +448,19 @@
                 </Grid>
             </Grid>
 
-            <!-- Right sidebar: Mobile + Related projects + Related links -->
+            <!-- Right sidebar: Links + Related projects. The links panel fills
+                 the column's remaining space and scrolls in place when it
+                 overflows; the related projects panel is short, so it sizes to
+                 its content. -->
             <Grid Grid.Column="2"
-                  RowDefinitions="2*,Auto,*" RowSpacing="20">
-                <!-- Mobile: the links are unbounded, so the panel fills the
-                     column's remaining space and scrolls in place when it
-                     overflows. -->
+                  RowDefinitions="*,Auto" RowSpacing="20">
                 <Grid Grid.Row="0">
-                    <cv:SectionCard Title="Mobile">
+                    <cv:SectionCard Title="Links">
                         <ScrollView>
                             <VerticalStackLayout Spacing="8" Padding="0,8,0,0">
-                                <!-- Mobile links grouped by platform -->
-                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding MobileLinks}"
+                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Links}"
                                                      Spacing="8"
-                                                     IsVisible="{Binding HasMobileLinks}">
+                                                     IsVisible="{Binding HasLinks}">
                                     <BindableLayout.ItemTemplate>
                                         <DataTemplate x:DataType="services:ReadmeLink">
                                             <cv:LinkAction Text="{Binding Text}"
@@ -474,10 +470,10 @@
                                     </BindableLayout.ItemTemplate>
                                 </VerticalStackLayout>
 
-                                <Label Text="No mobile links found in README."
-                           Style="{StaticResource HintLabel}"
-                           Padding="0,8"
-                           IsVisible="{Binding HasMobileLinks, Converter={StaticResource InvertedBoolConverter}}" />
+                                <Label Text="No links found in README."
+                                        Style="{StaticResource HintLabel}"
+                                        Padding="0,8"
+                                        IsVisible="{Binding HasLinks, Converter={StaticResource InvertedBoolConverter}}" />
                             </VerticalStackLayout>
                         </ScrollView>
                     </cv:SectionCard>
@@ -491,34 +487,6 @@
                                Padding="0,8" />
                     </VerticalStackLayout>
                 </cv:SectionCard>
-
-                <!-- Related links: the list is unbounded, so the panel fills the
-                     column's remaining space and scrolls in place when it
-                     overflows. -->
-                <Grid Grid.Row="2">
-                    <cv:SectionCard Title="Related links">
-                        <ScrollView>
-                            <VerticalStackLayout Spacing="8" Padding="0,8,0,0">
-                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding RelatedLinks}"
-                                             Spacing="8"
-                                             IsVisible="{Binding HasRelatedLinks}">
-                                    <BindableLayout.ItemTemplate>
-                                        <DataTemplate x:DataType="services:ReadmeLink">
-                                            <cv:LinkAction Text="{Binding Text}"
-                                                   Platform="Other"
-                                                   Url="{Binding Url}" />
-                                        </DataTemplate>
-                                    </BindableLayout.ItemTemplate>
-                                </VerticalStackLayout>
-
-                                <Label Text="No related links found in README."
-                               Style="{StaticResource HintLabel}"
-                               Padding="0,8"
-                               IsVisible="{Binding HasRelatedLinks, Converter={StaticResource InvertedBoolConverter}}" />
-                            </VerticalStackLayout>
-                        </ScrollView>
-                    </cv:SectionCard>
-                </Grid>
             </Grid>
 
             <!-- No project selected -->
