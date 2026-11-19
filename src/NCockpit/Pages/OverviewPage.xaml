@@ -116,13 +116,13 @@
                                     Command="{Binding ToggleFavoritesFilterCommand, Mode=OneTime}" />
                         </Grid>
 
-                        <CollectionView x:Name="ProjectListView" ItemSizingStrategy="MeasureFirstItem"
+                        <CollectionView x:Name="ProjectListView"
                                         ItemsSource="{Binding Projects}"
                                         SelectionMode="None"
                                         Margin="0,0,0,0">
                             <CollectionView.ItemTemplate>
                                 <DataTemplate x:DataType="viewmodels:ProjectListItem">
-                                    <cv:HoverBorder Padding="16" HeightRequest="80"
+                                    <cv:HoverBorder Padding="16" 
                                             Margin="0,0,0,0"
                                             Background="{Binding IsSelected, Converter={StaticResource SelectedToBackgroundColorConverter}}"
                                             StrokeThickness="0">
@@ -159,8 +159,8 @@
                                                         VerticalOptions="Center" />
                                             </Border>
 
-                                            <!-- Name + path -->
-                                            <VerticalStackLayout Grid.Column="2" Spacing="2">
+                                            <!-- Name, path, then the type and target-framework badges of the favorite project file -->
+                                            <VerticalStackLayout Grid.Column="2" Spacing="4">
                                                 <Label Text="{Binding Name}"
                                                         FontSize="15"
                                                         FontAttributes="Bold"
@@ -169,6 +169,16 @@
                                                         FontSize="12"
                                                         TextColor="#666666"
                                                         LineBreakMode="TailTruncation" />
+                                                <HorizontalStackLayout Spacing="6">
+                                                    <cv:Badge Text="{Binding TypeInfo}" IsVisible="{Binding TypeInfo, Converter={StaticResource StringToVisibilityConverter}}"
+                                                              BadgeBackground="#eff6ff"
+                                                              StrokeColor="#bfdbfe"
+                                                              TextColor="#1d4ed8" />
+                                                    <cv:Badge Text="{Binding FrameworksInfo}" IsVisible="{Binding FrameworksInfo, Converter={StaticResource StringToVisibilityConverter}}"
+                                                              BadgeBackground="#f0fdf4"
+                                                              StrokeColor="#bbf7d0"
+                                                              TextColor="#15803d" />
+                                                </HorizontalStackLayout>
                                             </VerticalStackLayout>
 
                                             <!-- Status + time -->
