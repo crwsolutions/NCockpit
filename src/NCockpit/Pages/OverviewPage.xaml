@@ -174,7 +174,7 @@
                                                                     Spacing="2"
                                                                     HorizontalOptions="End"
                                                                     VerticalOptions="Center">
-                                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
+                                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6" HorizontalOptions="End">
                                                     <Ellipse Grid.Column="0"
                                                                 WidthRequest="8"
                                                                 HeightRequest="8"
