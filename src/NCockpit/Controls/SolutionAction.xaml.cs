@@ -6,7 +6,7 @@ namespace NCockpit.Controls;
 /// A compact, clickable solution action: a Visual Studio icon, a blue bold
 /// title and a trailing chevron, with hover feedback. Tapping opens
 /// <see cref="Path"/> in Visual Studio via the configured handler.
-/// Styled like the Primary location (FolderAction).
+/// Styled like the folder rows in the Secondary locations panel (FolderAction).
 /// </summary>
 public partial class SolutionAction : ContentView
 {

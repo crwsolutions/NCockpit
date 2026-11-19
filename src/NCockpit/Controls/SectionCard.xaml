@@ -12,9 +12,15 @@
                     StrokeThickness="0"
                     StrokeShape="RoundRectangle 8">
                 <Grid RowDefinitions="Auto,*" RowSpacing="12">
-                    <Label Grid.Row="0"
-                           Style="{StaticResource SectionTitle}"
-                           Text="{Binding Title, Source={RelativeSource TemplatedParent}}" />
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <Label Grid.Column="0"
+                               Style="{StaticResource SectionTitle}"
+                               VerticalOptions="Center"
+                               Text="{Binding Title, Source={RelativeSource TemplatedParent}}" />
+                        <ContentView Grid.Column="1"
+                                     Content="{Binding TitleActions, Source={RelativeSource TemplatedParent}}"
+                                     IsVisible="{Binding TitleActions, Source={RelativeSource TemplatedParent}, Converter={StaticResource IsNotNullConverter}}" />
+                    </Grid>
                     <ContentPresenter Grid.Row="1" />
                 </Grid>
             </Border>

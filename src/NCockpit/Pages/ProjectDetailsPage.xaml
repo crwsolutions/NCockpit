@@ -245,63 +245,48 @@
                 </Grid>
             </Grid>
 
-            <!-- Middle column: Project locations + Solutions & Projects -->
+            <!-- Middle column: Secondary locations + Solutions & Projects -->
             <Grid Grid.Column="1"
                   RowDefinitions="Auto,*" RowSpacing="20">
-                <cv:SectionCard Grid.Row="0" Title="Project locations">
-                    <VerticalStackLayout Spacing="16">
-                        <!-- Primary location -->
-                        <VerticalStackLayout Spacing="4">
-                            <Label Text="Primary location"
-                                           Style="{StaticResource MetaLabel}" />
-                            <cv:FolderAction Text="{Binding CurrentProject.FolderPath}"
-                                             Path="{Binding CurrentProject.FolderPath}" />
+                <cv:SectionCard Grid.Row="0" Title="Secondary locations">
+                    <cv:SectionCard.TitleActions>
+                        <Button Style="{StaticResource PlusButton}"
+                                Text="+"
+                                Command="{Binding LinkSecondaryFolderCommand}" />
+                    </cv:SectionCard.TitleActions>
+                    <VerticalStackLayout Spacing="8" Padding="0,8,0,0">
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding LinkedFolders}"
+                                             Spacing="8"
+                                             IsVisible="{Binding HasLinkedFolders}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="models:SupportingFolder">
+                                    <Border Padding="10"
+                                            BackgroundColor="{StaticResource SurfaceAlt}"
+                                            Stroke="{StaticResource Border}"
+                                            StrokeThickness="1"
+                                            StrokeShape="RoundRectangle 6">
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                            <cv:FolderAction Text="{Binding FolderName}" Path="{Binding Path}" />
+
+                                            <Button Grid.Column="1"
+                                                    Style="{StaticResource SmallButton}"
+                                                    FontFamily="FontAwesomeSolid"
+                                                    BackgroundColor="{StaticResource Error}"
+                                                    FontSize="14"
+                                                    Padding="8,4"
+                                                    Text="&#xf2ed;"
+                                                    Command="{Binding Source={x:Reference ContentGrid}, Path=BindingContext.UnlinkSecondaryFolderCommand, Mode=OneTime}"
+                                                    CommandParameter="{Binding .}" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
                         </VerticalStackLayout>
 
-                        <!-- Secondary locations -->
-                        <VerticalStackLayout Spacing="8">
-                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                                <Label VerticalOptions="Center" 
-                                       Text="Secondary locations"
-                                       Style="{StaticResource MetaLabel}" />
-                                <Button Grid.Column="1"
-                                        Style="{StaticResource PlusButton}"
-                                        Text="+"
-                                        Command="{Binding LinkSecondaryFolderCommand}" />
-                            </Grid>
-
-                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding LinkedFolders}"
-                                                 Spacing="8"
-                                                 IsVisible="{Binding HasLinkedFolders}">
-                                <BindableLayout.ItemTemplate>
-                                    <DataTemplate x:DataType="models:SupportingFolder">
-                                        <Border Padding="10"
-                                                        BackgroundColor="{StaticResource SurfaceAlt}"
-                                                        Stroke="{StaticResource Border}"
-                                                        StrokeThickness="1"
-                                                        StrokeShape="RoundRectangle 6">
-                                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                                                <cv:FolderAction Text="{Binding FolderName}" Path="{Binding Path}" />
-
-                                                <Button Grid.Column="1"
-                                                        Style="{StaticResource SmallButton}"
-                                                        FontFamily="FontAwesomeSolid"
-                                                        BackgroundColor="{StaticResource Error}"
-                                                        FontSize="14"
-                                                        Padding="8,4"
-                                                        Text="&#xf2ed;"
-                                                        Command="{Binding Source={x:Reference ContentGrid}, Path=BindingContext.UnlinkSecondaryFolderCommand, Mode=OneTime}"
-                                                        CommandParameter="{Binding .}" />
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </BindableLayout.ItemTemplate>
-                            </VerticalStackLayout>
-
-                            <Label Text="No secondary folders linked yet."
-                                           Style="{StaticResource HintLabel}"
-                                           IsVisible="{Binding HasLinkedFolders, Converter={StaticResource InvertedBoolConverter}}" />
-                        </VerticalStackLayout>
+                        <Label Text="No secondary folders linked yet."
+                               Style="{StaticResource HintLabel}"
+                               Padding="0,8"
+                               IsVisible="{Binding HasLinkedFolders, Converter={StaticResource InvertedBoolConverter}}" />
                     </VerticalStackLayout>
                 </cv:SectionCard>
 

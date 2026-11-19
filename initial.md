@@ -137,10 +137,9 @@ Show:
 * project type
 * version
 * target framework(s)
-* primary location
 * secondary locations
 
-The primary and secondary locations must be clickable.
+The secondary locations must be clickable.
 
 Clicking a local location should open it using the appropriate Windows mechanism.
 
