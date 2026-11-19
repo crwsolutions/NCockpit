@@ -269,6 +269,7 @@
                                        Style="{StaticResource MetaLabel}" />
                                 <Button Grid.Column="1"
                                         Style="{StaticResource PlusButton}"
+                                        Text="+"
                                         Command="{Binding LinkSecondaryFolderCommand}" />
                             </Grid>
 
